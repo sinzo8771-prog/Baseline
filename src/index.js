@@ -33,7 +33,7 @@ export default {
       return json(
         { sources: Object.entries(FEEDS).map(([name, feed]) => ({ name, feed })) },
         200,
-        { "cache-control": "public, max-age=300" },
+        { "cache-control": "public, max-age=300, stale-while-revalidate=600" },
       );
     }
 
@@ -73,7 +73,7 @@ async function relayFeed(name) {
       headers: {
         "content-type": "text/xml; charset=utf-8",
         "access-control-allow-origin": "*",
-        "cache-control": "public, max-age=300",
+        "cache-control": "public, max-age=300, stale-while-revalidate=600",
       },
     });
   } catch (err) {

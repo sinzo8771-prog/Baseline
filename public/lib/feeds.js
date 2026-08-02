@@ -21,7 +21,7 @@ export const SOURCES = [
 // bounds the client-side dedupe (O(n^2)) without missing anything that would make the cut.
 export const MAX_PER_FEED = 40;
 export const SUMMARY_MAX = 500;
-export const FEED_TIMEOUT_MS = 15000;
+export const FEED_TIMEOUT_MS = 8000;
 
 // XML payloads often bury HTML inside CDATA (e.g. <description><![CDATA[<p>...<b>...</p>]]>).
 // Different parsers expose that differently: the browser's DOMParser builds child elements

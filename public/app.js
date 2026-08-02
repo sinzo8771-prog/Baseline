@@ -22,8 +22,55 @@ function spinClass(spin) {
 }
 
 function safeHref(link) {
-  // Only http(s) links may open; anything else is not a story worth following.
   return /^https?:\/\//i.test(link || "") ? link : "";
+}
+
+// Theme handling
+const THEME_KEY = "baseline-theme";
+function initTheme() {
+  const saved = localStorage.getItem(THEME_KEY);
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const isDark = saved ? saved === "dark" : prefersDark;
+  document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
+  updateThemeToggle(isDark);
+  return isDark;
+}
+
+function updateThemeToggle(isDark) {
+  const btn = document.getElementById("theme-toggle");
+  if (btn) btn.textContent = isDark ? "☀" : "🌙";
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute("data-theme") || "light";
+  const next = current === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  localStorage.setItem(THEME_KEY, next);
+  updateThemeToggle(next === "dark");
+}
+
+// Hype filter chips
+let currentFilter = "all";
+let allStories = [];
+
+function renderFilterChips() {
+  const container = document.getElementById("filter-chips");
+  if (!container) return;
+  container.innerHTML = "";
+  const filters = ["all", "Measured", "Warm", "Hot", "On Fire"];
+  filters.forEach((f) => {
+    const btn = el("button", "filter-chip" + (f === currentFilter ? " active" : ""), f === "all" ? "All" : f);
+    btn.dataset.filter = f;
+    btn.addEventListener("click", () => applyFilter(f));
+    container.appendChild(btn);
+  });
+}
+
+function applyFilter(filter) {
+  currentFilter = filter;
+  renderFilterChips();
+  const filtered = filter === "all" ? allStories : allStories.filter((s) => s.spin === filter);
+  render(filtered);
 }
 
 function renderStory(story, isLead) {
@@ -50,6 +97,7 @@ function renderStory(story, isLead) {
 }
 
 function render(stories) {
+  allStories = stories;
   const lead = document.getElementById("lead-story");
   const grid = document.getElementById("grid");
   lead.innerHTML = "";
@@ -78,10 +126,15 @@ function renderStats(stats) {
 function renderSources(sources) {
   const list = document.getElementById("source-list");
   list.innerHTML = "";
-  (sources || []).forEach((s) => {
+  const sorted = [...(sources || [])].sort((a, b) => {
+    if (a.ok !== b.ok) return a.ok ? 1 : -1;
+    return a.name.localeCompare(b.name);
+  });
+  sorted.forEach((s) => {
     const li = el("li");
     li.appendChild(document.createTextNode(s.name));
-    const status = el("span", s.ok ? "status ok" : "status err", s.ok ? "reporting" : `down (${s.error})`);
+    const label = s.ok ? "reporting" : `down (${s.error ?? "no signal"})`;
+    const status = el("span", s.ok ? "status ok" : "status err", label);
     li.appendChild(status);
     list.appendChild(li);
   });
@@ -105,10 +158,48 @@ function renderUpdated(iso) {
     : "Sourced " + d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }) + " · refresh for the latest";
 }
 
+// OPML export
+function exportOPML() {
+  const sources = [
+    { title: "OpenAI", xmlUrl: "https://openai.com/news/rss.xml", htmlUrl: "https://openai.com/news/" },
+    { title: "Anthropic", xmlUrl: "https://www.anthropic.com/rss.xml", htmlUrl: "https://www.anthropic.com/" },
+    { title: "Google DeepMind", xmlUrl: "https://deepmind.google/blog/rss.xml", htmlUrl: "https://deepmind.google/blog/" },
+    { title: "Hugging Face", xmlUrl: "https://huggingface.co/blog/feed.xml", htmlUrl: "https://huggingface.co/blog/" },
+    { title: "The Verge AI", xmlUrl: "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml", htmlUrl: "https://www.theverge.com/ai-artificial-intelligence/" },
+    { title: "MIT Tech Review AI", xmlUrl: "https://www.technologyreview.com/topic/artificial-intelligence/feed", htmlUrl: "https://www.technologyreview.com/topic/artificial-intelligence/" },
+    { title: "Ars Technica AI", xmlUrl: "https://arstechnica.com/ai/feed/", htmlUrl: "https://arstechnica.com/ai/" },
+    { title: "VentureBeat AI", xmlUrl: "https://venturebeat.com/category/ai/feed/", htmlUrl: "https://venturebeat.com/category/ai/" },
+    { title: "TechCrunch AI", xmlUrl: "https://techcrunch.com/category/artificial-intelligence/feed/", htmlUrl: "https://techcrunch.com/category/artificial-intelligence/" },
+    { title: "Wired AI", xmlUrl: "https://www.wired.com/feed/tag/ai/latest/rss", htmlUrl: "https://www.wired.com/tag/ai/" },
+  ];
+
+  let opml = '<?xml version="1.0" encoding="UTF-8"?>\n<opml version="2.0">\n  <head>\n    <title>The Baseline — AI News Sources</title>\n    <dateCreated>' + new Date().toUTCString() + '</dateCreated>\n  </head>\n  <body>\n';
+
+  sources.forEach((s) => {
+    opml += `    <outline text="${s.title}" title="${s.title}" type="rss" xmlUrl="${s.xmlUrl}" htmlUrl="${s.htmlUrl}" />\n`;
+  });
+
+  opml += "  </body>\n</opml>";
+
+  const blob = new Blob([opml], { type: "text/xml;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "the-baseline-sources.opml";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 async function main() {
+  initTheme();
+  renderFilterChips();
+
   document.getElementById("footer-year").textContent = new Date().getFullYear();
   const dateEl = document.getElementById("masthead-date");
   dateEl.textContent = new Date().toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+
+  document.getElementById("theme-toggle").addEventListener("click", toggleTheme);
+  document.getElementById("opml-export").addEventListener("click", exportOPML);
 
   let results;
   try {
@@ -123,6 +214,7 @@ async function main() {
   render(stories);
   renderStats(dailyStats(stories));
   renderSources(results.map((r) => ({ name: r.source, ok: !r.error, error: r.error })));
+  renderUpdated(dailyStats(stories).generatedAt);
 }
 
 main();

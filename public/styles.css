@@ -7,6 +7,35 @@
   --rule: #1c1a16;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #1c1a16;
+    --paper-dim: #2a2722;
+    --ink: #f4efe4;
+    --ink-soft: #b8b0a0;
+    --vermillion: #e87a5a;
+    --rule: #4a453d;
+  }
+}
+
+[data-theme="light"] {
+  --paper: #f4efe4;
+  --paper-dim: #e9e2d2;
+  --ink: #1c1a16;
+  --ink-soft: #5a554a;
+  --vermillion: #d94a2b;
+  --rule: #1c1a16;
+}
+
+[data-theme="dark"] {
+  --paper: #1c1a16;
+  --paper-dim: #2a2722;
+  --ink: #f4efe4;
+  --ink-soft: #b8b0a0;
+  --vermillion: #e87a5a;
+  --rule: #4a453d;
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -17,6 +46,7 @@ body {
   max-width: 960px;
   margin: 0 auto;
   padding: 0 24px 48px;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .masthead {
@@ -29,6 +59,7 @@ body {
 .masthead-meta {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -51,6 +82,21 @@ body {
   font-size: 18px;
   color: var(--ink-soft);
 }
+
+.theme-toggle {
+  background: none;
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  padding: 4px 10px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background 0.15s ease;
+}
+.theme-toggle:hover { background: var(--paper-dim); }
+.theme-toggle:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 2px; }
 
 .nav {
   display: flex;
@@ -122,3 +168,35 @@ body {
 .empty { padding: 40px 0; text-align: center; }
 .empty .kicker { font-family: Fraunces, Georgia, serif; font-weight: 900; font-size: 40px; }
 .empty p { color: var(--ink-soft); margin-top: 8px; }
+
+/* Hype filter chips */
+.filter-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  justify-content: center;
+}
+.filter-chip {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  padding: 4px 12px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.15s ease;
+}
+.filter-chip:hover { background: var(--paper-dim); }
+.filter-chip.active {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.filter-chip.active:hover { background: var(--ink-soft); }
+.filter-chip:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 2px; }
+@media (max-width: 640px) {
+  .filter-chip { padding: 4px 8px; font-size: 10px; }
+}
