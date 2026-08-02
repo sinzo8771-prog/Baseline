@@ -58,7 +58,7 @@ function render(stories) {
   if (!stories.length) {
     const empty = el("div", "empty");
     empty.appendChild(el("div", "kicker", "EXTRA! EXTRA!"));
-    empty.appendChild(el("p", "", "The presses are cold. No stories to report. Our sources may be napping, or the feeds are down. Check back shortly."));
+    empty.appendChild(el("p", "", "The presses are cold. No stories to report. Our sources may be napping, or the feeds are down. In this line of work, silence is usually a feature, not a bug. Reload to try again."));
     lead.appendChild(empty);
     return;
   }
@@ -91,9 +91,18 @@ function renderOffline() {
   const lead = document.getElementById("lead-story");
   lead.innerHTML = "";
   const empty = el("div", "empty");
-  empty.appendChild(el("div", "kicker", "OFFLINE"));
-  empty.appendChild(el("p", "", "We appear to be between editions. The site is up; the news pipeline is being bashful. Refresh shortly."));
+  empty.appendChild(el("div", "kicker", "OUT TO LUNCH"));
+  empty.appendChild(el("p", "", "The site is up, but the network is playing dead. Your browser can do everything except fetch. Try again in a moment."));
   lead.appendChild(empty);
+}
+
+function renderUpdated(iso) {
+  const el_ = document.getElementById("masthead-updated");
+  if (!el_) return;
+  const d = new Date(iso);
+  el_.textContent = Number.isNaN(d.getTime())
+    ? ""
+    : "Sourced " + d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }) + " · refresh for the latest";
 }
 
 async function main() {
