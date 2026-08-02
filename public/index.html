@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Baseline — AI news, hype removed.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400&family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="masthead">
+    <div class="masthead-meta">
+      <span id="masthead-date">Loading…</span>
+      <span class="masthead-rule"></span>
+      <span>No. 1 — Free edition</span>
+    </div>
+    <h1 class="masthead-title">THE BASELINE</h1>
+    <p class="masthead-tagline">AI news, hype removed.</p>
+  </header>
+
+  <nav class="nav">
+    <a href="#latest">Latest</a>
+    <a href="#hype-index">Hype Index</a>
+    <a href="#sources">Sources</a>
+    <a href="#about">About</a>
+  </nav>
+
+  <main>
+    <section id="latest" aria-label="Latest stories">
+      <div id="lead-story" class="lead"></div>
+      <div id="grid" class="grid"></div>
+    </section>
+
+    <section id="hype-index" class="section">
+      <h2 class="section-title">The Hype Index</h2>
+      <p class="section-note" id="hype-note">Share of today's stories that are, let's say, enthusiastic.</p>
+      <div class="meter">
+        <div class="meter-track">
+          <div class="meter-fill" id="meter-fill"></div>
+        </div>
+        <span class="meter-label" id="meter-label">—</span>
+      </div>
+      <div class="spin-legend">
+        <span class="spin spin-measured">Measured</span>
+        <span class="spin spin-warm">Warm</span>
+        <span class="spin spin-hot">Hot</span>
+        <span class="spin spin-fire">On Fire</span>
+      </div>
+    </section>
+
+    <section id="sources" class="section">
+      <h2 class="section-title">Sources</h2>
+      <ul id="source-list" class="source-list"></ul>
+    </section>
+
+    <section id="about" class="section">
+      <h2 class="section-title">About</h2>
+      <p class="about-copy">The Baseline aggregates RSS feeds from the AI industry and its chroniclers, verbatim. We add nothing but a rating, which is already more than some of these stories deserve. No summaries written by models. No clickbait of our own. Headlines as published, spin as detected, hype as measured.</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>© <span id="footer-year"></span> The Baseline. Hand-built, not generated. RSS in, judgment out.</p>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>
