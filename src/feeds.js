@@ -13,6 +13,18 @@ export const SOURCES = [
   { name: "Wired AI", feed: "https://www.wired.com/feed/tag/ai/latest/rss" },
 ];
 
+function summaryText(value) {
+  if (typeof value === "string") return value;
+  if (Array.isArray(value)) return value.map(summaryText).join(" ");
+  if (value && typeof value === "object") {
+    return Object.entries(value)
+      .filter(([key]) => !key.startsWith("@_"))
+      .map(([, v]) => summaryText(v))
+      .join(" ");
+  }
+  return "";
+}
+
 const parser = new XMLParser({
   ignoreAttributes: false,
   attributeNamePrefix: "@_",
@@ -49,7 +61,7 @@ export function parseFeed(xml, sourceName) {
       return {
         title: String(title).trim(),
         link: String(link).trim(),
-        summary: String(summary).slice(0, 500),
+        summary: summaryText(summary).slice(0, 500),
         publishedAt: Number.isNaN(date.getTime()) ? "" : date.toISOString(),
         source: sourceName,
       };
