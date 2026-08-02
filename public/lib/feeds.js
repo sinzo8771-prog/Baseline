@@ -41,9 +41,20 @@ function firstByTag(root, tag) {
 
 export function parseFeed(xml, sourceName, DOMParserCtor = globalThis.DOMParser) {
   if (!DOMParserCtor) return [];
+  // Accept either a DOMParser constructor (new DOMParser()) — as the browser passes
+  // globalThis.DOMParser — or an already-instantiated parser (as Node tests often do).
+  let parse;
+  if (typeof DOMParserCtor === "function" && DOMParserCtor.prototype?.parseFromString) {
+    parse = (x) => new DOMParserCtor().parseFromString(x, "text/xml");
+  } else if (typeof DOMParserCtor?.parseFromString === "function") {
+    parse = (x) => DOMParserCtor.parseFromString(x, "text/xml");
+  } else {
+    return [];
+  }
+
   let doc;
   try {
-    doc = new DOMParserCtor().parseFromString(xml, "text/xml");
+    doc = parse(xml);
   } catch {
     return [];
   }
