@@ -8,7 +8,7 @@ binding = "ASSETS"
 
 [[kv_namespaces]]
 binding = "BASELINE_KV"
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
+id = "e1205ab580814cab87a3a86010654195"
 
 [triggers]
 crons = ["*/20 * * * *"]
