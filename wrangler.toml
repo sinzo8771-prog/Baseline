@@ -1,0 +1,10 @@
+name = "the-baseline"
+main = "src/index.js"
+compatibility_date = "2026-01-01"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+# No KV or cron: aggregation now happens in the browser (free-tier CPU cap
+# makes server-side parsing infeasible). The Worker only relays feed XML.
