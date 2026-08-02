@@ -67,7 +67,7 @@ OpenAI, Anthropic, Google DeepMind, Hugging Face, The Verge AI, MIT Technology R
 
 ## 7. Deployment
 
-- Free Cloudflare account, `wrangler deploy` for the Worker; static assets served by the same Worker (assets binding) or a static host. Worker schedules itself via `wrangler.toml` cron.
+- Free Cloudflare account, one `wrangler deploy`. The Worker serves both `/api/news` and the static assets (public/ directory via assets binding). Worker schedules itself via `wrangler.toml` cron (every 20 min).
 - User creates account and runs deploy once (or I provide exact commands). Live URL is the deliverable.
 
 ## 8. Error handling
