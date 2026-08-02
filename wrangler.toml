@@ -6,9 +6,5 @@ compatibility_date = "2026-01-01"
 directory = "./public"
 binding = "ASSETS"
 
-[[kv_namespaces]]
-binding = "BASELINE_KV"
-id = "e1205ab580814cab87a3a86010654195"
-
-[triggers]
-crons = ["*/20 * * * *"]
+# No KV or cron: aggregation now happens in the browser (free-tier CPU cap
+# makes server-side parsing infeasible). The Worker only relays feed XML.

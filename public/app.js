@@ -1,4 +1,7 @@
-const MAX_LEAD_LEN = 120;
+// The Baseline frontend. Fetches raw feeds through the Worker's same-origin relay,
+// parses and scores them in the browser, then lays out the front page.
+import { fetchAllFeeds } from "./lib/feeds.js";
+import { composeStories, dailyStats } from "./lib/pipeline.js";
 
 function el(tag, className, text) {
   const node = document.createElement(tag);
@@ -18,12 +21,17 @@ function spinClass(spin) {
   return { Measured: "spin-measured", Warm: "spin-warm", Hot: "spin-hot", "On Fire": "spin-fire" }[spin] || "spin-measured";
 }
 
+function safeHref(link) {
+  // Only http(s) links may open; anything else is not a story worth following.
+  return /^https?:\/\//i.test(link || "") ? link : "";
+}
+
 function renderStory(story, isLead) {
   const article = el("article", "story");
   if (isLead) article.classList.add("lead");
   const title = el("h2", "story-title");
   const a = el("a");
-  a.href = story.link;
+  a.href = safeHref(story.link);
   a.target = "_blank";
   a.rel = "noopener noreferrer";
   a.textContent = story.title;
@@ -50,7 +58,7 @@ function render(stories) {
   if (!stories.length) {
     const empty = el("div", "empty");
     empty.appendChild(el("div", "kicker", "EXTRA! EXTRA!"));
-    empty.appendChild(el("p", "", "The presses are cold. No stories to report. Our sources may be napping, or the feeds are down. Check back in twenty minutes."));
+    empty.appendChild(el("p", "", "The presses are cold. No stories to report. Our sources may be napping, or the feeds are down. Check back shortly."));
     lead.appendChild(empty);
     return;
   }
@@ -79,26 +87,33 @@ function renderSources(sources) {
   });
 }
 
+function renderOffline() {
+  const lead = document.getElementById("lead-story");
+  lead.innerHTML = "";
+  const empty = el("div", "empty");
+  empty.appendChild(el("div", "kicker", "OFFLINE"));
+  empty.appendChild(el("p", "", "We appear to be between editions. The site is up; the news pipeline is being bashful. Refresh shortly."));
+  lead.appendChild(empty);
+}
+
 async function main() {
   document.getElementById("footer-year").textContent = new Date().getFullYear();
   const dateEl = document.getElementById("masthead-date");
   dateEl.textContent = new Date().toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
 
+  let results;
   try {
-    const res = await fetch("/api/news", { headers: { accept: "application/json" } });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    render(data.stories);
-    renderStats(data.stats);
-    renderSources(data.sources);
+    results = await fetchAllFeeds();
   } catch (err) {
-    const lead = document.getElementById("lead-story");
-    lead.innerHTML = "";
-    const empty = el("div", "empty");
-    empty.appendChild(el("div", "kicker", "OFFLINE"));
-    empty.appendChild(el("p", "", "We appear to be between editions. The site is up; the news pipeline is being bashful. Refresh shortly."));
-    lead.appendChild(empty);
+    renderOffline();
+    renderSources(results || []);
+    return;
   }
+
+  const stories = composeStories(results);
+  render(stories);
+  renderStats(dailyStats(stories));
+  renderSources(results.map((r) => ({ name: r.source, ok: !r.error, error: r.error })));
 }
 
 main();
