@@ -97,7 +97,7 @@ export function parseFeed(xml, sourceName, DOMParserCtor = globalThis.DOMParser)
     .filter((s) => s.title && s.link && !Number.isNaN(Date.parse(s.publishedAt)));
 }
 
-export async function fetchAllFeeds({ base = "" } = {}) {
+export async function fetchAllFeeds({ base = "", DOMParserCtor = globalThis.DOMParser } = {}) {
   let sources = SOURCES;
   try {
     const listRes = await fetch(`${base}/api/feeds`, { signal: AbortSignal.timeout(FEED_TIMEOUT_MS) });
@@ -116,7 +116,7 @@ export async function fetchAllFeeds({ base = "" } = {}) {
         );
         if (!res.ok) return { source: source.name, stories: [], error: `HTTP ${res.status}` };
         const xml = await res.text();
-        const parsed = parseFeed(xml, source.name);
+        const parsed = parseFeed(xml, source.name, DOMParserCtor);
         const stories = [...parsed]
           .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
           .slice(0, MAX_PER_FEED);
