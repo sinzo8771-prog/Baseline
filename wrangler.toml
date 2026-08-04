@@ -3,8 +3,10 @@ main = "src/index.js"
 compatibility_date = "2026-01-01"
 
 [assets]
-directory = "./public"
+directory = "./dist"
 binding = "ASSETS"
+not_found_handling = "single-page-application"
 
-# No KV or cron: aggregation now happens in the browser (free-tier CPU cap
-# makes server-side parsing infeasible). The Worker only relays feed XML.
+# No KV or cron: aggregation happens in the browser (free-tier CPU cap makes
+# server-side parsing infeasible). The Worker relays feed XML and serves the
+# Vite-built React app from ./dist.

@@ -38,6 +38,10 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background: var(--paper);
   color: var(--ink);
@@ -201,7 +205,7 @@ body {
   .filter-chip { padding: 4px 8px; font-size: 10px; }
 }
 
-/* Skeleton placeholders (shadcn-style pulse) */
+/* Skeleton placeholders */
 @keyframes skeleton-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
@@ -237,7 +241,7 @@ body {
 .w-30 { width: 30%; }
 .source-list .skeleton { margin: 0; height: 10px; }
 
-/* Toast (sonner-style) */
+/* Toast */
 .toast-region {
   position: fixed;
   bottom: 24px;
@@ -270,7 +274,6 @@ body {
   color: var(--ink);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
 }
-.toast.out { animation: toast-out 0.2s ease-in forwards; }
 @keyframes toast-in {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
@@ -279,15 +282,39 @@ body {
   to { opacity: 0; transform: translateY(8px); }
 }
 
-/* Focus rings (shadcn-style) */
+/* Focus rings */
 .nav a:focus-visible,
 .story-title a:focus-visible {
   outline: 2px solid var(--vermillion);
   outline-offset: 2px;
 }
 
+/* Canvas UI lens: the wrapper is relative; the source canvas hosts the live
+   DOM and the output canvas overlays it with the WebGL effect. When the
+   experimental API is unavailable the content renders normally (fallback). */
+.glass-lens,
+.ripple-lens {
+  position: relative;
+}
+.glass-lens canvas,
+.ripple-lens canvas {
+  display: block;
+  max-width: 100%;
+}
+
+/* If the lens wraps the whole page, keep the layout stable and let the
+   effect's output canvas sit above but never intercept clicks. */
+.page-lens {
+  min-height: 100%;
+}
+.page-lens .glass-output,
+.page-lens .ripple-output {
+  pointer-events: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .skeleton { animation: none; }
   .meter-fill { transition: none; }
-  .toast, .toast.out { animation: none; }
+  .toast { animation: none; }
+  html { scroll-behavior: auto; }
 }

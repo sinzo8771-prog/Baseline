@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { composeStories, dailyStats } from "../public/lib/pipeline.js";
+import { composeStories, dailyStats } from "../src/lib/pipeline.js";
 
 const results = [
   {

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { normalizeTitle, titleSimilarity, dedupeStories } from "../public/lib/dedupe.js";
+import { normalizeTitle, titleSimilarity, dedupeStories } from "../src/lib/dedupe.js";
 
 test("normalizeTitle lowercases and strips punctuation", () => {
   assert.equal(normalizeTitle("Hello, World!!"), "hello world");

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { scoreHype, spinLabel, spinFromStory } from "../public/lib/hype.js";
+import { scoreHype, spinLabel, spinFromStory } from "../src/lib/hype.js";
 
 test("measured headline scores low", () => {
   const { score, flags } = scoreHype({ title: "Model eval results published", summary: "Benchmark tables and methodology." });

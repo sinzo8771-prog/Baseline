@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DOMParser } from "@xmldom/xmldom";
-import { parseFeed, SOURCES, MAX_PER_FEED, SUMMARY_MAX } from "../public/lib/feeds.js";
+import { parseFeed, SOURCES, MAX_PER_FEED, SUMMARY_MAX } from "../src/lib/feeds.js";
 import { FEEDS } from "../src/index.js";
 
 // DOMParser (class) passed to parseFeed so the same tests run in Node and would run in a browser.
