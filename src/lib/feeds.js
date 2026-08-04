@@ -27,11 +27,34 @@ export const FEED_TIMEOUT_MS = 8000;
 // Different parsers expose that differently: the browser's DOMParser builds child elements
 // (whose textContent flattens the tags away), but some DOM implementations return the raw
 // CDATA string verbatim. Strip any residual tags so summaries are always plain text.
+const NAMED_ENTITIES = {
+  amp: "&",
+  lt: "<",
+  gt: ">",
+  quot: '"',
+  apos: "'",
+  nbsp: "\u00a0",
+};
+
+export function decodeEntities(text) {
+  return String(text).replace(/&(#x[0-9a-fA-F]+|#\d+|amp|lt|gt|quot|apos|nbsp);/g, (match, entity) => {
+    if (entity[0] === "#") {
+      const code = entity[1] === "x" || entity[1] === "X"
+        ? parseInt(entity.slice(2), 16)
+        : parseInt(entity.slice(1), 10);
+      return code > 0 ? String.fromCodePoint(code) : match;
+    }
+    return NAMED_ENTITIES.hasOwnProperty(entity) ? NAMED_ENTITIES[entity] : match;
+  });
+}
+
 export function stripTags(text) {
-  return String(text)
-    .replace(/<!--[\s\S]*?-->/g, "")
-    .replace(/<[^>]+>/g, "")
-    .trim();
+  return decodeEntities(
+    String(text)
+      .replace(/<!--[\s\S]*?-->/g, "")
+      .replace(/<[^>]+>/g, "")
+      .trim(),
+  );
 }
 
 function firstByTag(root, tag) {

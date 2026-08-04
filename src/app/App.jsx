@@ -1,5 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import useBaselineData from "./hooks/useBaselineData.js";
+import useTheme from "./hooks/useTheme.js";
+import exportOPML from "./lib/exportOPML.js";
 import GlassLens from "./components/GlassLens.jsx";
 import RippleLens from "./components/RippleLens.jsx";
 
@@ -106,6 +108,7 @@ function Toast({ message }) {
 
 export default function App() {
   const { stories, stats, sources, offline, loaded } = useBaselineData();
+  const { dark, toggle } = useTheme();
   const [filter, setFilter] = useState("all");
   const [toast, setToast] = useState(null);
 
@@ -119,6 +122,14 @@ export default function App() {
     window.clearTimeout(showToast._t);
     showToast._t = window.setTimeout(() => setToast(null), 3500);
   };
+
+  // Announce the presses rolling once the edition is ready (matches the
+  // original vanilla app.js intro toast).
+  useEffect(() => {
+    if (loaded && !offline && stats && stats.total > 0) {
+      showToast(`The presses are rolling — ${stats.total} stories, ${stats.hypePercent}% hype.`);
+    }
+  }, [loaded, offline, stats]);
 
   // Date + edition
   const now = new Date();
@@ -139,7 +150,7 @@ export default function App() {
           <span id="masthead-edition">No. 1 — Free edition</span>
           <span className="masthead-rule" />
           <span id="masthead-updated">{updatedLabel}</span>
-          <button className="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode" aria-pressed="false">☀</button>
+          <button className="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode" aria-pressed={dark ? "true" : "false"} onClick={toggle}>{dark ? "☀" : "🌙"}</button>
         </div>
         <h1 className="masthead-title">THE BASELINE</h1>
         <p className="masthead-tagline">AI news, hype removed.</p>
@@ -222,7 +233,7 @@ export default function App() {
           <section id="about" className="section">
             <h2 className="section-title">About</h2>
             <p className="about-copy">The Baseline aggregates RSS feeds from the AI industry and its chroniclers, verbatim. We add nothing but a rating, which is already more than some of these stories deserve. No summaries written by models. No clickbait of our own. Headlines as published, spin as detected, hype as measured.</p>
-            <button id="opml-export" className="theme-toggle" style={{ marginTop: 16 }}>Export OPML</button>
+            <button id="opml-export" className="theme-toggle" style={{ marginTop: 16 }} onClick={() => showToast(exportOPML())}>Export OPML</button>
           </section>
         </main>
       </GlassLens>

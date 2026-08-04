@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DOMParser } from "@xmldom/xmldom";
-import { parseFeed, SOURCES, MAX_PER_FEED, SUMMARY_MAX } from "../src/lib/feeds.js";
+import { parseFeed, stripTags, decodeEntities, SOURCES, MAX_PER_FEED, SUMMARY_MAX } from "../src/lib/feeds.js";
 import { FEEDS } from "../src/index.js";
 
 // DOMParser (class) passed to parseFeed so the same tests run in Node and would run in a browser.
@@ -96,4 +96,16 @@ test("parseFeed returns empty array for garbage input", () => {
 test("MAX_PER_FEED bounds client-side dedupe work", () => {
   assert.ok(MAX_PER_FEED >= 20);
   assert.ok(MAX_PER_FEED <= 50);
+});
+
+test("decodeEntities decodes numeric and common named entities", () => {
+  assert.equal(decodeEntities("China&#8217;s Alibaba"), "China’s Alibaba");
+  assert.equal(decodeEntities("A &amp; B &#x27;c&#x27; &lt;x&gt;"), "A & B 'c' <x>");
+  assert.equal(decodeEntities("non&nbsp;breaking"), "non\u00a0breaking");
+  assert.equal(decodeEntities("a &bogus; b"), "a &bogus; b");
+});
+
+test("stripTags decodes entities that survive CDATA", () => {
+  assert.equal(stripTags("China&#8217;s <b>Alibaba</b>"), "China’s Alibaba");
+  assert.equal(stripTags("<p>Para &amp; more</p>"), "Para & more");
 });
