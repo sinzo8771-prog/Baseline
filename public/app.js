@@ -38,7 +38,9 @@ function initTheme() {
 
 function updateThemeToggle(isDark) {
   const btn = document.getElementById("theme-toggle");
-  if (btn) btn.textContent = isDark ? "☀" : "🌙";
+  if (!btn) return;
+  btn.textContent = isDark ? "☀" : "🌙";
+  btn.setAttribute("aria-pressed", isDark ? "true" : "false");
 }
 
 function toggleTheme() {
@@ -52,18 +54,32 @@ function toggleTheme() {
 // Hype filter chips
 let currentFilter = "all";
 let allStories = [];
+const FILTERS = ["all", "Measured", "Warm", "Hot", "On Fire"];
 
 function renderFilterChips() {
   const container = document.getElementById("filter-chips");
   if (!container) return;
   container.innerHTML = "";
-  const filters = ["all", "Measured", "Warm", "Hot", "On Fire"];
-  filters.forEach((f) => {
-    const btn = el("button", "filter-chip" + (f === currentFilter ? " active" : ""), f === "all" ? "All" : f);
+  FILTERS.forEach((f, i) => {
+    const active = f === currentFilter;
+    const btn = el("button", "filter-chip" + (active ? " active" : ""), f === "all" ? "All" : f);
     btn.dataset.filter = f;
+    btn.type = "button";
+    btn.setAttribute("aria-pressed", active ? "true" : "false");
+    btn.tabIndex = active ? 0 : -1;
     btn.addEventListener("click", () => applyFilter(f));
+    btn.addEventListener("keydown", (e) => onChipKeydown(e, i));
     container.appendChild(btn);
   });
+}
+
+function onChipKeydown(e, index) {
+  let next = index;
+  if (e.key === "ArrowRight") next = (index + 1) % FILTERS.length;
+  else if (e.key === "ArrowLeft") next = (index - 1 + FILTERS.length) % FILTERS.length;
+  else return;
+  e.preventDefault();
+  applyFilter(FILTERS[next]);
 }
 
 function applyFilter(filter) {
@@ -71,6 +87,8 @@ function applyFilter(filter) {
   renderFilterChips();
   const filtered = filter === "all" ? allStories : allStories.filter((s) => s.spin === filter);
   render(filtered);
+  const chip = document.querySelector(`#filter-chips [data-filter="${filter}"]`);
+  if (chip) chip.focus();
 }
 
 function renderStory(story, isLead) {
@@ -119,8 +137,34 @@ function renderStats(stats) {
   if (!stats) return;
   const fill = document.getElementById("meter-fill");
   const label = document.getElementById("meter-label");
-  fill.style.width = `${stats.hypePercent}%`;
+  const track = document.getElementById("meter-track");
+  if (track) track.setAttribute("aria-valuenow", String(stats.hypePercent));
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      fill.style.width = `${stats.hypePercent}%`;
+    });
+  });
   label.textContent = `${stats.hypePercent}%`;
+}
+
+// Toast (sonner-style)
+const toastRegion = document.getElementById("toast-region");
+let toastTimer = null;
+
+function showToast(message) {
+  if (!toastRegion) return;
+  const prev = toastRegion.firstChild;
+  if (prev) {
+    prev.classList.add("out");
+    setTimeout(() => prev.remove(), 200);
+  }
+  const toast = el("div", "toast", message);
+  toastRegion.appendChild(toast);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toast.classList.add("out");
+    setTimeout(() => toast.remove(), 200);
+  }, 3500);
 }
 
 function renderSources(sources) {
@@ -188,6 +232,7 @@ function exportOPML() {
   a.download = "the-baseline-sources.opml";
   a.click();
   URL.revokeObjectURL(url);
+  showToast(`OPML exported — ${sources.length} sources, filed and sorted.`);
 }
 
 async function main() {
@@ -211,10 +256,12 @@ async function main() {
   }
 
   const stories = composeStories(results);
+  const stats = dailyStats(stories);
   render(stories);
-  renderStats(dailyStats(stories));
+  renderStats(stats);
   renderSources(results.map((r) => ({ name: r.source, ok: !r.error, error: r.error })));
-  renderUpdated(dailyStats(stories).generatedAt);
+  renderUpdated(stats.generatedAt);
+  showToast(`The presses are rolling — ${stats.total} stories, ${stats.hypePercent}% hype.`);
 }
 
 main();

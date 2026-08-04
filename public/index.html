@@ -19,7 +19,7 @@
       <span id="masthead-edition">No. 1 — Free edition</span>
       <span class="masthead-rule"></span>
       <span id="masthead-updated"></span>
-      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">☀</button>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode" aria-pressed="false">☀</button>
     </div>
     <h1 class="masthead-title">THE BASELINE</h1>
     <p class="masthead-tagline">AI news, hype removed.</p>
@@ -34,16 +34,54 @@
 
   <main>
     <section id="latest" aria-label="Latest stories">
-      <div id="lead-story" class="lead"></div>
+      <div id="lead-story" class="lead">
+        <div class="skeleton sk-kicker"></div>
+        <div class="skeleton sk-title w-90"></div>
+        <div class="skeleton sk-title w-60"></div>
+        <div class="skeleton sk-line w-95"></div>
+        <div class="skeleton sk-line w-75"></div>
+        <div class="skeleton sk-meta w-30"></div>
+      </div>
       <div class="filter-chips" id="filter-chips" role="group" aria-label="Filter by hype level"></div>
-      <div id="grid" class="grid"></div>
+      <div id="grid" class="grid">
+        <article class="story skeleton-card">
+          <div class="skeleton sk-title w-90"></div>
+          <div class="skeleton sk-line w-70"></div>
+          <div class="skeleton sk-meta w-40"></div>
+        </article>
+        <article class="story skeleton-card">
+          <div class="skeleton sk-title w-85"></div>
+          <div class="skeleton sk-line w-65"></div>
+          <div class="skeleton sk-meta w-45"></div>
+        </article>
+        <article class="story skeleton-card">
+          <div class="skeleton sk-title w-80"></div>
+          <div class="skeleton sk-line w-60"></div>
+          <div class="skeleton sk-meta w-35"></div>
+        </article>
+        <article class="story skeleton-card">
+          <div class="skeleton sk-title w-90"></div>
+          <div class="skeleton sk-line w-70"></div>
+          <div class="skeleton sk-meta w-40"></div>
+        </article>
+        <article class="story skeleton-card">
+          <div class="skeleton sk-title w-85"></div>
+          <div class="skeleton sk-line w-65"></div>
+          <div class="skeleton sk-meta w-45"></div>
+        </article>
+        <article class="story skeleton-card">
+          <div class="skeleton sk-title w-80"></div>
+          <div class="skeleton sk-line w-60"></div>
+          <div class="skeleton sk-meta w-35"></div>
+        </article>
+      </div>
     </section>
 
     <section id="hype-index" class="section">
       <h2 class="section-title">The Hype Index</h2>
       <p class="section-note" id="hype-note">Share of today's stories that are, let's say, enthusiastic.</p>
       <div class="meter">
-        <div class="meter-track">
+        <div class="meter-track" id="meter-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Share of today's stories that are enthusiastic">
           <div class="meter-fill" id="meter-fill"></div>
         </div>
         <span class="meter-label" id="meter-label">—</span>
@@ -58,7 +96,18 @@
 
     <section id="sources" class="section">
       <h2 class="section-title">Sources</h2>
-      <ul id="source-list" class="source-list"></ul>
+      <ul id="source-list" class="source-list">
+        <li><div class="skeleton sk-line w-60"></div></li>
+        <li><div class="skeleton sk-line w-45"></div></li>
+        <li><div class="skeleton sk-line w-55"></div></li>
+        <li><div class="skeleton sk-line w-50"></div></li>
+        <li><div class="skeleton sk-line w-65"></div></li>
+        <li><div class="skeleton sk-line w-40"></div></li>
+        <li><div class="skeleton sk-line w-55"></div></li>
+        <li><div class="skeleton sk-line w-60"></div></li>
+        <li><div class="skeleton sk-line w-45"></div></li>
+        <li><div class="skeleton sk-line w-50"></div></li>
+      </ul>
     </section>
 
     <section id="about" class="section">
@@ -71,6 +120,8 @@
   <footer class="footer">
     <p>© <span id="footer-year"></span> The Baseline. Hand-built, not generated. RSS in, judgment out.</p>
   </footer>
+
+  <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 
   <script type="module" src="/app.js"></script>
 </body>
