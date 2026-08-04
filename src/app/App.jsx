@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import useBaselineData from "./hooks/useBaselineData.js";
 import useTheme from "./hooks/useTheme.js";
 import exportOPML from "./lib/exportOPML.js";
 import GlassLens from "./components/GlassLens.jsx";
-import RippleLens from "./components/RippleLens.jsx";
 
 const FILTERS = ["all", "Measured", "Warm", "Hot", "On Fire"];
 
@@ -111,6 +110,7 @@ export default function App() {
   const { dark, toggle } = useTheme();
   const [filter, setFilter] = useState("all");
   const [toast, setToast] = useState(null);
+  const toastTimer = useRef(null);
 
   const filtered = useMemo(
     () => (filter === "all" ? stories : stories.filter((s) => s.spin === filter)),
@@ -119,9 +119,12 @@ export default function App() {
 
   const showToast = (message) => {
     setToast(message);
-    window.clearTimeout(showToast._t);
-    showToast._t = window.setTimeout(() => setToast(null), 3500);
+    window.clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToast(null), 3500);
   };
+
+  // Clean up the toast timer on unmount.
+  useEffect(() => () => window.clearTimeout(toastTimer.current), []);
 
   // Announce the presses rolling once the edition is ready (matches the
   // original vanilla app.js intro toast).
