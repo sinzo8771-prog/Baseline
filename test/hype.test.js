@@ -21,6 +21,16 @@ test("all-caps and exclamations add score", () => {
   assert.ok(score > 0);
 });
 
+test("short words like AGI match on word boundaries, not substrings", () => {
+  // "imaging" and "imagination" contain the letters "agi" but must not trip it.
+  const { score: score1, flags: flags1 } = scoreHype({ title: "New imaging model from OpenAI", summary: "" });
+  assert.equal(flags1.includes('"agi"'), false);
+  assert.equal(score1, 0);
+  const { score: score2, flags: flags2 } = scoreHype({ title: "AGI breakthrough announced", summary: "" });
+  assert.ok(flags2.includes('"agi"'));
+  assert.ok(score2 >= 8);
+});
+
 test("score is capped at 100", () => {
   const long = Array.from({ length: 40 }, (_, i) => `hype${i}`).join(" ");
   const { score } = scoreHype({ title: "Revolutionary AGI singularity breakthrough", summary: long });

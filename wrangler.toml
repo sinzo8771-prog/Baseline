@@ -7,6 +7,13 @@ directory = "./dist"
 binding = "ASSETS"
 not_found_handling = "single-page-application"
 
+# PR preview deployments (see .github/workflows/preview-deploy.yml). A
+# separate worker (the-baseline-preview on baseline-news.workers.dev) so
+# previews never touch production. Top-level config — main, compatibility,
+# and [assets] — is inherited.
+[env.preview]
+name = "the-baseline-preview"
+
 # No KV or cron: aggregation happens in the browser (free-tier CPU cap makes
 # server-side parsing infeasible). The Worker relays feed XML and serves the
 # Vite-built React app from ./dist.

@@ -13,19 +13,31 @@ const EMOTION_WORDS = [
   "terrifying", "scary", "exciting",
 ];
 
+function escapeRegExp(text) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function includesWord(text, word) {
+  // Short tokens like the "AGI" acronym must match on word boundaries, or
+  // "imaging" and "imagination" would falsely trip the flag via substring.
+  return word.length < 5
+    ? new RegExp(`(^|[^a-z0-9])${escapeRegExp(word)}(?=$|[^a-z0-9])`).test(text)
+    : text.includes(word);
+}
+
 export function scoreHype({ title, summary }) {
   const text = `${title} ${summary || ""}`.toLowerCase();
   let score = 0;
   const flags = [];
 
   for (const word of HYPE_WORDS) {
-    if (text.includes(word)) {
+    if (includesWord(text, word)) {
       score += 8;
       flags.push(`"${word}"`);
     }
   }
   for (const word of EMOTION_WORDS) {
-    if (text.includes(word)) {
+    if (includesWord(text, word)) {
       score += 5;
       flags.push(`"${word}"`);
     }

@@ -28,6 +28,9 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Build static assets
+        run: npm run build
+
       - name: Deploy to Cloudflare Workers (preview)
         id: deploy
         uses: cloudflare/wrangler-action@v3

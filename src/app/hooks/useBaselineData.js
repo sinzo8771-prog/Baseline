@@ -15,9 +15,10 @@ export default function useBaselineData() {
     let results;
     try {
       results = await fetchAllFeeds();
-    } catch (err) {
+    } catch {
+      // fetchAllFeeds rarely rejects (it catches per-feed errors), but if it
+      // does the page can still stand up with its default empty state.
       setOffline(true);
-      setSources(results || []);
       setLoaded(true);
       return;
     }
@@ -25,6 +26,10 @@ export default function useBaselineData() {
     setStories(storyList);
     setStats(dailyStats(storyList));
     setSources(results.map((r) => ({ name: r.source, ok: !r.error, error: r.error })));
+    // Every relay failed => the network (or the relay) is down, not just the
+    // feeds napping. This is the only signal that distinguishes "offline"
+    // from a quiet morning, so derive it from the results.
+    setOffline(results.length > 0 && results.every((r) => r.error));
     setLoaded(true);
   }, []);
 

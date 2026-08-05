@@ -189,7 +189,11 @@ export default function App() {
             ) : offline ? (
               <EmptyState kicker="OUT TO LUNCH" text="The site is up, but the network is playing dead. Your browser can do everything except fetch. Try again in a moment." />
             ) : filtered.length === 0 ? (
-              <EmptyState kicker="EXTRA! EXTRA!" text="The presses are cold. No stories to report. Our sources may be napping, or the feeds are down. In this line of work, silence is usually a feature, not a bug. Reload to try again." />
+              stories.length > 0 ? (
+                <EmptyState kicker="NO MATCHES" text={`Nothing filed under "${filter}". Switch back to All to see the full edition.`} />
+              ) : (
+                <EmptyState kicker="EXTRA! EXTRA!" text="The presses are cold. No stories to report. Our sources may be napping, or the feeds are down. In this line of work, silence is usually a feature, not a bug. Reload to try again." />
+              )
             ) : (
               <>
                 <div className="lead">
