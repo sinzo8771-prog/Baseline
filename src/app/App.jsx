@@ -31,7 +31,7 @@ function StoryCard({ story, isLead = false }) {
       </h2>
       {story.summary && isLead ? <p className="story-summary">{story.summary}</p> : null}
       <div className="story-meta">
-        <span className={spinClass(story.spin)}>{story.spin}</span>
+        <span className={"spin " + spinClass(story.spin)}>{story.spin}</span>
         <span>{story.source} — {fmtDate(story.publishedAt)}</span>
       </div>
     </article>
