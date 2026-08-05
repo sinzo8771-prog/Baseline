@@ -3,10 +3,10 @@
 // Cloudflare's free tier enforces a sub-millisecond CPU budget per invocation, so no
 // server-side RSS parsing or aggregation can run here. The Worker instead does two
 // trivially-cheap jobs:
-//   1. serve the static frontend from ./public (the browser does all parsing/scoring),
+//   1. serve the static frontend from ./dist (the browser does all parsing/scoring),
 //   2. relay feed XML from an allowlisted set of sources to the browser (pure I/O).
 //
-// Feed URLs must stay in sync with `SOURCES` in public/lib/feeds.js; a unit test
+// Feed URLs must stay in sync with `SOURCES` in src/lib/feeds.js; a unit test
 // (test/feeds.test.js) guards against drift.
 
 export const FEEDS = {
@@ -22,7 +22,9 @@ export const FEEDS = {
   "Wired AI": "https://www.wired.com/feed/tag/ai/latest/rss",
 };
 
-const UPSTREAM_TIMEOUT_MS = 10000;
+// Must stay at or below the browser-side FEED_TIMEOUT_MS (src/lib/feeds.js), or the
+// relay holds upstream connections the browser has already abandoned.
+const UPSTREAM_TIMEOUT_MS = 8000;
 const USER_AGENT = "TheBaseline/1.0 (+https://the-baseline.baseline-news.workers.dev)";
 
 export default {

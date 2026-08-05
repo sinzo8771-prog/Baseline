@@ -26,7 +26,11 @@ export default function exportOPML() {
   const a = document.createElement("a");
   a.href = url;
   a.download = "the-baseline-sources.opml";
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
+  a.remove();
+  // Revoke on a later tick: some browsers (Firefox) abort the download if the
+  // object URL is revoked before the browser has started reading it.
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
   return `OPML exported — ${sources.length} sources, filed and sorted.`;
 }

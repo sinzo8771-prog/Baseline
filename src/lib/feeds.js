@@ -42,7 +42,7 @@ export function decodeEntities(text) {
       const code = entity[1] === "x" || entity[1] === "X"
         ? parseInt(entity.slice(2), 16)
         : parseInt(entity.slice(1), 10);
-      return code > 0 ? String.fromCodePoint(code) : match;
+      return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : match;
     }
     return NAMED_ENTITIES.hasOwnProperty(entity) ? NAMED_ENTITIES[entity] : match;
   });

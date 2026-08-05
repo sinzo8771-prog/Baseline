@@ -85,8 +85,8 @@ overlay canvas. When the experimental HTML-in-canvas API is unavailable, the
 component falls back to plain rendering — content is never hidden. It also
 self-respects `prefers-reduced-motion`.
 
-The lens components live in `src/components/canvasui/` and the React wrappers
-in `src/app/components/` (`GlassLens.jsx`, `RippleLens.jsx`).
+The lens component lives in `src/components/canvasui/` and the React wrapper
+in `src/app/components/` (`GlassLens.jsx`).
 
 ## Adding or changing sources
 

@@ -105,6 +105,11 @@ test("decodeEntities decodes numeric and common named entities", () => {
   assert.equal(decodeEntities("a &bogus; b"), "a &bogus; b");
 });
 
+test("decodeEntities never throws on out-of-range numeric entities", () => {
+  assert.equal(decodeEntities("a &#99999999; b &amp; c"), "a &#99999999; b & c");
+  assert.equal(decodeEntities("&#x110000;"), "&#x110000;");
+});
+
 test("stripTags decodes entities that survive CDATA", () => {
   assert.equal(stripTags("China&#8217;s <b>Alibaba</b>"), "China’s Alibaba");
   assert.equal(stripTags("<p>Para &amp; more</p>"), "Para & more");

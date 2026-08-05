@@ -41,11 +41,11 @@ jobs:
           workingDirectory: .
 
       - name: Comment preview URL on PR
-        if: steps.deploy.outputs.url != ''
+        if: steps.deploy.outputs.deployment-url != ''
         uses: actions/github-script@v7
         with:
           script: |
-            const url = '${{ steps.deploy.outputs.url }}';
+            const url = '${{ steps.deploy.outputs.deployment-url }}';
             const body = `## 🚀 Preview Deployment Ready\n\nThe Baseline preview is live at: [${url}](${url})\n\n_This preview updates on every push to this PR._`;
             github.rest.issues.createComment({
               issue_number: context.issue.number,

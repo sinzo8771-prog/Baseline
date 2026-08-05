@@ -38,7 +38,6 @@ export default function GlassLens({
   const contentRef = useRef(null);
   const outputRef = useRef(null);
   const instanceRef = useRef(null);
-  const [initialOptions] = useState({});
   const [failed, setFailed] = useState(false);
 
   const supported = useSyncExternalStore(

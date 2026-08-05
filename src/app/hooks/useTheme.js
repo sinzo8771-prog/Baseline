@@ -15,8 +15,6 @@ export default function useTheme() {
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
     window.localStorage.setItem(THEME_KEY, dark ? "dark" : "light");
-    const btn = document.getElementById("theme-toggle");
-    if (btn) btn.setAttribute("aria-pressed", dark ? "true" : "false");
   }, [dark]);
 
   return { dark, toggle: () => setDark((v) => !v) };

@@ -31,7 +31,7 @@ function StoryCard({ story, isLead = false }) {
       </h2>
       {story.summary && isLead ? <p className="story-summary">{story.summary}</p> : null}
       <div className="story-meta">
-        <span className={"spin " + spinClass(story.spin)}>{story.spin}</span>
+        <span className={"spin " + spinClass(story.spin)} title={story.flags?.length ? story.flags.join(", ") : "no hype signals"}>{story.spin}</span>
         <span>{story.source} — {fmtDate(story.publishedAt)}</span>
       </div>
     </article>
@@ -234,7 +234,7 @@ export default function App() {
 
           <section id="sources" className="section">
             <h2 className="section-title">Sources</h2>
-            {loaded && !offline ? <SourceList sources={sources} /> : null}
+            {loaded ? <SourceList sources={sources} /> : null}
           </section>
 
           <section id="about" className="section">
