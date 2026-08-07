@@ -98,6 +98,9 @@ body {
     text-wrap: balance;
   }
 
+  .masthead-link { color: inherit; text-decoration: none; }
+  .masthead-link:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 2px; }
+
   .masthead-tagline {
     font-family: Fraunces, Georgia, serif;
     font-style: italic;
@@ -147,6 +150,7 @@ body {
 
   .nav a { color: var(--ink); text-decoration: none; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; }
   .nav a:hover { text-decoration: underline; }
+  .nav a.active { text-decoration: underline; text-underline-offset: 4px; }
   .nav a:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 2px; }
 
   .section { margin-top: 56px; padding-top: 24px; border-top: 3px solid var(--rule); }

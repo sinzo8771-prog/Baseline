@@ -3,3 +3,7 @@ node_modules/
 .dev.vars/
 *.log
 dist/ 
+
+# Tool-generated artifacts (agent harnesses, browser screenshots)
+.claude/autoharness/
+.playwright-mcp/
