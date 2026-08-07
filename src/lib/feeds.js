@@ -21,7 +21,13 @@ export const SOURCES = [
 // bounds the client-side dedupe (O(n^2)) without missing anything that would make the cut.
 export const MAX_PER_FEED = 40;
 export const SUMMARY_MAX = 500;
-export const FEED_TIMEOUT_MS = 8000;
+// Per-feed fetch cap. Streaming (onPartial) already lets the edition render as
+// feeds land, so this only bounds how long a single hung feed can delay the
+// final tally — not first paint.
+export const FEED_TIMEOUT_MS = 6000;
+// The /api/feeds source list should answer fast; a stale list is a fallback
+// prompt, not a reason to block the whole page.
+export const SOURCE_LIST_TIMEOUT_MS = 4000;
 
 // XML payloads often bury HTML inside CDATA (e.g. <description><![CDATA[<p>...<b>...</p>]]>).
 // Different parsers expose that differently: the browser's DOMParser builds child elements
@@ -120,18 +126,19 @@ export function parseFeed(xml, sourceName, DOMParserCtor = globalThis.DOMParser)
     .filter((s) => s.title && s.link && !Number.isNaN(Date.parse(s.publishedAt)));
 }
 
-export async function fetchAllFeeds({ base = "", DOMParserCtor = globalThis.DOMParser } = {}) {
+export async function fetchAllFeeds({ base = "", DOMParserCtor = globalThis.DOMParser, onPartial = null } = {}) {
   let sources = SOURCES;
   try {
-    const listRes = await fetch(`${base}/api/feeds`, { signal: AbortSignal.timeout(FEED_TIMEOUT_MS) });
+    const listRes = await fetch(`${base}/api/feeds`, { signal: AbortSignal.timeout(SOURCE_LIST_TIMEOUT_MS) });
     const list = await listRes.json();
     if (Array.isArray(list.sources)) sources = list.sources;
   } catch {
     // Fall back to the bundled list if the API is unreachable.
   }
 
-  return Promise.all(
-    sources.map(async (source) => {
+  const tasks = sources.map((source) => ({
+    name: source.name,
+    promise: (async () => {
       try {
         const res = await fetch(
           `${base}/api/feed?name=${encodeURIComponent(source.name)}`,
@@ -147,6 +154,23 @@ export async function fetchAllFeeds({ base = "", DOMParserCtor = globalThis.DOMP
       } catch (err) {
         return { source: source.name, stories: [], error: String(err?.message ?? err) };
       }
-    }),
-  );
+    })(),
+  }));
+
+  if (!onPartial) return Promise.all(tasks.map((t) => t.promise));
+
+  // Streaming mode: resolve results in completion order and hand each growing
+  // set to onPartial so the page can render a rolling edition instead of
+  // waiting for the slowest feed. Final return value equals Promise.all.
+  const results = [];
+  let remaining = tasks;
+  while (remaining.length > 0) {
+    const settled = await Promise.race(
+      remaining.map((t) => t.promise.then((value) => ({ name: t.name, value }))),
+    );
+    remaining = remaining.filter((t) => t.name !== settled.name);
+    results.push(settled.value);
+    onPartial([...results]);
+  }
+  return results;
 }

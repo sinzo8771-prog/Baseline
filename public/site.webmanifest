@@ -1,0 +1,13 @@
+{
+  "name": "The Baseline — AI news, hype removed",
+  "short_name": "The Baseline",
+  "description": "A daily RSS edition from the AI industry and its chroniclers. Headlines as published, spin as detected, hype as measured.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4efe4",
+  "theme_color": "#1c1a16",
+  "icons": [
+    { "src": "/favicon-32.png", "sizes": "32x32", "type": "image/png" },
+    { "src": "/favicon-16.png", "sizes": "16x16", "type": "image/png" }
+  ]
+}

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MotionConfig } from "framer-motion";
+import { Sun, Moon } from "lucide-react";
 import useBaselineData from "./hooks/useBaselineData.js";
 import useTheme from "./hooks/useTheme.js";
 import exportOPML from "./lib/exportOPML.js";
@@ -71,10 +72,21 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
 
+  // The printed edition is capped at 25 stories (1 lead + 24 in the grid).
+  // Everything downstream — filters, chip counts, and the feed itself —
+  // operates on this same capped set so the numbers always match the cards.
+  const edition = useMemo(() => stories.slice(0, 25), [stories]);
+
   const filtered = useMemo(
-    () => (filter === "all" ? stories : stories.filter((s) => s.spin === filter)),
-    [stories, filter],
+    () => (filter === "all" ? edition : edition.filter((s) => s.spin === filter)),
+    [edition, filter],
   );
+
+  const counts = useMemo(() => {
+    const c = { all: edition.length };
+    for (const f of FILTERS) if (f !== "all") c[f] = edition.filter((s) => s.spin === f).length;
+    return c;
+  }, [edition]);
 
   const showToast = (message) => {
     setToast(message);
@@ -86,12 +98,13 @@ export default function App() {
   useEffect(() => () => window.clearTimeout(toastTimer.current), []);
 
   // Announce the presses rolling once the edition is ready (matches the
-  // original vanilla app.js intro toast).
+  // original vanilla app.js intro toast). Uses the printed edition size so
+  // the claim matches the cards on screen.
   useEffect(() => {
-    if (loaded && !offline && stats && stats.total > 0) {
-      showToast(`The presses are rolling — ${stats.total} stories, ${stats.hypePercent}% hype.`);
+    if (loaded && !offline && stats && edition.length > 0) {
+      showToast(`The presses are rolling — ${edition.length} stories, ${stats.hypePercent}% hype.`);
     }
-  }, [loaded, offline, stats]);
+  }, [loaded, offline, stats, edition]);
 
   // Date + edition
   const now = new Date();
@@ -109,7 +122,7 @@ export default function App() {
           <span id="masthead-edition">No. 1 — Free edition</span>
           <span className="masthead-rule" />
           <span id="masthead-updated">{updatedLabel}</span>
-          <button className="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode" aria-pressed={dark ? "true" : "false"} onClick={toggle}>{dark ? "☀" : "🌙"}</button>
+          <button className="theme-toggle" id="theme-toggle" aria-label={dark ? "Switch to light mode" : "Switch to dark mode"} title={dark ? "Switch to light mode" : "Switch to dark mode"} aria-pressed={dark ? "true" : "false"} onClick={toggle}>{dark ? <Sun className="size-4" aria-hidden="true" /> : <Moon className="size-4" aria-hidden="true" />}</button>
         </div>
         <h1 className="masthead-title">THE BASELINE</h1>
         <p className="masthead-tagline">AI news, hype removed.</p>
@@ -141,10 +154,23 @@ export default function App() {
               <EmptyState kicker="OUT TO LUNCH" text="The site is up, but the network is playing dead. Your browser can do everything except fetch. Try again in a moment." />
             ) : (
               <>
+                <div
+                  className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[10px] uppercase tracking-[0.08em] text-muted-foreground"
+                  role="group"
+                  aria-label="The spin scale"
+                >
+                  <span className="font-semibold text-foreground">The spin scale</span>
+                  {FILTERS.filter((f) => f !== "all").map((f) => (
+                    <span key={f} className="inline-flex items-center gap-1.5">
+                      <SpinBadge spin={f} />
+                    </span>
+                  ))}
+                </div>
                 <SelectorChips
                   className="mb-6"
                   options={FILTERS}
                   value={filter}
+                  counts={counts}
                   onChange={setFilter}
                 />
                 {stories.length === 0 ? (
@@ -162,9 +188,6 @@ export default function App() {
             <h2 className="section-title">The Hype Index</h2>
             <p className="section-note">Share of today's stories that are, let's say, enthusiastic.</p>
             {loaded && !offline && stats ? <HypeMeter percent={stats.hypePercent} className="mb-5" /> : <div className="h-6 w-60 animate-pulse rounded bg-muted" />}
-            <div className="spin-legend">
-              {FILTERS.filter((f) => f !== "all").map((f) => <SpinBadge key={f} spin={f} />)}
-            </div>
           </section>
 
           <section id="sources" className="section">
@@ -175,7 +198,7 @@ export default function App() {
           <section id="about" className="section">
             <h2 className="section-title">About</h2>
             <p className="about-copy">The Baseline aggregates RSS feeds from the AI industry and its chroniclers, verbatim. We add nothing but a rating, which is already more than some of these stories deserve. No summaries written by models. No clickbait of our own. Headlines as published, spin as detected, hype as measured.</p>
-            <button id="opml-export" className="theme-toggle" style={{ marginTop: 16 }} onClick={() => showToast(exportOPML())}>Export OPML</button>
+            <button id="opml-export" className="btn-outline" style={{ marginTop: 16 }} onClick={() => showToast(exportOPML())}>Export OPML</button>
           </section>
         </main>
 

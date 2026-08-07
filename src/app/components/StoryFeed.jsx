@@ -43,25 +43,23 @@ function CardShell({ story, isLead = false, onOpen }) {
       whileHover={{ y: -2 }}
       transition={{ type: "spring", stiffness: 400, damping: 30 }}
       className={cn(
-        "group block w-full rounded-md border border-border/70 bg-card p-5 text-left transition-colors duration-150",
-        "hover:border-primary/50 hover:bg-accent/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-        isLead && "mb-8 border-border/80 p-6 sm:p-8",
+        "group block w-full rounded-md border border-border/70 bg-card p-5 text-left transition-colors duration-150 sm:p-6",
+        "hover:border-primary/50 hover:bg-accent/40 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+        isLead && "mb-10 border-t-2 border-border/80 p-6 sm:p-8",
       )}
+      style={isLead ? { borderTopColor: "var(--vermillion)" } : undefined}
     >
-      {isLead ? (
-        <div className="mb-3 font-sans text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Lead story</div>
-      ) : null}
       <Meta story={story} />
       <h2
         className={cn(
-          "mt-3 font-serif font-bold leading-tight text-foreground",
+          "mt-3 font-serif font-bold leading-snug tracking-[-0.01em] text-foreground",
           isLead ? "text-3xl sm:text-4xl" : "text-lg sm:text-xl",
         )}
       >
         {story.title}
       </h2>
       {isLead && story.summary ? (
-        <p className="mt-3 max-w-[60ch] text-sm leading-relaxed text-muted-foreground">{story.summary}</p>
+        <p className="mt-3 max-w-[60ch] text-[15px] leading-relaxed text-muted-foreground">{story.summary}</p>
       ) : null}
       <span className="mt-3 inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.08em] text-primary opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
         Read <ExternalLink className="size-3" aria-hidden="true" />
@@ -72,11 +70,35 @@ function CardShell({ story, isLead = false, onOpen }) {
 
 function StoryModal({ story, onClose }) {
   const closeRef = useRef(null);
+  const dialogRef = useRef(null);
 
   useEffect(() => {
     closeRef.current?.focus();
+    const dialog = dialogRef.current;
     const onKey = (e) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      // Focus trap: keep Tab cycling inside the dialog so keyboard users never
+      // reach the page behind it (aria-modal is a hint, not a mechanism).
+      const focusables = [
+        ...dialog.querySelectorAll('a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])'),
+      ].filter((el) => el.offsetParent !== null || el === document.activeElement);
+      if (focusables.length === 0) {
+        e.preventDefault();
+        return;
+      }
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
@@ -92,6 +114,7 @@ function StoryModal({ story, onClose }) {
         onClick={onClose}
       />
       <motion.div
+        ref={dialogRef}
         layoutId={`story-${story.id}`}
         role="dialog"
         aria-modal="true"
@@ -159,13 +182,17 @@ export default function StoryFeed({ stories }) {
   };
   const close = () => setSelectedId(null);
 
-  const lead = stories[0];
-  const grid = stories.slice(1, 25);
+  // A single filtered story is just a card — promoting it to the 4xl lead
+  // slot when it's the whole result looks absurd. Lead treatment only earns
+  // its weight above a 2-card edition.
+  const showLead = stories.length > 1;
+  const lead = showLead ? stories[0] : null;
+  const grid = showLead ? stories.slice(1) : stories;
 
   return (
     <div>
       {lead ? <CardShell story={lead} isLead onOpen={() => open(lead)} /> : null}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:gap-6">
         {grid.map((story) =>
           selectedId === story.id ? null : <CardShell key={story.id} story={story} onOpen={() => open(story)} />,
         )}
