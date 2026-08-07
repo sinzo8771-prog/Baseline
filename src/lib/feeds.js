@@ -55,12 +55,19 @@ export function decodeEntities(text) {
 }
 
 export function stripTags(text) {
-  return decodeEntities(
-    String(text)
-      .replace(/<!--[\s\S]*?-->/g, "")
-      .replace(/<[^>]+>/g, "")
-      .trim(),
-  );
+  const input = String(text);
+
+  if (typeof globalThis.DOMParser === "function") {
+    const parser = new globalThis.DOMParser();
+    const doc = parser.parseFromString(input, "text/html");
+    const plain = (doc && doc.body && typeof doc.body.textContent === "string")
+      ? doc.body.textContent
+      : input;
+    return decodeEntities(plain.trim());
+  }
+
+  const plain = input.replace(/<|>/g, "");
+  return decodeEntities(plain.trim());
 }
 
 function firstByTag(root, tag) {
