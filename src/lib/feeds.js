@@ -56,17 +56,7 @@ export function decodeEntities(text) {
 
 export function stripTags(text) {
   const input = String(text);
-
-  if (typeof globalThis.DOMParser === "function") {
-    const parser = new globalThis.DOMParser();
-    const doc = parser.parseFromString(input, "text/html");
-    const plain = (doc && doc.body && typeof doc.body.textContent === "string")
-      ? doc.body.textContent
-      : input;
-    return decodeEntities(plain.trim());
-  }
-
-  const plain = input.replace(/<|>/g, "");
+  const plain = input.replace(/<[^>]*>/g, "");
   return decodeEntities(plain.trim());
 }
 
