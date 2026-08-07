@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Link, NavLink, Route, Routes, useLocation } from "react-router-dom";
-import { MotionConfig } from "framer-motion";
+import { LazyMotion, MotionConfig, domAnimation } from "framer-motion";
 import { Sun, Moon } from "lucide-react";
 import useBaselineData from "./hooks/useBaselineData.js";
 import useTheme from "./hooks/useTheme.js";
@@ -102,43 +102,45 @@ export default function App() {
     : "";
 
   return (
-    <MotionConfig reducedMotion="user">
-      <ScrollToTop />
-      <header className="masthead">
-        <MastheadMeta dateLabel={dateLabel} updatedLabel={updatedLabel} />
-        <h1 className="masthead-title">
-          <Link to="/" className="masthead-link">THE BASELINE</Link>
-        </h1>
-        <p className="masthead-tagline">AI news, hype removed.</p>
-      </header>
+    <LazyMotion features={domAnimation} strict>
+      <MotionConfig reducedMotion="user">
+        <ScrollToTop />
+        <header className="masthead">
+          <MastheadMeta dateLabel={dateLabel} updatedLabel={updatedLabel} />
+          <h1 className="masthead-title">
+            <Link to="/" className="masthead-link">THE BASELINE</Link>
+          </h1>
+          <p className="masthead-tagline">AI news, hype removed.</p>
+        </header>
 
-      <nav className="nav" aria-label="Primary">
-        {NAV_LINKS.map(({ to, label }) => (
-          <NavLink key={to} to={to} end={to === "/"} className={({ isActive }) => (isActive ? "active" : undefined)}>
-            {label}
-          </NavLink>
-        ))}
-      </nav>
+        <nav className="nav" aria-label="Primary">
+          {NAV_LINKS.map(({ to, label }) => (
+            <NavLink key={to} to={to} end={to === "/"} className={({ isActive }) => (isActive ? "active" : undefined)}>
+              {label}
+            </NavLink>
+          ))}
+        </nav>
 
-      <main>
-        <Suspense fallback={<RouteFallback />}>
-          <Routes>
-            <Route path="/" element={<Home stories={stories} offline={offline} loaded={loaded} />} />
-            <Route path="/hype-index" element={<HypeIndex stats={stats} loaded={loaded} offline={offline} />} />
-            <Route path="/sources" element={<Sources sources={sources} loaded={loaded} />} />
-            <Route path="/about" element={<About showToast={showToast} />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
-      </main>
+        <main>
+          <Suspense fallback={<RouteFallback />}>
+            <Routes>
+              <Route path="/" element={<Home stories={stories} offline={offline} loaded={loaded} />} />
+              <Route path="/hype-index" element={<HypeIndex stats={stats} loaded={loaded} offline={offline} />} />
+              <Route path="/sources" element={<Sources sources={sources} loaded={loaded} />} />
+              <Route path="/about" element={<About showToast={showToast} />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </main>
 
-      <footer className="footer">
-        <p>© {now.getFullYear()} The Baseline. Hand-built, not generated. RSS in, judgment out.</p>
-      </footer>
+        <footer className="footer">
+          <p>© {now.getFullYear()} The Baseline. Hand-built, not generated. RSS in, judgment out.</p>
+        </footer>
 
-      <div id="toast-region" className="toast-region" aria-live="polite" aria-atomic="true">
-        {toast ? <Toast message={toast} /> : null}
-      </div>
-    </MotionConfig>
+        <div id="toast-region" className="toast-region" aria-live="polite" aria-atomic="true">
+          {toast ? <Toast message={toast} /> : null}
+        </div>
+      </MotionConfig>
+    </LazyMotion>
   );
 }

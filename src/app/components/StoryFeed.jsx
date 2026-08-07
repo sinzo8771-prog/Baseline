@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { ExternalLink, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import SpinBadge from "./SpinBadge.jsx";
@@ -35,7 +35,7 @@ function Meta({ story }) {
 
 function CardShell({ story, isLead = false, onOpen }) {
   return (
-    <motion.button
+    <m.button
       layoutId={`story-${story.id}`}
       type="button"
       onClick={onOpen}
@@ -64,7 +64,7 @@ function CardShell({ story, isLead = false, onOpen }) {
       <span className="mt-3 inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.08em] text-primary opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
         Read <ExternalLink className="size-3" aria-hidden="true" />
       </span>
-    </motion.button>
+    </m.button>
   );
 }
 
@@ -106,14 +106,14 @@ function StoryModal({ story, onClose }) {
 
   return (
     <>
-      <motion.div
+      <m.div
         className="fixed inset-0 z-40 bg-background/85 backdrop-blur-sm"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
       />
-      <motion.div
+      <m.div
         ref={dialogRef}
         layoutId={`story-${story.id}`}
         role="dialog"
@@ -155,7 +155,7 @@ function StoryModal({ story, onClose }) {
             </a>
           </div>
         </div>
-      </motion.div>
+      </m.div>
     </>
   );
 }

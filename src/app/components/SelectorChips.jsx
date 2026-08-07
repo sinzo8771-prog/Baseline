@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 // Animated selector chips with a shared sliding active pill (framer-motion
@@ -34,7 +34,7 @@ export default function SelectorChips({ options, value, onChange, counts, classN
             )}
           >
             {active && (
-              <motion.span
+              <m.span
                 layoutId="filter-pill"
                 className="absolute inset-0 rounded-full bg-primary"
                 transition={{ type: "spring", stiffness: 400, damping: 32 }}
