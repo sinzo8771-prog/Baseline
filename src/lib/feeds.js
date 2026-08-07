@@ -55,12 +55,17 @@ export function decodeEntities(text) {
 }
 
 export function stripTags(text) {
-  return decodeEntities(
-    String(text)
+  let current = String(text);
+  let previous;
+
+  do {
+    previous = current;
+    current = current
       .replace(/<!--[\s\S]*?-->/g, "")
-      .replace(/<[^>]+>/g, "")
-      .trim(),
-  );
+      .replace(/<[^>]+>/g, "");
+  } while (current !== previous);
+
+  return decodeEntities(current.trim());
 }
 
 function firstByTag(root, tag) {
