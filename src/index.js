@@ -74,7 +74,7 @@ async function relayFeed(name) {
       status: 200,
       headers: {
         "content-type": "text/xml; charset=utf-8",
-        "access-control-allow-origin": "*",
+        "access-control-allow-origin": originOf(request),
         "cache-control": "public, max-age=300, stale-while-revalidate=600",
       },
     });
@@ -91,4 +91,14 @@ function json(obj, status = 200, headers = {}) {
     status,
     headers: { "content-type": "application/json; charset=utf-8", ...headers },
   });
+}
+
+// The browser calls /api/feed same-origin, so a wildcard ACAO only helps
+// third parties turn this Worker into a free open proxy for the 10 feeds.
+// Echo the requesting origin only when it matches this Worker's own origin;
+// anything else gets no CORS header and is blocked by the browser.
+function originOf(request) {
+  const self = new URL(request.url).origin;
+  const incoming = request.headers.get("origin");
+  return incoming && new URL(incoming).origin === self ? incoming : self;
 }

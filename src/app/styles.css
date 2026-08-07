@@ -188,6 +188,16 @@ body {
   .empty .kicker { font-family: Fraunces, Georgia, serif; font-weight: 900; font-size: 40px; }
   .empty p { color: var(--ink-soft); margin-top: 8px; }
 
+  .spin-badge { line-height: 1; }
+  .spin-reason > summary { list-style: none; }
+  .spin-reason > summary::-webkit-details-marker { display: none; }
+  .spin-reason[open] > summary { background: var(--accent, var(--paper-dim)); color: var(--ink); }
+  .spin-reason > span {
+    /* Hidden until opened; works without hover and is keyboard reachable. */
+    display: none;
+  }
+  .spin-reason[open] > span { display: block; }
+
   .toast-region {
     position: fixed;
     bottom: 24px;

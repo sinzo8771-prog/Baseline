@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import StoryFeed from "../components/StoryFeed.jsx";
 import SelectorChips from "../components/SelectorChips.jsx";
 import SpinBadge from "../components/SpinBadge.jsx";
+import EmptyState from "../components/EmptyState.jsx";
 
 const FILTERS = ["all", "Measured", "Warm", "Hot", "On Fire"];
 
@@ -23,15 +24,6 @@ function LeadSkeleton() {
       <div className="mt-3 h-8 w-6/12 animate-pulse rounded bg-muted" />
       <div className="mt-4 h-4 w-full animate-pulse rounded bg-muted" />
       <div className="mt-2 h-4 w-7/12 animate-pulse rounded bg-muted" />
-    </div>
-  );
-}
-
-function EmptyState({ kicker, text }) {
-  return (
-    <div className="empty">
-      <div className="kicker">{kicker}</div>
-      <p>{text}</p>
     </div>
   );
 }

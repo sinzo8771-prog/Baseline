@@ -4,9 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>The Baseline — AI news, hype removed.</title>
+  <link rel="canonical" href="https://the-baseline.baseline-news.workers.dev/" />
   <meta name="description" content="A daily RSS edition from the AI industry and its chroniclers. Headlines as published, spin as detected, hype as measured." />
   <meta name="theme-color" content="#f4efe4" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#1c1a16" media="(prefers-color-scheme: dark)" />
+  <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" href="/favicon-32.png" sizes="32x32" />
   <link rel="icon" href="/favicon-16.png" sizes="16x16" />
   <link rel="manifest" href="/site.webmanifest" />
@@ -34,8 +36,21 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
-</head>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+    <script>
+      // Set the theme synchronously before the app mounts to avoid a flash of
+      // the wrong theme for users who picked a theme opposite their OS default.
+      (function () {
+        try {
+          var t = localStorage.getItem("baseline-theme");
+          if (t !== "light" && t !== "dark") {
+            t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+          }
+          document.documentElement.setAttribute("data-theme", t);
+        } catch (e) {}
+      })();
+    </script>
+  </head>
 <body>
   <div id="root"></div>
   <script type="module" src="/src/main.jsx"></script>

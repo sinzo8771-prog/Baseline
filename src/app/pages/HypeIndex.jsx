@@ -1,4 +1,5 @@
 import HypeMeter from "../components/HypeMeter.jsx";
+import EmptyState from "../components/EmptyState.jsx";
 
 export default function HypeIndex({ stats, loaded, offline }) {
   return (
@@ -12,6 +13,8 @@ export default function HypeIndex({ stats, loaded, offline }) {
             {stats.bySpin.Measured} Measured · {stats.bySpin.Warm} Warm · {stats.bySpin.Hot} Hot · {stats.bySpin["On Fire"]} On Fire
           </p>
         </>
+      ) : offline ? (
+        <EmptyState kicker="OUT TO LUNCH" text="The site is up, but the network is playing dead. Your browser can do everything except fetch. Try again in a moment." />
       ) : (
         <div className="h-6 w-60 animate-pulse rounded bg-muted" />
       )}
