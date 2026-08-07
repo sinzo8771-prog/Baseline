@@ -55,17 +55,19 @@ export function decodeEntities(text) {
 }
 
 export function stripTags(text) {
-  let current = String(text);
-  let previous;
+  const input = String(text);
 
-  do {
-    previous = current;
-    current = current
-      .replace(/<!--[\s\S]*?-->/g, "")
-      .replace(/<[^>]+>/g, "");
-  } while (current !== previous);
+  if (typeof globalThis.DOMParser === "function") {
+    const parser = new globalThis.DOMParser();
+    const doc = parser.parseFromString(input, "text/html");
+    const plain = (doc && doc.body && typeof doc.body.textContent === "string")
+      ? doc.body.textContent
+      : input;
+    return decodeEntities(plain.trim());
+  }
 
-  return decodeEntities(current.trim());
+  const plain = input.replace(/<|>/g, "");
+  return decodeEntities(plain.trim());
 }
 
 function firstByTag(root, tag) {
