@@ -35,11 +35,29 @@ This site runs on Cloudflare's free tier, which enforces a sub-millisecond CPU b
 - **Worker** (`src/index.js`): serves the built React app from `dist/` and relays feed XML from an allowlisted set of sources. Pure I/O, trivial CPU.
 - **Browser**: fetches each feed through the Worker, parses it with the native `DOMParser`, scores hype, dedupes, and renders the front page. Fresh on every load.
 
-```
-Browser ── /api/feed?name=… ──► Worker ──► upstream RSS (allowlist)
-   ▲                                   │
-   └───────── XML / DOMParser ─────────┘
-        parse → score → dedupe → render
+```mermaid
+flowchart LR
+    subgraph Browser["Browser"]
+        A["React app (dist/)"]
+        C["DOMParser + hype scoring"]
+    end
+    subgraph Worker["Cloudflare Worker"]
+        W["/api/feed relay"]
+    end
+    subgraph Upstream["Upstream RSS (allowlist)"]
+        F1["OpenAI"]
+        F2["Anthropic"]
+        F3["Google DeepMind"]
+        F4["Hugging Face"]
+        F5["The Verge AI"]
+        F6["…more"]
+    end
+
+    A -- "GET /api/feed?name=…" --> W
+    W -- "fetch XML" --> F1 & F2 & F3 & F4 & F5 & F6
+    F1 & F2 & F3 & F4 & F5 & F6 -- "XML" --> W
+    W -- "relay XML" --> C
+    C -- "parse → score → dedupe" --> A
 ```
 
 ## Local development
@@ -130,3 +148,15 @@ Edit the `SOURCES` array in `src/lib/feeds.js` **and** the `FEEDS` map in `src/i
 ## Hype scoring
 
 Heuristics live in `src/lib/hype.js`: hype words, emotion words, ALL CAPS, exclamation marks, emoji, and number-bragging. Score maps to Measured / Warm / Hot / On Fire. It is a detector, not a judge. Mostly.
+
+```mermaid
+flowchart LR
+    S["story headline"] --> H{"hype signals?"}
+    H -- "hype words / ALL CAPS / ! / emoji / big numbers" --> P["score"]
+    P --> M["Measured"]
+    P --> W["Warm"]
+    P --> H2["Hot"]
+    P --> F["On Fire"]
+    M & W & H2 & F --> D["dedupe + sort"]
+    D --> R["front page"]
+```
