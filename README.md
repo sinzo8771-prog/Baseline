@@ -1,16 +1,14 @@
 # The Baseline
 
 AI news, hype removed. A free, editorial-print AI news site with live RSS
-aggregation and a hype meter. Built on Cloudflare Workers, **React 19 + Vite**,
-with a canvas-ui lens upgrade. No AI-generated content anywhere.
+aggregation and a hype meter. Built on Cloudflare Workers, **React 19 + Vite**.
+No AI-generated content anywhere.
 
 ## Stack
 
 - **Frontend**: React 19 + Vite, static build output into `dist/`.
 - **Hosting**: a Cloudflare Worker serves the built app (`env.ASSETS` →
   `dist/`) and relays feed XML at `/api/feed`.
-- **Effects**: [canvas-ui](https://canvasui.dev) WebGL/glass components, wired
-  for the experimental HTML-in-canvas API with a safe WebGL-overlay fallback.
 - **RSS parsing** happens entirely in the browser (the Worker is pure I/O, so
   the free-tier CPU cap is respected).
 
@@ -78,16 +76,8 @@ assets. The Worker serves both the site and the feed relay on your
 
 ## Canvas UI
 
-The site uses [canvas-ui](https://canvasui.dev) components via its
-shadcn-compatible registry. The Glass lens wraps the page: it captures the live
-DOM into a source canvas (`layoutsubtree`) and draws a WebGL effect on an
-overlay canvas. When the experimental HTML-in-canvas API is unavailable, the
-component falls back to plain rendering — content is never hidden. It also
-self-respects `prefers-reduced-motion`.
-
-The lens component lives in `src/components/canvasui/` and the React wrapper
-in `src/app/components/` (`GlassLens.jsx`).
-
+The site is a hand-built static React app. No WebGL effects or experimental
+browser APIs are used — just plain DOM, CSS, and print-inspired type.
 ## Adding or changing sources
 
 Edit the `SOURCES` array in `src/lib/feeds.js` **and** the `FEEDS` map in

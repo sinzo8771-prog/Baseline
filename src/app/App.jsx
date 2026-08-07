@@ -1,62 +1,33 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { MotionConfig } from "framer-motion";
 import useBaselineData from "./hooks/useBaselineData.js";
 import useTheme from "./hooks/useTheme.js";
 import exportOPML from "./lib/exportOPML.js";
-import GlassLens from "./components/GlassLens.jsx";
+import StoryFeed from "./components/StoryFeed.jsx";
+import SelectorChips from "./components/SelectorChips.jsx";
+import HypeMeter from "./components/HypeMeter.jsx";
+import SpinBadge from "./components/SpinBadge.jsx";
 
 const FILTERS = ["all", "Measured", "Warm", "Hot", "On Fire"];
 
-function spinClass(spin) {
-  return { Measured: "spin-measured", Warm: "spin-warm", Hot: "spin-hot", "On Fire": "spin-fire" }[spin] || "spin-measured";
-}
-
-function fmtDate(iso) {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime())
-    ? "recently"
-    : d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-}
-
-function safeHref(link) {
-  return /^https?:\/\//i.test(link || "") ? link : "";
-}
-
-function StoryCard({ story, isLead = false }) {
-  return (
-    <article className={isLead ? "story lead" : "story"}>
-      <h2 className="story-title">
-        <a href={safeHref(story.link)} target="_blank" rel="noopener noreferrer" data-glass-target>
-          {story.title}
-        </a>
-      </h2>
-      {story.summary && isLead ? <p className="story-summary">{story.summary}</p> : null}
-      <div className="story-meta">
-        <span className={"spin " + spinClass(story.spin)} title={story.flags?.length ? story.flags.join(", ") : "no hype signals"}>{story.spin}</span>
-        <span>{story.source} — {fmtDate(story.publishedAt)}</span>
-      </div>
-    </article>
-  );
-}
-
 function SkeletonCard() {
   return (
-    <article className="story skeleton-card">
-      <div className="skeleton sk-title w-90" />
-      <div className="skeleton sk-line w-70" />
-      <div className="skeleton sk-meta w-40" />
-    </article>
+    <div className="rounded-md border border-border/70 bg-card p-5">
+      <div className="h-4 w-24 animate-pulse rounded-full bg-muted" />
+      <div className="mt-3 h-5 w-11/12 animate-pulse rounded bg-muted" />
+      <div className="mt-2 h-5 w-8/12 animate-pulse rounded bg-muted" />
+    </div>
   );
 }
 
 function LeadSkeleton() {
   return (
-    <div className="lead">
-      <div className="skeleton sk-kicker" />
-      <div className="skeleton sk-title w-90" />
-      <div className="skeleton sk-title w-60" />
-      <div className="skeleton sk-line w-95" />
-      <div className="skeleton sk-line w-75" />
-      <div className="skeleton sk-meta w-30" />
+    <div className="mb-8 rounded-md border border-border/80 bg-card p-6 sm:p-8">
+      <div className="h-4 w-20 animate-pulse rounded-full bg-muted" />
+      <div className="mt-4 h-8 w-9/12 animate-pulse rounded bg-muted" />
+      <div className="mt-3 h-8 w-6/12 animate-pulse rounded bg-muted" />
+      <div className="mt-4 h-4 w-full animate-pulse rounded bg-muted" />
+      <div className="mt-2 h-4 w-7/12 animate-pulse rounded bg-muted" />
     </div>
   );
 }
@@ -86,18 +57,6 @@ function SourceList({ sources }) {
         </li>
       ))}
     </ul>
-  );
-}
-
-function Meter({ stats }) {
-  if (!stats) return null;
-  return (
-    <div className="meter">
-      <div className="meter-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow={stats.hypePercent} aria-label="Share of today's stories that are enthusiastic">
-        <div className="meter-fill" style={{ width: `${stats.hypePercent}%` }} />
-      </div>
-      <span className="meter-label">{stats.hypePercent}%</span>
-    </div>
   );
 }
 
@@ -141,11 +100,8 @@ export default function App() {
     ? "Sourced " + new Date(stats.generatedAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }) + " · refresh for the latest"
     : "";
 
-  const lead = filtered[0];
-  const gridStories = filtered.slice(1, 25);
-
   return (
-    <>
+    <MotionConfig reducedMotion="user">
       <header className="masthead">
         <div className="masthead-meta">
           <span id="masthead-date">{dateLabel}</span>
@@ -166,56 +122,38 @@ export default function App() {
         <a href="#about">About</a>
       </nav>
 
-      <GlassLens
-        className="glass-lens page-lens"
-        targets="h1, h2, a, button, .masthead-title"
-        size={180}
-        zoom={1.25}
-        aberration={0.8}
-        blur={0.1}
-        shine={0.35}
-        follow={0.28}
-      >
-        <main>
+      <main>
           <section id="latest" aria-label="Latest stories">
             {!loaded ? (
               <>
                 <LeadSkeleton />
-                <div id="filter-chips" className="filter-chips" role="group" aria-label="Filter by hype level" />
-                <div id="grid" className="grid">
+                <div className="mb-6 inline-flex items-center gap-1 rounded-full border border-border bg-card p-1">
+                  <div className="h-6 w-16 animate-pulse rounded-full bg-muted" />
+                  <div className="h-6 w-20 animate-pulse rounded-full bg-muted" />
+                  <div className="h-6 w-16 animate-pulse rounded-full bg-muted" />
+                  <div className="h-6 w-20 animate-pulse rounded-full bg-muted" />
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   {[0, 1, 2, 3, 4, 5].map((i) => <SkeletonCard key={i} />)}
                 </div>
               </>
             ) : offline ? (
               <EmptyState kicker="OUT TO LUNCH" text="The site is up, but the network is playing dead. Your browser can do everything except fetch. Try again in a moment." />
-            ) : filtered.length === 0 ? (
-              stories.length > 0 ? (
-                <EmptyState kicker="NO MATCHES" text={`Nothing filed under "${filter}". Switch back to All to see the full edition.`} />
-              ) : (
-                <EmptyState kicker="EXTRA! EXTRA!" text="The presses are cold. No stories to report. Our sources may be napping, or the feeds are down. In this line of work, silence is usually a feature, not a bug. Reload to try again." />
-              )
             ) : (
               <>
-                <div className="lead">
-                  {lead ? <StoryCard story={lead} isLead /> : null}
-                </div>
-                <div id="filter-chips" className="filter-chips" role="group" aria-label="Filter by hype level">
-                  {FILTERS.map((f) => (
-                    <button
-                      key={f}
-                      type="button"
-                      className={"filter-chip" + (f === filter ? " active" : "")}
-                      data-filter={f}
-                      aria-pressed={f === filter}
-                      onClick={() => setFilter(f)}
-                    >
-                      {f === "all" ? "All" : f}
-                    </button>
-                  ))}
-                </div>
-                <div id="grid" className="grid">
-                  {gridStories.map((s) => <StoryCard key={s.id} story={s} />)}
-                </div>
+                <SelectorChips
+                  className="mb-6"
+                  options={FILTERS}
+                  value={filter}
+                  onChange={setFilter}
+                />
+                {stories.length === 0 ? (
+                  <EmptyState kicker="EXTRA! EXTRA!" text="The presses are cold. No stories to report. Our sources may be napping, or the feeds are down. In this line of work, silence is usually a feature, not a bug. Reload to try again." />
+                ) : filtered.length === 0 ? (
+                  <EmptyState kicker="NO MATCHES" text={`Nothing filed under "${filter}". Switch back to All to see the full edition.`} />
+                ) : (
+                  <StoryFeed stories={filtered} />
+                )}
               </>
             )}
           </section>
@@ -223,12 +161,9 @@ export default function App() {
           <section id="hype-index" className="section">
             <h2 className="section-title">The Hype Index</h2>
             <p className="section-note">Share of today's stories that are, let's say, enthusiastic.</p>
-            {loaded && !offline ? <Meter stats={stats} /> : <div className="skeleton sk-title w-60" />}
+            {loaded && !offline && stats ? <HypeMeter percent={stats.hypePercent} className="mb-5" /> : <div className="h-6 w-60 animate-pulse rounded bg-muted" />}
             <div className="spin-legend">
-              <span className="spin spin-measured">Measured</span>
-              <span className="spin spin-warm">Warm</span>
-              <span className="spin spin-hot">Hot</span>
-              <span className="spin spin-fire">On Fire</span>
+              {FILTERS.filter((f) => f !== "all").map((f) => <SpinBadge key={f} spin={f} />)}
             </div>
           </section>
 
@@ -243,7 +178,6 @@ export default function App() {
             <button id="opml-export" className="theme-toggle" style={{ marginTop: 16 }} onClick={() => showToast(exportOPML())}>Export OPML</button>
           </section>
         </main>
-      </GlassLens>
 
       <footer className="footer">
         <p>© {now.getFullYear()} The Baseline. Hand-built, not generated. RSS in, judgment out.</p>
@@ -252,6 +186,6 @@ export default function App() {
       <div id="toast-region" className="toast-region" aria-live="polite" aria-atomic="true">
         {toast ? <Toast message={toast} /> : null}
       </div>
-    </>
+    </MotionConfig>
   );
 }

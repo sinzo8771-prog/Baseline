@@ -286,29 +286,6 @@ body {
   outline-offset: 2px;
 }
 
-/* Canvas UI lens: the wrapper is relative; the source canvas hosts the live
-   DOM and the output canvas overlays it with the WebGL effect. When the
-   experimental API is unavailable the content renders normally (fallback). */
-.glass-lens,
-.ripple-lens {
-  position: relative;
-}
-.glass-lens canvas,
-.ripple-lens canvas {
-  display: block;
-  max-width: 100%;
-}
-
-/* If the lens wraps the whole page, keep the layout stable and let the
-   effect's output canvas sit above but never intercept clicks. */
-.page-lens {
-  min-height: 100%;
-}
-.page-lens .glass-output,
-.page-lens .ripple-output {
-  pointer-events: none !important;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .skeleton { animation: none; }
   .meter-fill { transition: none; }
