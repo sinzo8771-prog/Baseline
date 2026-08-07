@@ -1,14 +1,27 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Link, NavLink, Route, Routes, useLocation } from "react-router-dom";
 import { MotionConfig } from "framer-motion";
 import { Sun, Moon } from "lucide-react";
 import useBaselineData from "./hooks/useBaselineData.js";
 import useTheme from "./hooks/useTheme.js";
 import Home from "./pages/Home.jsx";
-import HypeIndex from "./pages/HypeIndex.jsx";
-import Sources from "./pages/Sources.jsx";
-import About from "./pages/About.jsx";
-import NotFound from "./pages/NotFound.jsx";
+
+// Secondary pages are code-split so /about, /sources, and /hype-index don't
+// ship their bytes to a visitor who only reads the front page. Home stays
+// eager (it's the landing route and streams the feed).
+const HypeIndex = lazy(() => import("./pages/HypeIndex.jsx"));
+const Sources = lazy(() => import("./pages/Sources.jsx"));
+const About = lazy(() => import("./pages/About.jsx"));
+const NotFound = lazy(() => import("./pages/NotFound.jsx"));
+
+function RouteFallback() {
+  return (
+    <div className="section" aria-busy="true" aria-label="Loading page">
+      <div className="h-8 w-40 animate-pulse rounded bg-muted" />
+      <div className="mt-4 h-4 w-72 max-w-full animate-pulse rounded bg-muted" />
+    </div>
+  );
+}
 
 function Toast({ message }) {
   return <div className="toast">{message}</div>;
@@ -108,13 +121,15 @@ export default function App() {
       </nav>
 
       <main>
-        <Routes>
-          <Route path="/" element={<Home stories={stories} offline={offline} loaded={loaded} />} />
-          <Route path="/hype-index" element={<HypeIndex stats={stats} loaded={loaded} offline={offline} />} />
-          <Route path="/sources" element={<Sources sources={sources} loaded={loaded} />} />
-          <Route path="/about" element={<About showToast={showToast} />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <Suspense fallback={<RouteFallback />}>
+          <Routes>
+            <Route path="/" element={<Home stories={stories} offline={offline} loaded={loaded} />} />
+            <Route path="/hype-index" element={<HypeIndex stats={stats} loaded={loaded} offline={offline} />} />
+            <Route path="/sources" element={<Sources sources={sources} loaded={loaded} />} />
+            <Route path="/about" element={<About showToast={showToast} />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </main>
 
       <footer className="footer">

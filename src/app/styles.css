@@ -78,9 +78,10 @@ body {
 
   .masthead-meta {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
+    gap: 8px 12px;
     font-size: 12px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -112,8 +113,9 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 8px;
     border: 1px solid var(--rule);
     color: var(--ink);
     background: none;
@@ -128,7 +130,8 @@ body {
     background: none;
     border: 1px solid var(--rule);
     color: var(--ink);
-    padding: 6px 14px;
+    min-height: 44px;
+    padding: 10px 18px;
     font-size: 11px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -141,14 +144,25 @@ body {
 
   .nav {
     display: flex;
-    gap: 24px;
+    gap: 8px;
     justify-content: center;
+    align-items: center;
     border-bottom: 1px solid var(--rule);
-    padding: 12px 0;
+    padding: 4px 0;
     margin-bottom: 36px;
   }
 
-  .nav a { color: var(--ink); text-decoration: none; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; }
+  .nav a {
+    color: var(--ink);
+    text-decoration: none;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 12px;
+  }
   .nav a:hover { text-decoration: underline; }
   .nav a.active { text-decoration: underline; text-underline-offset: 4px; }
   .nav a:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 2px; }
