@@ -20,5 +20,8 @@
     "hooks": "@/hooks"
   },
   "menuColor": "default",
-  "menuAccent": "subtle"
+  "menuAccent": "subtle",
+  "registries": {
+    "@canvas-ui": "https://canvasui.dev/r/{name}.json"
+  }
 }

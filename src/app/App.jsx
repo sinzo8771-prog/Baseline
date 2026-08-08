@@ -5,6 +5,9 @@ import { Sun, Moon } from "lucide-react";
 import useBaselineData from "./hooks/useBaselineData.js";
 import useTheme from "./hooks/useTheme.js";
 import Home from "./pages/Home.jsx";
+import Asciify from "@/components/canvasui/Asciify.jsx";
+import DecryptReveal from "@/components/canvasui/DecryptReveal.jsx";
+import VHS from "@/components/canvasui/VHS.jsx";
 
 // Secondary pages are code-split so /about, /sources, and /hype-index don't
 // ship their bytes to a visitor who only reads the front page. Home stays
@@ -107,10 +110,14 @@ export default function App() {
         <ScrollToTop />
         <header className="masthead">
           <MastheadMeta dateLabel={dateLabel} updatedLabel={updatedLabel} />
-          <h1 className="masthead-title">
-            <Link to="/" className="masthead-link">THE BASELINE</Link>
-          </h1>
-          <p className="masthead-tagline">AI news, hype removed.</p>
+          <Asciify baseStrength={0.2} radius={0.45} charset="ascii" background="auto" glow={0.5} aberration={0.5}>
+            <h1 className="masthead-title">
+              <Link to="/" className="masthead-link">THE BASELINE</Link>
+            </h1>
+          </Asciify>
+          <DecryptReveal color="#D94A2B" background="auto" scramble={0.12} cell={8} radius={320} colored={0.6}>
+            <p className="masthead-tagline">AI news, hype removed.</p>
+          </DecryptReveal>
         </header>
 
         <nav className="nav" aria-label="Primary">
@@ -133,9 +140,11 @@ export default function App() {
           </Suspense>
         </main>
 
-        <footer className="footer">
-          <p>© {now.getFullYear()} The Baseline. Hand-built, not generated. RSS in, judgment out.</p>
-        </footer>
+        <VHS wave={0.5} jitter={0.15} crease={0.03} bloom={0} grain={0.08} scanlines={0.08} switching={0.02} speed={0.4}>
+          <footer className="footer">
+            <p>© {now.getFullYear()} The Baseline. Hand-built, not generated. RSS in, judgment out.</p>
+          </footer>
+        </VHS>
 
         <div id="toast-region" className="toast-region" aria-live="polite" aria-atomic="true">
           {toast ? <Toast message={toast} /> : null}

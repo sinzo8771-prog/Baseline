@@ -3,6 +3,7 @@ import { m, AnimatePresence } from "framer-motion";
 import { ExternalLink, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import SpinBadge from "./SpinBadge.jsx";
+import Glitch from "@/components/canvasui/Glitch.jsx";
 
 // Editorial story feed. Adapted from 21st.dev's News Cards pattern: cards
 // lift on hover and expand into a shared-layout modal (framer-motion
@@ -191,10 +192,26 @@ export default function StoryFeed({ stories }) {
 
   return (
     <div>
-      {lead ? <CardShell story={lead} isLead onOpen={() => open(lead)} /> : null}
+      {lead ? (
+        lead.spin === "On Fire" ? (
+          <Glitch intensity={0.85} interval={4} duration={0.3} slices={20} rgbShift={5}>
+            <CardShell story={lead} isLead onOpen={() => open(lead)} />
+          </Glitch>
+        ) : (
+          <CardShell story={lead} isLead onOpen={() => open(lead)} />
+        )
+      ) : null}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:gap-6">
         {grid.map((story) =>
-          selectedId === story.id ? null : <CardShell key={story.id} story={story} onOpen={() => open(story)} />,
+          selectedId === story.id ? null : (
+            story.spin === "On Fire" ? (
+              <Glitch key={story.id} intensity={0.85} interval={4} duration={0.3} slices={20} rgbShift={5}>
+                <CardShell story={story} onOpen={() => open(story)} />
+              </Glitch>
+            ) : (
+              <CardShell key={story.id} story={story} onOpen={() => open(story)} />
+            )
+          ),
         )}
       </div>
       <AnimatePresence>
