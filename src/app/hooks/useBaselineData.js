@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchAllFeeds } from "../../lib/feeds.js";
 import { composeStories, dailyStats } from "../../lib/pipeline.js";
+import { recordToday } from "../lib/hypeHistory.js";
 
 // The printed edition is capped at 25 stories (1 lead + 24 in the grid).
 // Applying the cap here means the front page, the Hype Index page, the toast,
@@ -45,19 +46,24 @@ function composeEdition(results) {
   return { edition, stats: dailyStats(edition) };
 }
 
-// Holds the site's data: stories, stats, source health, and an offline flag.
-// Mirrors the original vanilla app.js flow (fetch -> parse -> score -> render).
+// Holds the site's data: stories, stats, source health, an offline flag, and a
+// `settled` flag that flips only when the final tally is in (partial results
+// stream in while `loaded` is already true).
 export default function useBaselineData() {
-  // Prime state from the last successful edition (painted before any fetch).
+  // Prime state from the last successful edition so a return visit paints the
+  // cached edition immediately (loaded starts true when we have one), then
+  // refreshes in the background. Mirrors the original vanilla app.js flow.
   const cached = useMemo(() => readCachedEdition(), []);
   const [stories, setStories] = useState(cached ? cached.stories : []);
   const [stats, setStats] = useState(cached ? cached.stats : null);
   const [sources, setSources] = useState([]);
   const [offline, setOffline] = useState(false);
-  const [loaded, setLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(Boolean(cached));
+  const [settled, setSettled] = useState(false);
   const [servedFromCache, setServedFromCache] = useState(Boolean(cached));
 
   const load = useCallback(async () => {
+    setSettled(false);
     try {
       const finalResults = await fetchAllFeeds({
         onPartial: (partial) => {
@@ -69,26 +75,29 @@ export default function useBaselineData() {
           const { edition, stats } = composeEdition(partial);
           setStories(edition);
           setStats(stats);
-          setSources(partial.map((r) => ({ name: r.source, ok: !r.error, error: r.error })));
+          setSources(partial.map((r) => ({ source: r.source, ok: !r.error, error: r.error })));
         },
       });
       const { edition, stats } = composeEdition(finalResults);
       setStories(edition);
       setStats(stats);
-      setSources(finalResults.map((r) => ({ name: r.source, ok: !r.error, error: r.error })));
+      setSources(finalResults.map((r) => ({ source: r.source, ok: !r.error, error: r.error })));
       // Persist the fresh edition for instant paint on the next load.
       writeCachedEdition(edition, stats);
+      recordToday(stats);
       // Every relay failed => the network (or the relay) is down, not just the
       // feeds napping. This is the only signal that distinguishes "offline"
       // from a quiet morning, so derive it from the results.
       setOffline(finalResults.length > 0 && finalResults.every((r) => r.error));
       setLoaded(true);
       setServedFromCache(false);
+      setSettled(true);
     } catch {
       // fetchAllFeeds rarely rejects (it catches per-feed errors), but if it
-      // does the page can still stand up with its default empty state.
+      // does the page can still stand up with whatever it already has.
       setOffline(true);
       setLoaded(true);
+      setSettled(true);
     }
   }, []);
 
@@ -97,7 +106,7 @@ export default function useBaselineData() {
   }, [load]);
 
   return useMemo(
-    () => ({ stories, stats, sources, offline, loaded, servedFromCache, reload: load }),
-    [stories, stats, sources, offline, loaded, servedFromCache, load],
+    () => ({ stories, stats, sources, offline, loaded, settled, servedFromCache, reload: load }),
+    [stories, stats, sources, offline, loaded, settled, servedFromCache, load],
   );
 }

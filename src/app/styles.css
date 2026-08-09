@@ -12,6 +12,7 @@
   --ink-soft: #5a554a;
   --vermillion: #b93c22;
   --rule: #1c1a16;
+  --skeleton: #d8d1bd;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,6 +23,7 @@
     --ink-soft: #b8b0a0;
     --vermillion: #e87a5a;
     --rule: #4a453d;
+    --skeleton: #3c382f;
   }
 }
 
@@ -32,6 +34,7 @@
   --ink-soft: #5a554a;
   --vermillion: #b93c22;
   --rule: #1c1a16;
+  --skeleton: #d8d1bd;
 }
 
 [data-theme="dark"] {
@@ -41,6 +44,7 @@
   --ink-soft: #b8b0a0;
   --vermillion: #e87a5a;
   --rule: #4a453d;
+  --skeleton: #3c382f;
 }
 
 html {
@@ -60,7 +64,14 @@ body {
   max-width: 1140px;
   margin: 0 auto;
   padding: 0 24px 56px;
+  overflow-wrap: break-word;
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Loading placeholders: a solid mid-tone (not the near-invisible paper-dim)
+   so the first paint reads as "loading" instead of "broken". */
+.skeleton {
+  background: var(--skeleton);
 }
 
 /* Page chrome (masthead, nav, sections, footer, toast). Kept in the
@@ -144,6 +155,7 @@ body {
 
   .nav {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     justify-content: center;
     align-items: center;
@@ -176,6 +188,13 @@ body {
   .source-list { list-style: none; columns: 2; column-gap: 40px; }
   @media (max-width: 640px) { .source-list { columns: 1; } }
   .source-list li { padding: 8px 0; border-bottom: 1px solid var(--paper-dim); }
+  .source-link {
+    color: var(--ink);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .source-link:hover { text-decoration: underline; text-underline-offset: 4px; }
+  .source-link:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 2px; }
   .source-list .status { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; margin-left: 8px; }
   .source-list .ok { color: var(--ink-soft); }
   .source-list .err { color: var(--vermillion); }
@@ -197,6 +216,90 @@ body {
     display: none;
   }
   .spin-reason[open] > span { display: block; }
+
+  .search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 220px;
+    max-width: 380px;
+  }
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    width: 14px;
+    height: 14px;
+    color: var(--ink-soft);
+    pointer-events: none;
+  }
+  .search-input {
+    width: 100%;
+    min-height: 44px;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: 0 36px;
+    font: inherit;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+  }
+  .search-input::placeholder { color: var(--ink-soft); }
+  .search-input:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 2px; }
+  .search-clear {
+    position: absolute;
+    right: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: none;
+    color: var(--ink-soft);
+    cursor: pointer;
+    border-radius: 9999px;
+  }
+  .search-clear:hover { background: var(--paper-dim); color: var(--ink); }
+  .search-clear:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 2px; }
+
+  .sort-control {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: 3px;
+    background: var(--paper);
+  }
+  .sort-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink-soft);
+    padding: 0 6px;
+  }
+  .sort-control button {
+    min-height: 34px;
+    padding: 0 12px;
+    border: none;
+    background: none;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    cursor: pointer;
+    border-radius: 2px;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .sort-control button:hover { color: var(--ink); }
+  .sort-control button.active {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .sort-control button:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 2px; }
 
   .toast-region {
     position: fixed;

@@ -14,7 +14,12 @@ export default function useTheme() {
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
-    window.localStorage.setItem(THEME_KEY, dark ? "dark" : "light");
+    try {
+      window.localStorage.setItem(THEME_KEY, dark ? "dark" : "light");
+    } catch {
+      // Quota or private-mode failure is non-fatal; the theme still applies
+      // for this visit.
+    }
   }, [dark]);
 
   return { dark, toggle: () => setDark((v) => !v) };

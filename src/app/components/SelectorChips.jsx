@@ -29,14 +29,14 @@ export default function SelectorChips({ options, value, onChange, counts, classN
               "relative rounded-full px-4 py-2 text-xs font-medium uppercase tracking-[0.08em] transition-colors duration-150",
               "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
               active
-                ? "text-primary-foreground"
+                ? "text-background"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
             {active && (
               <m.span
                 layoutId="filter-pill"
-                className="absolute inset-0 rounded-full bg-primary"
+                className="absolute inset-0 rounded-full bg-foreground"
                 transition={{ type: "spring", stiffness: 400, damping: 32 }}
               />
             )}
@@ -45,8 +45,8 @@ export default function SelectorChips({ options, value, onChange, counts, classN
               {typeof count === "number" && (
                 <span
                   className={cn(
-                    "text-[10px] tabular-nums",
-                    active ? "text-primary-foreground/80" : "text-muted-foreground/70",
+                    "text-[11px] tabular-nums",
+                    active ? "text-background/70" : "text-muted-foreground",
                   )}
                 >
                   {count}

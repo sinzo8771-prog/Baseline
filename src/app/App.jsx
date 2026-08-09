@@ -20,8 +20,8 @@ const NotFound = lazy(() => import("./pages/NotFound.jsx"));
 function RouteFallback() {
   return (
     <div className="section" aria-busy="true" aria-label="Loading page">
-      <div className="h-8 w-40 animate-pulse rounded bg-muted" />
-      <div className="mt-4 h-4 w-72 max-w-full animate-pulse rounded bg-muted" />
+      <div className="h-8 w-40 animate-pulse rounded skeleton" />
+      <div className="mt-4 h-4 w-72 max-w-full animate-pulse rounded skeleton" />
     </div>
   );
 }
@@ -74,7 +74,7 @@ const NAV_LINKS = [
 ];
 
 export default function App() {
-  const { stories, stats, sources, offline, loaded } = useBaselineData();
+  const { stories, stats, sources, offline, loaded, settled, reload } = useBaselineData();
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
   usePageTitle();
@@ -88,14 +88,14 @@ export default function App() {
   // Clean up the toast timer on unmount.
   useEffect(() => () => window.clearTimeout(toastTimer.current), []);
 
-  // Announce the presses rolling once the edition is ready (matches the
-  // original vanilla app.js intro toast). Uses the printed edition size so
-  // the claim matches the cards on screen.
+  // Announce the presses rolling once the edition is *settled* (the final
+  // tally, not the first partial), so the claimed count matches the cards on
+  // screen. Uses the printed edition size to keep the claim honest.
   useEffect(() => {
-    if (loaded && !offline && stats && stories.length > 0) {
+    if (settled && !offline && stats && stories.length > 0) {
       showToast(`The presses are rolling — ${stories.length} stories, ${stats.hypePercent}% hype.`);
     }
-  }, [loaded, offline, stats, stories]);
+  }, [settled, offline, stats, stories]);
 
   // Date + edition
   const now = new Date();
@@ -131,9 +131,9 @@ export default function App() {
         <main>
           <Suspense fallback={<RouteFallback />}>
             <Routes>
-              <Route path="/" element={<Home stories={stories} offline={offline} loaded={loaded} />} />
-              <Route path="/hype-index" element={<HypeIndex stats={stats} loaded={loaded} offline={offline} />} />
-              <Route path="/sources" element={<Sources sources={sources} loaded={loaded} />} />
+              <Route path="/" element={<Home stories={stories} offline={offline} loaded={loaded} reload={reload} />} />
+              <Route path="/hype-index" element={<HypeIndex stats={stats} loaded={loaded} offline={offline} reload={reload} />} />
+              <Route path="/sources" element={<Sources sources={sources} loaded={loaded} offline={offline} reload={reload} />} />
               <Route path="/about" element={<About showToast={showToast} />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

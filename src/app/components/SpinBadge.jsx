@@ -17,7 +17,6 @@ export default function SpinBadge({ spin, flags, className }) {
   const Icon = variant.icon;
   const reason = flags?.length ? flags.join(", ") : "no hype signals";
   const hasFlags = Boolean(flags?.length);
-  const detailId = `spin-reason-${spin}-${hasFlags ? "flags" : "none"}`;
 
   return (
     <span className={cn("inline-flex items-center gap-1.5", className)}>
@@ -38,14 +37,13 @@ export default function SpinBadge({ spin, flags, className }) {
       {/* Screen readers get the label + reason; the visual badge is decorative. */}
       <span className="sr-only">{`${spin} — ${reason}`}</span>
       {hasFlags ? (
-        <details className="spin-reason group relative">
-          <summary className="inline-flex size-4 cursor-help list-none items-center justify-center rounded-full border border-border text-[10px] leading-none text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+        <details className="spin-reason group relative z-10">
+          <summary className="inline-flex size-6 cursor-help list-none items-center justify-center rounded-full border border-border text-[10px] leading-none text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
             ?
             <span className="sr-only">Why was this flagged {spin}?</span>
           </summary>
           <span
-            id={detailId}
-            className="absolute left-0 top-6 z-20 w-56 rounded-md border border-border bg-popover px-3 py-2 text-[11px] normal-case leading-snug tracking-normal text-popover-foreground shadow-md"
+            className="absolute left-0 top-7 z-20 w-56 max-w-[calc(100vw-2rem)] rounded-md border border-border bg-popover px-3 py-2 text-[11px] normal-case leading-snug tracking-normal text-popover-foreground shadow-md"
           >
             {reason}
           </span>
