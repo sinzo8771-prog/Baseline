@@ -46,6 +46,13 @@ function composeEdition(results) {
   return { edition, stats: dailyStats(edition) };
 }
 
+// Feed results -> the shape the Sources page renders. Each entry carries the
+// source's display `name` (not the API's `source` field), its health, and the
+// error text if the relay failed.
+export function sourceStatuses(results) {
+  return results.map((r) => ({ name: r.source, ok: !r.error, error: r.error }));
+}
+
 // Holds the site's data: stories, stats, source health, an offline flag, and a
 // `settled` flag that flips only when the final tally is in (partial results
 // stream in while `loaded` is already true).
@@ -75,13 +82,13 @@ export default function useBaselineData() {
           const { edition, stats } = composeEdition(partial);
           setStories(edition);
           setStats(stats);
-          setSources(partial.map((r) => ({ source: r.source, ok: !r.error, error: r.error })));
+          setSources(sourceStatuses(partial));
         },
       });
       const { edition, stats } = composeEdition(finalResults);
       setStories(edition);
       setStats(stats);
-      setSources(finalResults.map((r) => ({ source: r.source, ok: !r.error, error: r.error })));
+      setSources(sourceStatuses(finalResults));
       // Persist the fresh edition for instant paint on the next load.
       writeCachedEdition(edition, stats);
       recordToday(stats);

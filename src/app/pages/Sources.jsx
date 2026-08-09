@@ -6,7 +6,7 @@ function SourceList({ sources }) {
   const sorted = useMemo(() => {
     return [...(sources || [])].sort((a, b) => {
       if (a.ok !== b.ok) return a.ok ? 1 : -1;
-      return a.name.localeCompare(b.name);
+      return (a.name ?? "").localeCompare(b.name ?? "");
     });
   }, [sources]);
   return (
