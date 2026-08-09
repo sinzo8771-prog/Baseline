@@ -2,12 +2,55 @@ import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Search, X } from "lucide-react";
 import StoryFeed from "../components/StoryFeed.jsx";
+import { NewsCards } from "@/components/ui/news-cards.jsx";
 import SelectorChips from "../components/SelectorChips.jsx";
 import SpinBadge from "../components/SpinBadge.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import { cn } from "@/lib/utils";
 
 const FILTERS = ["all", "Measured", "Warm", "Hot", "On Fire"];
+
+const VIEWS = [
+  { key: "edition", label: "Edition" },
+  { key: "cards", label: "Cards" },
+];
+
+// The Cards view feeds the 21st NewsCards component real stories: source is
+// the category, spin the subcategory, and the lead gradient band is keyed to
+// the hype tier (ink for sober, vermillion as it climbs). No photos exist in
+// the data, so the component renders its gradient fallback.
+const SPIN_GRADIENT = {
+  Measured: ["from-foreground/10", "to-transparent"],
+  Warm: ["from-chart-4/25", "to-transparent"],
+  Hot: ["from-primary/30", "to-transparent"],
+  "On Fire": ["from-primary/50", "to-chart-4/30"],
+};
+
+function timeAgo(iso) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "recently";
+  const mins = Math.max(0, Math.round((Date.now() - d.getTime()) / 60000));
+  if (mins < 60) return mins <= 1 ? "just now" : `${mins} min ago`;
+  const hours = Math.round(mins / 60);
+  if (hours < 24) return `${hours} h ago`;
+  const days = Math.round(hours / 24);
+  return `${days} d ago`;
+}
+
+function toNewsCard(story) {
+  return {
+    id: story.id,
+    title: story.title,
+    category: story.source,
+    subcategory: story.spin,
+    timeAgo: timeAgo(story.publishedAt),
+    location: "",
+    image: null,
+    gradientColors: SPIN_GRADIENT[story.spin] ?? SPIN_GRADIENT.Measured,
+    content: story.summary ? [story.summary] : [`The full article is published by ${story.source}.`],
+    link: story.link,
+  };
+}
 
 // The default "Edited" order is a news judgment, not a timestamp dump: it
 // favors freshness (a story stops being front-page news after ~a day) and
@@ -65,6 +108,7 @@ export default function Home({ stories, offline, loaded, reload }) {
   const [filter, setFilter] = useState("all");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState("edited");
+  const [view, setView] = useState("edition");
 
   const sourceFilter = searchParams.get("source") || "";
 
@@ -161,19 +205,35 @@ export default function Home({ stories, offline, loaded, reload }) {
                 </button>
               ) : null}
             </div>
-            <div className="sort-control" role="group" aria-label="Sort the edition">
-              <span className="sort-label">Sort</span>
-              {SORTS.map(({ key, label }) => (
-                <button
-                  key={key}
-                  type="button"
-                  aria-pressed={sort === key}
-                  className={cn(sort === key && "active")}
-                  onClick={() => setSort(key)}
-                >
-                  {label}
-                </button>
-              ))}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="sort-control" role="group" aria-label="View the edition">
+                <span className="sort-label">View</span>
+                {VIEWS.map(({ key, label }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    aria-pressed={view === key}
+                    className={cn(view === key && "active")}
+                    onClick={() => setView(key)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <div className="sort-control" role="group" aria-label="Sort the edition">
+                <span className="sort-label">Sort</span>
+                {SORTS.map(({ key, label }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    aria-pressed={sort === key}
+                    className={cn(sort === key && "active")}
+                    onClick={() => setSort(key)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -224,7 +284,14 @@ export default function Home({ stories, offline, loaded, reload }) {
               action={hasActiveFilters ? { label: "Clear the filters", onClick: clearFilters } : undefined}
             />
           ) : (
-            <StoryFeed stories={sorted} />
+            view === "cards" ? (
+              <NewsCards
+                newsCards={sorted.map(toNewsCard)}
+                showHeader={false}
+              />
+            ) : (
+              <StoryFeed stories={sorted} />
+            )
           )}
         </>
       )}
