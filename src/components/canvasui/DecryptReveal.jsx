@@ -757,6 +757,11 @@ export function createDecryptReveal(elements, options = {}) {
   let destroyed = false;
   let running = false;
   let visible = true;
+  // Frames the effect keeps churning after its reveal has settled and the
+  // pointer has left, before going idle. The scramble is an ambient flourish;
+  // burning the GPU at 60fps forever for a static tagline is not.
+  let settleFrames = 0;
+  const IDLE_AFTER_FRAMES = 180;
 
   function frame(now) {
     if (destroyed) return;
@@ -791,11 +796,24 @@ export function createDecryptReveal(elements, options = {}) {
       running = false;
       return;
     }
+    // Reveal done but still churning (ambient scramble): keep animating only
+    // while the pointer is over the element, and for a short grace period
+    // after it leaves. Any interaction wakes the loop via start().
+    if (settled && !contentDirty && churning && pointer.active < 1e-3) {
+      settleFrames += 1;
+      if (settleFrames >= IDLE_AFTER_FRAMES) {
+        running = false;
+        return;
+      }
+    } else {
+      settleFrames = 0;
+    }
     raf = requestAnimationFrame(frame);
   }
 
   function start() {
     if (destroyed || running || !visible) return;
+    settleFrames = 0;
     running = true;
     lastTime = performance.now();
     raf = requestAnimationFrame(frame);

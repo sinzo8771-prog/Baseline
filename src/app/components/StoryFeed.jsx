@@ -56,7 +56,7 @@ function CardShell({ story, isLead = false, onOpen }) {
       <h2
         className={cn(
           "mt-3 break-words font-serif font-bold leading-snug tracking-[-0.01em] text-foreground",
-          isLead ? "text-3xl sm:text-4xl" : "text-lg sm:text-xl",
+          isLead ? "text-3xl sm:text-4xl" : "line-clamp-3 text-lg sm:text-xl",
         )}
       >
         {story.title}

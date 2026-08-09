@@ -140,7 +140,7 @@ export default function App() {
           </Suspense>
         </main>
 
-        <VHS wave={0.5} jitter={0.15} crease={0.03} bloom={0} grain={0.08} scanlines={0.08} switching={0.02} speed={0.4}>
+        <VHS wave={0.25} jitter={0.08} crease={0.02} bloom={0} grain={0.04} scanlines={0.04} switching={0.01} speed={0.25}>
           <footer className="footer">
             <p>© {now.getFullYear()} The Baseline. Hand-built, not generated. RSS in, judgment out.</p>
           </footer>
