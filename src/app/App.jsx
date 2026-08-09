@@ -1,10 +1,10 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
-import { Link, NavLink, Route, Routes, useLocation } from "react-router-dom";
+import { Link, Route, Routes, useLocation } from "react-router-dom";
 import { LazyMotion, MotionConfig, domAnimation } from "framer-motion";
-import { Sun, Moon } from "lucide-react";
 import useBaselineData from "./hooks/useBaselineData.js";
-import useTheme from "./hooks/useTheme.js";
 import Home from "./pages/Home.jsx";
+import SiteNav from "./components/SiteNav.jsx";
+import SiteFooter from "./components/SiteFooter.jsx";
 import Asciify from "@/components/canvasui/Asciify.jsx";
 import DecryptReveal from "@/components/canvasui/DecryptReveal.jsx";
 import VHS from "@/components/canvasui/VHS.jsx";
@@ -53,7 +53,6 @@ function ScrollToTop() {
 }
 
 function MastheadMeta({ dateLabel, updatedLabel }) {
-  const { dark, toggle } = useTheme();
   return (
     <div className="masthead-meta">
       <span id="masthead-date">{dateLabel}</span>
@@ -61,17 +60,9 @@ function MastheadMeta({ dateLabel, updatedLabel }) {
       <span id="masthead-edition">No. 1 — Free edition</span>
       <span className="masthead-rule" />
       <span id="masthead-updated">{updatedLabel}</span>
-      <button className="theme-toggle" id="theme-toggle" aria-label={dark ? "Switch to light mode" : "Switch to dark mode"} title={dark ? "Switch to light mode" : "Switch to dark mode"} aria-pressed={dark ? "true" : "false"} onClick={toggle}>{dark ? <Sun className="size-4" aria-hidden="true" /> : <Moon className="size-4" aria-hidden="true" />}</button>
     </div>
   );
 }
-
-const NAV_LINKS = [
-  { to: "/", label: "Latest" },
-  { to: "/hype-index", label: "Hype Index" },
-  { to: "/sources", label: "Sources" },
-  { to: "/about", label: "About" },
-];
 
 export default function App() {
   const { stories, stats, sources, offline, loaded, settled, reload } = useBaselineData();
@@ -120,13 +111,7 @@ export default function App() {
           </DecryptReveal>
         </header>
 
-        <nav className="nav" aria-label="Primary">
-          {NAV_LINKS.map(({ to, label }) => (
-            <NavLink key={to} to={to} end={to === "/"} className={({ isActive }) => (isActive ? "active" : undefined)}>
-              {label}
-            </NavLink>
-          ))}
-        </nav>
+        <SiteNav />
 
         <main>
           <Suspense fallback={<RouteFallback />}>
@@ -141,9 +126,7 @@ export default function App() {
         </main>
 
         <VHS wave={0.25} jitter={0.08} crease={0.02} bloom={0} grain={0.04} scanlines={0.04} switching={0.01} speed={0.25}>
-          <footer className="footer">
-            <p>© {now.getFullYear()} The Baseline. Hand-built, not generated. RSS in, judgment out.</p>
-          </footer>
+          <SiteFooter />
         </VHS>
 
         <div id="toast-region" className="toast-region" aria-live="polite" aria-atomic="true">
