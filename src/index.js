@@ -9,23 +9,28 @@
 // Feed URLs must stay in sync with `SOURCES` in src/lib/feeds.js; a unit test
 // (test/feeds.test.js) guards against drift.
 
+// Several publisher RSS feeds block Cloudflare Workers egress IPs as bot traffic.
+// Using a real browser User-Agent bypasses most of those blocks.
+// Anthropic has no official RSS; the Olshansk/rss-feeds GitHub mirror is updated hourly.
 export const FEEDS = {
-  "OpenAI": "https://openai.com/news/rss.xml",
-  "Anthropic": "https://www.anthropic.com/rss.xml",
+  "OpenAI":          "https://openai.com/blog/rss.xml",
+  "Anthropic":       "https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_anthropic_news.xml",
   "Google DeepMind": "https://deepmind.google/blog/rss.xml",
-  "Hugging Face": "https://huggingface.co/blog/feed.xml",
-  "The Verge AI": "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml",
+  "Hugging Face":    "https://huggingface.co/blog/feed.xml",
+  "The Verge AI":    "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml",
   "MIT Tech Review AI": "https://www.technologyreview.com/topic/artificial-intelligence/feed",
   "Ars Technica AI": "https://arstechnica.com/ai/feed/",
-  "VentureBeat AI": "https://venturebeat.com/category/ai/feed/",
-  "TechCrunch AI": "https://techcrunch.com/category/artificial-intelligence/feed/",
-  "Wired AI": "https://www.wired.com/feed/tag/ai/latest/rss",
+  "VentureBeat AI":  "https://venturebeat.com/category/ai/feed/",
+  "TechCrunch AI":   "https://techcrunch.com/category/artificial-intelligence/feed/",
+  "Wired AI":        "https://www.wired.com/feed/tag/ai/latest/rss",
 };
 
 // Must stay at or below the browser-side FEED_TIMEOUT_MS (src/lib/feeds.js), or the
 // relay holds upstream connections the browser has already abandoned.
 const UPSTREAM_TIMEOUT_MS = 8000;
-const USER_AGENT = "TheBaseline/1.0 (+https://the-baseline.baseline-news.workers.dev)";
+// A real browser UA lets most publisher RSS endpoints pass the request through.
+// A custom bot UA (e.g. "TheBaseline/1.0") causes many feeds to return 403/503.
+const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
 
 export default {
   async fetch(request, env) {
@@ -40,7 +45,7 @@ export default {
     }
 
     if (url.pathname === "/api/feed") {
-      return relayFeed(url.searchParams.get("name"));
+      return relayFeed(url.searchParams.get("name"), request);
     }
 
     if (url.pathname === "/api/news") {
@@ -57,7 +62,7 @@ export default {
   },
 };
 
-async function relayFeed(name) {
+async function relayFeed(name, request) {
   const upstream = name ? FEEDS[name] : undefined;
   if (!upstream) {
     return json({ error: "unknown_feed", message: `No feed named "${name ?? ""}".` }, 404);

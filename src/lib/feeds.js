@@ -4,17 +4,19 @@
 // Parsing uses the native DOMParser (namespace-aware, CDATA-aware), so summaries are
 // always plain strings and never "[object Object]" by construction.
 
+// Feed URLs mirror the Worker's FEEDS map in src/index.js. Keep the two in sync.
+// Anthropic has no official RSS; the Olshansk/rss-feeds GitHub mirror is updated hourly.
 export const SOURCES = [
-  { name: "OpenAI", feed: "https://openai.com/news/rss.xml" },
-  { name: "Anthropic", feed: "https://www.anthropic.com/rss.xml" },
+  { name: "OpenAI",          feed: "https://openai.com/blog/rss.xml" },
+  { name: "Anthropic",       feed: "https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_anthropic_news.xml" },
   { name: "Google DeepMind", feed: "https://deepmind.google/blog/rss.xml" },
-  { name: "Hugging Face", feed: "https://huggingface.co/blog/feed.xml" },
-  { name: "The Verge AI", feed: "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml" },
+  { name: "Hugging Face",    feed: "https://huggingface.co/blog/feed.xml" },
+  { name: "The Verge AI",    feed: "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml" },
   { name: "MIT Tech Review AI", feed: "https://www.technologyreview.com/topic/artificial-intelligence/feed" },
   { name: "Ars Technica AI", feed: "https://arstechnica.com/ai/feed/" },
-  { name: "VentureBeat AI", feed: "https://venturebeat.com/category/ai/feed/" },
-  { name: "TechCrunch AI", feed: "https://techcrunch.com/category/artificial-intelligence/feed/" },
-  { name: "Wired AI", feed: "https://www.wired.com/feed/tag/ai/latest/rss" },
+  { name: "VentureBeat AI",  feed: "https://venturebeat.com/category/ai/feed/" },
+  { name: "TechCrunch AI",   feed: "https://techcrunch.com/category/artificial-intelligence/feed/" },
+  { name: "Wired AI",        feed: "https://www.wired.com/feed/tag/ai/latest/rss" },
 ];
 
 // Keep only the newest stories per feed; the page shows at most 50 total, so this
