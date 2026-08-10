@@ -6,18 +6,6 @@ import SpinBadge from "./SpinBadge.jsx";
 import Glitch from "@/components/canvasui/Glitch.jsx";
 import { copyText, storyUrl } from "../lib/copyLink.js";
 
-// Editorial story feed. Adapted from 21st.dev's News Cards pattern: cards
-// lift on hover and expand into a shared-layout modal (framer-motion
-// layoutId morph). Images/bookmarks are dropped — our data is typography +
-// rating — and the card keeps the paper/ink/vermillion print look. The App
-// root wraps this in <MotionConfig reducedMotion="user"> so the morph
-// respects prefers-reduced-motion.
-//
-// Each card is an <article> with a stretched cover <button> rather than a
-// button wrapping headings and the spin-reason <details>: the heading stays
-// valid HTML, the ? popover is independently clickable, and keyboard users get
-// one clear focus target per card.
-
 function fmtDate(iso) {
   const d = new Date(iso);
   return Number.isNaN(d.getTime())
@@ -55,6 +43,17 @@ function CardShell({ story, isLead = false, onOpen, active = false }) {
       )}
       style={isLead ? { borderTopColor: "var(--vermillion)" } : undefined}
     >
+      {story.image ? (
+        <div className="mb-4 -mx-5 -mt-5 rounded-t-md overflow-hidden sm:-mx-6 sm:-mt-6 sm:rounded-t-md">
+          <img
+            src={story.image}
+            alt=""
+            loading="lazy"
+            className="w-full h-auto max-h-[200px] object-cover transition-opacity duration-200 group-hover:opacity-90"
+            onError={(e) => { e.currentTarget.style.display = "none"; }}
+          />
+        </div>
+      ) : null}
       <Meta story={story} />
       <h2
         className={cn(
@@ -158,6 +157,17 @@ function StoryModal({ story, onClose }) {
             </button>
           </header>
           <div className="p-5 sm:p-8 md:p-10">
+            {story.image ? (
+              <div className="-mx-5 -mt-5 mb-6 rounded-t-md overflow-hidden sm:-mx-8 sm:-mt-8 md:-mx-10 md:-mt-10 md:mb-8 sm:rounded-t-md md:rounded-t-lg">
+                <img
+                  src={story.image}
+                  alt=""
+                  loading="lazy"
+                  className="w-full h-auto max-h-[300px] object-cover"
+                  onError={(e) => { e.currentTarget.style.display = "none"; }}
+                />
+              </div>
+            ) : null}
             <h2 className="font-serif text-2xl font-black leading-tight break-words text-foreground sm:text-3xl md:text-4xl">
               {story.title}
             </h2>

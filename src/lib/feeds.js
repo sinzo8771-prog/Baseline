@@ -67,6 +67,43 @@ function firstByTag(root, tag) {
   return nodes.length > 0 ? nodes[0] : null;
 }
 
+function firstByTagNS(root, ns, tag) {
+  const nodes = root.getElementsByTagNameNS(ns, tag);
+  return nodes.length > 0 ? nodes[0] : null;
+}
+
+function getImageFromNode(node) {
+  // Check enclosure (RSS 2.0)
+  const enclosures = node.getElementsByTagName("enclosure");
+  for (let i = 0; i < enclosures.length; i++) {
+    const type = enclosures[i].getAttribute("type") || "";
+    const url = enclosures[i].getAttribute("url") || "";
+    if (type.startsWith("image/") && url) return url;
+  }
+  // Check media:content (Media RSS)
+  const mediaContents = node.getElementsByTagNameNS("http://search.yahoo.com/mrss/", "content");
+  for (let i = 0; i < mediaContents.length; i++) {
+    const medium = mediaContents[i].getAttribute("medium") || "";
+    const url = mediaContents[i].getAttribute("url") || "";
+    if (medium === "image" && url) return url;
+  }
+  // Check media:thumbnail (Media RSS)
+  const mediaThumbs = node.getElementsByTagNameNS("http://search.yahoo.com/mrss/", "thumbnail");
+  for (let i = 0; i < mediaThumbs.length; i++) {
+    const url = mediaThumbs[i].getAttribute("url") || "";
+    if (url) return url;
+  }
+  // Check atom:link rel="enclosure"
+  const atomLinks = node.getElementsByTagNameNS("http://www.w3.org/2005/Atom", "link");
+  for (let i = 0; i < atomLinks.length; i++) {
+    const rel = atomLinks[i].getAttribute("rel") || "";
+    const type = atomLinks[i].getAttribute("type") || "";
+    const href = atomLinks[i].getAttribute("href") || "";
+    if (rel === "enclosure" && type.startsWith("image/") && href) return href;
+  }
+  return null;
+}
+
 export function parseFeed(xml, sourceName, DOMParserCtor = globalThis.DOMParser) {
   if (!DOMParserCtor) return [];
   // Accept either a DOMParser constructor (new DOMParser()) — as the browser passes
@@ -114,12 +151,15 @@ export function parseFeed(xml, sourceName, DOMParserCtor = globalThis.DOMParser)
       const rawDate = (dateEl?.textContent ?? "").trim();
       const date = new Date(rawDate);
 
+      const image = getImageFromNode(node);
+
       return {
         title,
         link,
         summary,
         publishedAt: Number.isNaN(date.getTime()) ? "" : date.toISOString(),
         source: sourceName,
+        image,
       };
     })
     .filter((s) => s.title && s.link && !Number.isNaN(Date.parse(s.publishedAt)));
