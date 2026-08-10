@@ -144,7 +144,7 @@ export default function HypeIndex({ stats, sourceStats, loaded, offline, reload 
                 The baseline starts the day you read your first edition. Come back tomorrow and we'll tell you whether the presses are getting louder.
               </p>
             ) : (
-              <p className="mt-4 text-sm text-foreground/80">
+              <p className="mt-4 mb-6 text-sm text-foreground/80">
                 <span className="font-semibold text-foreground">
                   {delta > 0 ? "▲" : delta < 0 ? "▼" : "—"} {Math.abs(delta)} pts
                 </span>{" "}
