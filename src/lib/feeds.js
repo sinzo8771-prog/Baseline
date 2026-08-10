@@ -101,6 +101,15 @@ function getImageFromNode(node) {
     const href = atomLinks[i].getAttribute("href") || "";
     if (rel === "enclosure" && type.startsWith("image/") && href) return href;
   }
+  // Fallback: extract first <img> from description/summary/content HTML
+  const htmlContent = node.getElementsByTagName("description")[0]?.textContent ||
+    node.getElementsByTagName("summary")[0]?.textContent ||
+    node.getElementsByTagName("content")[0]?.textContent ||
+    node.getElementsByTagName("encoded")[0]?.textContent;
+  if (htmlContent) {
+    const imgMatch = htmlContent.match(/<img[^>]+src=["']([^"']+)["']/i);
+    if (imgMatch?.[1]) return imgMatch[1];
+  }
   return null;
 }
 
