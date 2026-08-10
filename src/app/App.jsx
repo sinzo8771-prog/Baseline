@@ -65,7 +65,7 @@ function MastheadMeta({ dateLabel, updatedLabel }) {
 }
 
 export default function App() {
-  const { stories, stats, sources, offline, loaded, settled, reload } = useBaselineData();
+  const { stories, stats, sources, offline, loaded, settled, servedFromCache, reload } = useBaselineData();
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
   usePageTitle();
@@ -92,7 +92,8 @@ export default function App() {
   const now = new Date();
   const dateLabel = now.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
   const updatedLabel = stats?.generatedAt
-    ? "Sourced " + new Date(stats.generatedAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }) + " · refresh for the latest"
+    ? (servedFromCache && !settled ? "Showing saved edition, refreshing… · " : "")
+      + "Sourced " + new Date(stats.generatedAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }) + " · refresh for the latest"
     : "";
 
   return (
