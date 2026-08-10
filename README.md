@@ -2,38 +2,86 @@
 
 **AI news, hype removed.**
 
+![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)
+![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
+![Tailwind CSS 4](https://img.shields.io/badge/Tailwind_CSS-4-38BDF8?logo=tailwindcss&logoColor=white)
+![Cloudflare Workers](https://img.shields.io/badge/Cloudflare_Workers-Free_Tier-F38020?logo=cloudflare&logoColor=white)
+![Deploy](https://img.shields.io/badge/status-live-2ea44f)
+[![CI](https://github.com/sinzo8771-prog/Baseline/actions/workflows/deploy.yml/badge.svg)](https://github.com/sinzo8771-prog/Baseline/actions/workflows/deploy.yml)
+
 A free, editorial-print AI news site that aggregates RSS from the AI industry and its chroniclers — verbatim. Headlines as published, spin as detected, hype as measured. No AI-generated content anywhere.
 
 ![The Baseline](public/og-image.png)
 
-Live site: https://the-baseline.baseline-news.workers.dev
+**Live site:** <https://the-baseline.baseline-news.workers.dev>
 
 ---
 
+## Table of contents
+
+- [Why "hype removed"?](#why-hype-removed)
+- [Features](#features)
+- [Pages](#pages)
+- [Stack](#stack)
+- [Architecture](#architecture)
+- [Local development](#local-development)
+- [Tests](#tests)
+- [Build](#build)
+- [Deploy](#deploy)
+  - [Manual](#manual)
+  - [CI (recommended)](#ci-recommended)
+- [Project structure](#project-structure)
+- [API endpoints](#api-endpoints)
+- [Adding or changing sources](#adding-or-changing-sources)
+- [Hype scoring](#hype-scoring)
+- [Hype Index history](#hype-index-history)
+- [Accessibility](#accessibility)
+- [Roadmap](#roadmap)
+
+## Why "hype removed"?
+
+Most AI coverage reads like a press release. Every model is "revolutionary", every benchmark is "AGI-adjacent". The Baseline does the opposite of writing news: it *collects* it. Ten RSS feeds from the people doing the work and the people covering it are fetched fresh on every page load, parsed in your browser, scored for spin, deduped across sources, and laid out like tomorrow's paper — with the hype measured, not amplified.
+
+The site never rewrites a headline and generates no content. It is a meter, not a voice.
+
 ## Features
 
-- **Live RSS aggregation** — fetches 10 AI feeds in the browser, fresh on every load.
-- **Hype Index** — a print-style gauge showing what share of today's stories are "enthusiastic."
-- **Spin scale** — every story is scored Measured → Warm → Hot → On Fire by a heuristic detector.
-- **Filter chips** — filter the edition by hype level with live per-bucket counts.
-- **Editorial print design** — serif masthead, paper texture, light/dark themes, no WebGL or experimental APIs.
-- **Progressive rendering** — stories stream in as each feed resolves; a slow feed never holds the front page.
-- **Accessible** — keyboard-navigable modal with a focus trap, ARIA-metered hype gauge, reduced-motion support, color-blind-safe spin badges (shape *and* color).
-- **SEO-ready** — Open Graph/Twitter/JSON-LD tags, `robots.txt`, `sitemap.xml`, `site.webmanifest`, and a generated 1200×630 OG image.
+- **Live RSS aggregation** — fetches 10 AI feeds in the browser on every load; a slow feed never holds the front page (stories stream in as each feed resolves).
+- **Hype Index** — a print-style gauge showing what share of today's stories are "enthusiastic", with **history**: today's reading vs. yesterday, plus a 7-day trend, persisted per-day in your browser.
+- **Spin scale** — every story is scored Measured → Warm → Hot → On Fire by a heuristic detector, shown as color-and-shape badges.
+- **Search** — filter the edition by any text in a headline, summary, or source name.
+- **Source drill-down** — a `?source=` URL filter isolates one outlet, with a one-click "stop filtering" chip.
+- **Sorting** — *Edited* (the default news judgment: freshness weighted by hype), *Newest*, *Hottest*, *By Source*.
+- **Filter chips** — filter by hype level with live per-bucket counts; search, source, and hype filters compose.
+- **Two views** — *Edition* (the print-style list with lead story, glitch headline, and spin badges) and *Cards* (a 21st.dev NewsCards feed where each card's gradient band is keyed to its hype tier).
+- **Resilience** — an in-browser saved edition (SWR-style cache) paints instantly when offline; a "Showing the saved edition, refreshing…" banner offers retry, and every error state has a working "Try the presses again" button.
+- **Editorial print design** — serif masthead, paper texture, sticky utility nav, light/dark themes, subtle canvas flourishes (VHS footer, reveal effects) that respect reduced motion.
+- **SEO-ready** — Open Graph / Twitter / JSON-LD tags, `robots.txt`, `sitemap.xml`, `site.webmanifest`, and a generated 1200×630 OG image.
 - **OPML export** — one click to grab every source for your own reader.
+- **Crash-proofing** — a root `<ErrorBoundary>` catches render errors and prints a "STOP THE PRESSES" recovery screen instead of a blank page.
+
+## Pages
+
+| Route | Page |
+| --- | --- |
+| `/` | **Home** — the edition: lead story, search, hype filter chips, sort control, Edition/Cards view toggle |
+| `/hype-index` | **Hype Index** — today's gauge, spin distribution, delta vs. yesterday, 7-day trend |
+| `/sources` | **Sources** — the ten feeds with live status, per-feed drill-down, OPML export |
+| `/about` | **About** — the editorial stance |
+| `*` | **404** — a themed dead-end |
 
 ## Stack
 
-- **Frontend**: React 19 + Vite + Tailwind CSS 4 (shadcn-style components), static build output into `dist/`.
-- **Hosting**: a Cloudflare Worker serves the built app (`env.ASSETS` → `dist/`) and relays feed XML at `/api/feed`.
+- **Frontend**: React 19 + Vite + Tailwind CSS 4 (shadcn-style primitives), `react-router-dom` for routing, `framer-motion` for motion, `lucide-react` for icons. Static build output into `dist/`.
+- **Hosting**: a Cloudflare Worker serves the built app (`env.ASSETS` → `dist/`) and relays feed XML at `/api/feed` (with a source list at `/api/feeds`).
 - **RSS parsing** happens entirely in the browser (the Worker is pure I/O, so the free-tier CPU cap is respected).
 
 ## Architecture
 
 This site runs on Cloudflare's free tier, which enforces a sub-millisecond CPU budget per invocation — too small for server-side RSS parsing. So the work is split:
 
-- **Worker** (`src/index.js`): serves the built React app from `dist/` and relays feed XML from an allowlisted set of sources. Pure I/O, trivial CPU.
-- **Browser**: fetches each feed through the Worker, parses it with the native `DOMParser`, scores hype, dedupes, and renders the front page. Fresh on every load.
+- **Worker** (`src/index.js`): serves the built React app from `dist/`, lists sources, and relays feed XML from an allowlisted set. Pure I/O, trivial CPU. It also locks CORS down to its own origin so it can't be used as an open proxy.
+- **Browser**: fetches each feed through the Worker, parses it with the native `DOMParser`, scores hype, dedupes across feeds, ranks the edition, and renders. Fresh on every load.
 
 ```mermaid
 flowchart LR
@@ -60,6 +108,8 @@ flowchart LR
     C -- "parse → score → dedupe" --> A
 ```
 
+A note on the feeds: several publishers block Cloudflare's egress IPs as bots, so the Worker relays with a real browser User-Agent; Anthropic publishes no RSS, so its feed comes from an hourly-updated GitHub mirror.
+
 ## Local development
 
 ```bash
@@ -81,7 +131,7 @@ npm run dev:react
 npm test
 ```
 
-Runs the unit suite with `node --test` (hype scoring, dedupe, RSS parsing, pipeline, and a guard that the local source allowlist matches the Worker's).
+Runs the unit suite with `node --test`: hype scoring, cross-feed dedupe, RSS parsing, pipeline composition, Hype Index history, and a guard that the browser-side source allowlist matches the Worker's.
 
 ## Build
 
@@ -103,7 +153,7 @@ npx wrangler login
 npm run deploy
 ```
 
-`npm run deploy` builds the React app, then uploads the Worker and the static assets. The Worker serves both the site and the feed relay on your `workers.dev` URL. No KV namespace is required.
+`npm run deploy` builds the React app, then uploads the Worker and the static assets. The Worker serves both the site and the feed relay on your `workers.dev` URL. No KV namespace or bindings are required.
 
 ### CI (recommended)
 
@@ -123,23 +173,41 @@ Both need two repository secrets:
 
 ```
 src/
-  index.js                 # Worker: static assets + /api/feed relay (allowlist)
-  main.jsx                 # React entry point
+  index.js                 # Worker: static assets, /api/feeds, /api/feed relay (allowlist)
+  main.jsx                 # React entry point (wraps the app in <ErrorBoundary>)
   app/
-    App.jsx                # Page: masthead, filters, sections
+    App.jsx                # Shell: SiteNav, masthead, routes, VHS footer, toasts
     styles.css             # Print-style theme tokens (Tailwind v4)
-    components/            # HypeMeter, SelectorChips, SpinBadge, StoryFeed
+    components/            # SiteNav, SiteFooter, StoryFeed, SpinBadge, SelectorChips,
+                           # HypeMeter, EmptyState, ErrorBoundary
+    pages/                 # Home, HypeIndex, Sources, About, NotFound
     hooks/                 # useBaselineData, useTheme
-    lib/exportOPML.js      # OPML export
+    lib/                   # hypeHistory.js, exportOPML.js
   lib/
-    feeds.js               # Source allowlist (must match src/index.js)
+    feeds.js               # Source allowlist + browser-side fetch/parse helpers
+                           # (must match src/index.js)
     hype.js                # Spin-scoring heuristics
     dedupe.js              # Cross-feed dedupe
     pipeline.js            # Compose + score + stats
-  components/ui/           # shadcn-style primitives
+  components/
+    ui/                    # shadcn-style primitives (button, card, badge, …)
+    canvasui/              # Glitch, DecryptReveal, VHS, Asciify, RetroDither
 public/                    # OG image, robots.txt, sitemap, manifest, favicons
 test/                      # node --test unit suite
+.github/workflows/         # deploy.yml, preview-deploy.yml
 ```
+
+## API endpoints
+
+The Worker exposes a tiny, same-origin-only API:
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /api/feeds` | JSON list of `{ name, feed }` for every source (cache-control: 5 min + stale-while-revalidate) |
+| `GET /api/feed?name=OpenAI` | Relays that source's upstream RSS XML (browser UA, 8 s upstream timeout) |
+| `GET /api/news` | Retired — returns a `410` explaining the presses moved into the browser |
+
+CORS is restricted to the Worker's own origin so third parties can't use the relay as a free open proxy.
 
 ## Adding or changing sources
 
@@ -160,3 +228,29 @@ flowchart LR
     M & W & H2 & F --> D["dedupe + sort"]
     D --> R["front page"]
 ```
+
+## Hype Index history
+
+The index only means something with a baseline, so each day's reading is written to `localStorage` (`baseline-hype-history-v1`, capped at 30 days). The Hype Index page then shows **today vs. yesterday** ("63% today, up 8 from yesterday") and a **7-day trend line**. If a previous day is missing — a first visit, a private-mode browser — the delta and trend quietly hide rather than fabricate a story.
+
+## Accessibility
+
+- Keyboard-navigable story modal with a focus trap, Escape to close, and focus restored on close.
+- ARIA-metered hype gauge and `role="status"` banners for offline/refreshing states.
+- Reduced-motion support across canvas effects, decrypted headlines, and the VHS footer.
+- Color-blind-safe spin badges (shape *and* color), AA-safe chip contrast, and `line-clamp`-ed titles that never push the grid.
+
+## Roadmap
+
+Ideas on the press, in rough priority order:
+
+- **Per-story structured data** — publication date, reading time, category, and a stable internal ID for every story.
+- **Permalinks** — a deep link that reproduces the exact edition (or story) it points at.
+- **PWA** — offline installability, icons, and a service worker around the saved-edition cache.
+- **Edge caching** — serve `/api/feed` responses from the CDN with short TTLs to cut upstream load.
+- **Source leaderboard** — who writes the most (and the least) hype, over time.
+- **`j`/`k` keyboard navigation** — move up and down the edition without a mouse.
+
+---
+
+*Verbatim in, hype measured out.*
