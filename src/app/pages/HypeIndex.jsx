@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import HypeMeter from "../components/HypeMeter.jsx";
 import EmptyState from "../components/EmptyState.jsx";
-import RetroDither from "@/components/canvasui/RetroDither.jsx";
 import { readHypeHistory, hypeTrend } from "../lib/hypeHistory.js";
 import { dailyShift } from "@/lib/pipeline";
 
@@ -131,19 +130,10 @@ export default function HypeIndex({ stats, sourceStats, loaded, offline, reload 
   const { delta, series } = hypeTrend(history);
 
   return (
-    <RetroDither
-      pattern="halftone"
-      pixelSize={3}
-      levels={4}
-      darkColor={[0.1, 0.08, 0.05]}
-      lightColor={[0.97, 0.94, 0.88]}
-      contrast={0.7}
-      strength={0.75}
-    >
-      <section id="hype-index" className="section">
-        <h2 className="section-title">The Hype Index</h2>
-        <p className="section-note">Share of today's stories that are, let's say, enthusiastic.</p>
-        {loaded && !offline && stats ? (
+    <section id="hype-index" className="section">
+      <h2 className="section-title">The Hype Index</h2>
+      <p className="section-note">Share of today's stories that are, let's say, enthusiastic.</p>
+      {loaded && !offline && stats ? (
           <>
             <HypeMeter percent={stats.hypePercent} className="mb-5" />
             <p className="text-sm text-muted-foreground">
@@ -176,6 +166,5 @@ export default function HypeIndex({ stats, sourceStats, loaded, offline, reload 
           <div className="h-6 w-60 animate-pulse rounded skeleton" />
         )}
       </section>
-    </RetroDither>
   );
 }
