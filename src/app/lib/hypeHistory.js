@@ -57,3 +57,61 @@ export function hypeTrend(history) {
     series: history.slice(0, 7).map((e) => ({ date: e.date, hypePercent: e.hypePercent })),
   };
 }
+
+// Per-source daily averages, so the Sources page can show "who's getting
+// louder" without pretending browser-local data is global. Stored separately
+// from the global hype history so each reader's baseline stays honest.
+const SOURCE_HISTORY_KEY = "baseline-source-history-v1";
+const SOURCE_MAX_DAYS = 30;
+
+export function readSourceHistory() {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(SOURCE_HISTORY_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((e) => e && typeof e.date === "string" && Array.isArray(e.sources))
+      .slice(0, SOURCE_MAX_DAYS);
+  } catch {
+    return [];
+  }
+}
+
+// `sourceStats` is the output of pipeline.sourceStats (full edition). Records
+// today's per-source averages, newest-first, one entry per calendar day.
+export function recordSourceStats(sourceStats, d = new Date()) {
+  if (typeof window === "undefined") return;
+  const today = localDateKey(d);
+  const entry = {
+    date: today,
+    sources: sourceStats.map((s) => ({ name: s.name, count: s.count, avgHype: s.avgHype })),
+  };
+  try {
+    const history = readSourceHistory().filter((e) => e.date !== today);
+    history.unshift(entry);
+    window.localStorage.setItem(SOURCE_HISTORY_KEY, JSON.stringify(history.slice(0, SOURCE_MAX_DAYS)));
+  } catch {
+    // Non-fatal: the leaderboard just shows today without a trend.
+  }
+}
+
+// Compare a source's average headline intensity against its previous available
+// day. Returns "up" | "down" | "flat", or null when there's no prior reading.
+export function sourceTrend(history, name) {
+  const today = history.find((e) => e.sources.some((s) => s.name === name));
+  if (!today) return null;
+  const todayEntry = today.sources.find((s) => s.name === name);
+  let prevEntry = null;
+  for (const day of history.slice(1)) {
+    const match = day.sources.find((s) => s.name === name);
+    if (match) {
+      prevEntry = match;
+      break;
+    }
+  }
+  if (!todayEntry || !prevEntry) return null;
+  if (todayEntry.avgHype === prevEntry.avgHype) return "flat";
+  return todayEntry.avgHype > prevEntry.avgHype ? "up" : "down";
+}

@@ -1,6 +1,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { localDateKey, readHypeHistory, recordToday, hypeTrend } from "../src/app/lib/hypeHistory.js";
+import {
+  localDateKey,
+  readHypeHistory,
+  recordToday,
+  hypeTrend,
+  recordSourceStats,
+  readSourceHistory,
+  sourceTrend,
+} from "../src/app/lib/hypeHistory.js";
 
 function fakeWindow() {
   const store = new Map();
@@ -71,4 +79,51 @@ test("hypeHistory ignores garbage in storage", () => {
   const store = fakeWindow();
   store.set("baseline-hype-history-v1", "not json");
   assert.deepEqual(readHypeHistory(), []);
+});
+
+test("recordSourceStats roundtrips and replaces the same day", () => {
+  fakeWindow();
+  const day1 = [
+    { name: "OpenAI", count: 3, avgHype: 40 },
+    { name: "Wired", count: 2, avgHype: 12 },
+  ];
+  recordSourceStats(day1);
+  recordSourceStats([
+    { name: "OpenAI", count: 4, avgHype: 55 },
+    { name: "Wired", count: 2, avgHype: 12 },
+  ]);
+  const history = readSourceHistory();
+  assert.equal(history.length, 1);
+  const openai = history[0].sources.find((s) => s.name === "OpenAI");
+  assert.equal(openai.avgHype, 55);
+  assert.equal(history[0].date, localDateKey());
+});
+
+test("sourceTrend compares against the previous available day", () => {
+  fakeWindow();
+  // Two different calendar days so there's a real before/after to compare.
+  recordSourceStats(
+    [
+      { name: "OpenAI", count: 3, avgHype: 60 },
+      { name: "Wired", count: 2, avgHype: 12 },
+    ],
+    new Date(2026, 7, 8),
+  );
+  recordSourceStats(
+    [
+      { name: "OpenAI", count: 4, avgHype: 45 },
+      { name: "Wired", count: 2, avgHype: 12 },
+    ],
+    new Date(2026, 7, 9),
+  );
+  const history = readSourceHistory();
+  assert.equal(sourceTrend(history, "OpenAI"), "down");
+  assert.equal(sourceTrend(history, "Wired"), "flat");
+});
+
+test("sourceTrend returns null when a source has no prior reading", () => {
+  fakeWindow();
+  recordSourceStats([{ name: "Only", count: 1, avgHype: 50 }], new Date(2026, 7, 9));
+  const history = readSourceHistory();
+  assert.equal(sourceTrend(history, "Missing"), null);
 });

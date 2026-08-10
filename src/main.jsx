@@ -14,3 +14,13 @@ root.render(
     </BrowserRouter>
   </ErrorBoundary>,
 );
+
+// Register the offline-shell service worker in production builds only. In dev
+// the worker could cache stale Vite assets and mask HMR.
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {
+      // Registration is a progressive enhancement; failure is non-fatal.
+    });
+  });
+}

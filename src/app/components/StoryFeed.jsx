@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { m, AnimatePresence } from "framer-motion";
-import { ExternalLink, X } from "lucide-react";
+import { Copy, ExternalLink, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import SpinBadge from "./SpinBadge.jsx";
 import Glitch from "@/components/canvasui/Glitch.jsx";
+import { copyText, storyUrl } from "../lib/copyLink.js";
 
 // Editorial story feed. Adapted from 21st.dev's News Cards pattern: cards
 // lift on hover and expand into a shared-layout modal (framer-motion
@@ -39,9 +40,10 @@ function Meta({ story }) {
   );
 }
 
-function CardShell({ story, isLead = false, onOpen }) {
+function CardShell({ story, isLead = false, onOpen, active = false }) {
   return (
     <m.article
+      id={`story-${story.id}`}
       layoutId={`story-${story.id}`}
       whileHover={{ y: -2 }}
       transition={{ type: "spring", stiffness: 400, damping: 30 }}
@@ -49,6 +51,7 @@ function CardShell({ story, isLead = false, onOpen }) {
         "group relative block rounded-md border border-border/70 bg-card p-5 text-left transition-colors duration-150 sm:p-6",
         "hover:border-primary/50 hover:bg-accent/40 hover:shadow-sm",
         isLead && "mb-10 border-t-2 border-border/80 p-6 sm:p-8",
+        active && "border-primary ring-2 ring-primary/30",
       )}
       style={isLead ? { borderTopColor: "var(--vermillion)" } : undefined}
     >
@@ -82,6 +85,15 @@ function StoryModal({ story, onClose }) {
   const closeRef = useRef(null);
   const dialogRef = useRef(null);
   const href = safeHref(story.link);
+  const [copied, setCopied] = useState(false);
+
+  const onCopy = async () => {
+    const ok = await copyText(storyUrl(story.id));
+    if (ok) {
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   useEffect(() => {
     closeRef.current?.focus();
@@ -168,6 +180,26 @@ function StoryModal({ story, onClose }) {
             ) : (
               <p className="mt-8 text-sm text-muted-foreground">The original URL for this story isn't available.</p>
             )}
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={onCopy}
+                className={cn(
+                  "inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-2.5 text-xs font-medium uppercase tracking-[0.08em] text-foreground transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                  copied && "border-primary text-primary",
+                )}
+              >
+                <Copy className="size-3.5" aria-hidden="true" />
+                {copied ? "Link copied" : "Copy link"}
+              </button>
+              <a
+                href={`/story/${encodeURIComponent(story.id)}`}
+                onClick={onClose}
+                className="inline-flex items-center gap-1 text-xs uppercase tracking-[0.08em] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              >
+                Open permalink
+              </a>
+            </div>
           </div>
         </div>
       </m.div>
@@ -177,6 +209,7 @@ function StoryModal({ story, onClose }) {
 
 export default function StoryFeed({ stories }) {
   const [selectedId, setSelectedId] = useState(null);
+  const [activeId, setActiveId] = useState(null);
   const triggerRef = useRef(null);
 
   const selectedStory = stories.find((s) => s.id === selectedId) || null;
@@ -197,6 +230,42 @@ export default function StoryFeed({ stories }) {
   };
   const close = () => setSelectedId(null);
 
+  // j / k move a visual selection between stories, Enter opens it, Escape
+  // closes. Never hijack keys while the user is typing in an input.
+  useEffect(() => {
+    const onKey = (e) => {
+      const t = e.target;
+      const typing = t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable);
+      if (typing) return;
+      const list = stories;
+      if (list.length === 0) return;
+      if (selectedId) {
+        if (e.key === "Escape") {
+          e.preventDefault();
+          close();
+        }
+        return;
+      }
+      const idx = activeId ? list.findIndex((s) => s.id === activeId) : -1;
+      if (e.key === "j" || e.key === "J") {
+        e.preventDefault();
+        const next = Math.min(list.length - 1, Math.max(0, idx + 1));
+        setActiveId(list[next].id);
+        document.getElementById(`story-${list[next].id}`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      } else if (e.key === "k" || e.key === "K") {
+        e.preventDefault();
+        const next = Math.max(0, Math.max(0, idx - 1));
+        setActiveId(list[next].id);
+        document.getElementById(`story-${list[next].id}`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      } else if (e.key === "Enter" && idx >= 0) {
+        e.preventDefault();
+        open(list[idx]);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [stories, activeId, selectedId]);
+
   // A single filtered story is just a card — promoting it to the 4xl lead
   // slot when it's the whole result looks absurd. Lead treatment only earns
   // its weight above a 2-card edition.
@@ -208,7 +277,7 @@ export default function StoryFeed({ stories }) {
   // wrapping every On Fire card in its own WebGL loop would pin the GPU on
   // mobile. Only the lead earns the effect.
   const renderCard = (story, { lead: isLead = false } = {}) => {
-    const card = <CardShell story={story} isLead={isLead} onOpen={() => open(story)} />;
+    const card = <CardShell story={story} isLead={isLead} active={story.id === activeId} onOpen={() => open(story)} />;
     if (isLead && story.spin === "On Fire") {
       return (
         <Glitch key={story.id} intensity={0.85} interval={4} duration={0.3} slices={20} rgbShift={5}>

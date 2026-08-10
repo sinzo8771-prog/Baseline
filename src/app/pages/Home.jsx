@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Search, X } from "lucide-react";
 import StoryFeed from "../components/StoryFeed.jsx";
@@ -25,6 +25,41 @@ const SPIN_GRADIENT = {
   Hot: ["from-primary/30", "to-transparent"],
   "On Fire": ["from-primary/50", "to-chart-4/30"],
 };
+
+const SHORTCUTS = [
+  { key: "j", what: "next story" },
+  { key: "k", what: "previous story" },
+  { key: "Enter", what: "open selected story" },
+  { key: "Escape", what: "close story" },
+  { key: "/", what: "search the edition" },
+  { key: "?", what: "this help" },
+];
+
+function ShortcutsHelp({ onClose }) {
+  return (
+    <div className="mt-3 rounded-md border border-border bg-card p-5" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
+      <div className="mb-2 flex items-center justify-between">
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Keyboard</h3>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close shortcuts"
+          className="inline-flex size-6 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        >
+          <X className="size-3.5" aria-hidden="true" />
+        </button>
+      </div>
+      <ul className="grid gap-1.5 text-sm text-muted-foreground sm:grid-cols-2">
+        {SHORTCUTS.map((s) => (
+          <li key={s.key} className="flex items-center justify-between gap-4">
+            <span className="rounded border border-border bg-accent px-1.5 py-0.5 font-mono text-xs text-foreground">{s.key}</span>
+            <span>{s.what}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 function timeAgo(iso) {
   const d = new Date(iso);
@@ -109,6 +144,28 @@ export default function Home({ stories, offline, loaded, reload }) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState("edited");
   const [view, setView] = useState("edition");
+  const [helpOpen, setHelpOpen] = useState(false);
+  const searchRef = useRef(null);
+
+  // "/" focuses search, "?" toggles the shortcuts help. Skip while typing in an
+  // input or when a story dialog is open, so we never hijack the page.
+  useEffect(() => {
+    const onKey = (e) => {
+      const t = e.target;
+      const typing = t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable);
+      if (typing) return;
+      if (document.querySelector('[role="dialog"]')) return;
+      if (e.key === "/") {
+        e.preventDefault();
+        searchRef.current?.focus();
+      } else if (e.key === "?") {
+        e.preventDefault();
+        setHelpOpen((o) => !o);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
 
   const sourceFilter = searchParams.get("source") || "";
 
@@ -188,6 +245,7 @@ export default function Home({ stories, offline, loaded, reload }) {
               <label className="sr-only" htmlFor="story-search">Search the edition</label>
               <input
                 id="story-search"
+                ref={searchRef}
                 className="search-input"
                 type="search"
                 placeholder="Search the edition…"
@@ -270,6 +328,14 @@ export default function Home({ stories, offline, loaded, reload }) {
             counts={counts}
             onChange={setFilter}
           />
+
+          {hasActiveFilters ? (
+            <p className="mb-3 text-[11px] uppercase tracking-[0.08em] text-muted-foreground" role="status">
+              {sorted.length === 1 ? "Searching 1 story" : `Searching ${sorted.length} stories`}
+            </p>
+          ) : null}
+
+          {helpOpen ? <ShortcutsHelp onClose={() => setHelpOpen(false)} /> : null}
 
           {edition.length === 0 ? (
             <EmptyState

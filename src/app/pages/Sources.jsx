@@ -1,8 +1,56 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import EmptyState from "../components/EmptyState.jsx";
+import { readSourceHistory, sourceTrend } from "../lib/hypeHistory.js";
+import exportOPML from "../lib/exportOPML.js";
 
-function SourceList({ sources }) {
+function TrendGlyph({ trend }) {
+  if (trend === "up") return <span className="text-primary" title="Louder than yesterday">↑</span>;
+  if (trend === "down") return <span className="text-muted-foreground" title="Quieter than yesterday">↓</span>;
+  if (trend === "flat") return <span className="text-muted-foreground" title="Same as yesterday">→</span>;
+  return <span className="text-muted-foreground/50" title="No prior reading">·</span>;
+}
+
+function Leaderboard({ stats, history }) {
+  if (!stats || stats.length === 0) {
+    return <p className="text-sm text-muted-foreground">No edition to measure yet.</p>;
+  }
+  const rows = [...stats].sort((a, b) => b.avgHype - a.avgHype || b.count - a.count);
+  return (
+    <table className="mt-4 w-full border-collapse text-left" role="table" aria-label="Who's shouting — average headline intensity by source">
+      <caption className="sr-only">Average headline intensity by source</caption>
+      <thead>
+        <tr className="border-b border-border text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
+          <th className="py-2 pr-4 font-medium">Source</th>
+          <th className="py-2 pr-4 text-right font-medium">Stories</th>
+          <th className="py-2 pr-4 text-right font-medium">Avg. hype</th>
+          <th className="py-2 text-right font-medium">Trend</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((s) => (
+          <tr key={s.name} className="border-b border-border/60">
+            <td className="py-2.5 pr-4">
+              <Link
+                to={`/sources/${encodeURIComponent(s.name)}`}
+                className="font-medium text-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              >
+                {s.name}
+              </Link>
+            </td>
+            <td className="py-2.5 pr-4 text-right tabular-nums text-muted-foreground">{s.count}</td>
+            <td className="py-2.5 pr-4 text-right tabular-nums text-foreground">{s.avgHype}</td>
+            <td className="py-2.5 text-right">
+              <TrendGlyph trend={sourceTrend(history, s.name)} />
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function FeedStatus({ sources }) {
   const sorted = useMemo(() => {
     return [...(sources || [])].sort((a, b) => {
       if (a.ok !== b.ok) return a.ok ? 1 : -1;
@@ -10,13 +58,13 @@ function SourceList({ sources }) {
     });
   }, [sources]);
   return (
-    <ul id="source-list" className="source-list">
+    <ul id="source-list" className="source-list mt-6">
       {sorted.map((s) => (
         <li key={s.name}>
           <Link
-            to={`/?source=${encodeURIComponent(s.name)}`}
+            to={`/sources/${encodeURIComponent(s.name)}`}
             className="source-link"
-            title={`Browse today's edition from ${s.name}`}
+            title={`Browse ${s.name}`}
           >
             {s.name}
           </Link>
@@ -27,20 +75,38 @@ function SourceList({ sources }) {
   );
 }
 
-export default function Sources({ sources, loaded, offline, reload }) {
+export default function Sources({ sources, sourceStats: stats, loaded, offline, reload }) {
+  const history = readSourceHistory();
   return (
     <section id="sources" className="section">
-      <h2 className="section-title">Sources</h2>
-      <p className="section-note">The feeds behind today's edition, verbatim. Dead sources are skipped automatically. Click a source to browse just its stories.</p>
+      <h2 className="section-title">Who's Shouting?</h2>
+      <p className="section-note">
+        Average headline intensity per source — a measurement, not a judgment. Dead sources are skipped automatically.
+      </p>
+      <button type="button" className="btn-outline mt-4" onClick={exportOPML}>Download OPML</button>
       {loaded ? (
-        offline ? (
+        offline && !stats?.length ? (
           <EmptyState
             kicker="OUT TO LUNCH"
             text="The site is up, but the network is playing dead. Your browser can do everything except fetch. Try the presses again."
             action={{ label: "Try the presses again", onClick: reload }}
           />
         ) : (
-          <SourceList sources={sources} />
+          <>
+            {offline ? (
+              <p className="mb-4 border border-border/70 bg-card px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-foreground" role="status">
+                Showing the saved edition — the live feeds are down.{" "}
+                <button type="button" className="underline underline-offset-4 hover:text-foreground" onClick={reload}>
+                  Try again
+                </button>
+              </p>
+            ) : null}
+            <Leaderboard stats={stats} history={history} />
+            <h3 className="mt-8 text-sm font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              Feed status
+            </h3>
+            <FeedStatus sources={sources} />
+          </>
         )
       ) : (
         <div className="h-6 w-60 animate-pulse rounded skeleton" />

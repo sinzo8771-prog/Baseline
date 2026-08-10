@@ -67,6 +67,14 @@ async function relayFeed(name, request) {
   if (!upstream) {
     return json({ error: "unknown_feed", message: `No feed named "${name ?? ""}".` }, 404);
   }
+  // Short-lived edge cache on top of the cache-control header: a popular
+  // edition can hit the same feed dozens of times, so serving a 5-minute-old
+  // copy spares upstream (and your quota) without ever going stale. Bounded
+  // TTL enforced via the max-age below — nothing is cached forever.
+  const cacheKey = new Request(`https://the-baseline-cache.local/feed?name=${encodeURIComponent(name)}`, request);
+  const cache = caches.default;
+  const cached = await cache.match(cacheKey);
+  if (cached) return cached;
   try {
     const res = await fetch(upstream, {
       signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
@@ -75,7 +83,7 @@ async function relayFeed(name, request) {
     if (!res.ok) {
       return json({ error: `upstream HTTP ${res.status}`, message: `"${name}" returned ${res.status}.` }, 502);
     }
-    return new Response(res.body, {
+    const relayed = new Response(res.body, {
       status: 200,
       headers: {
         "content-type": "text/xml; charset=utf-8",
@@ -83,6 +91,12 @@ async function relayFeed(name, request) {
         "cache-control": "public, max-age=300, stale-while-revalidate=600",
       },
     });
+    // Only cache successful relays; failures must not poison the edge copy.
+    // Keyed per feed name (not by upstream URL) so the allowlist stays the
+    // single source of truth.
+    const toCache = relayed.clone();
+    await cache.put(cacheKey, toCache);
+    return relayed;
   } catch (err) {
     return json(
       { error: "fetch_failed", message: `Could not reach "${name}": ${String(err?.message ?? err)}` },

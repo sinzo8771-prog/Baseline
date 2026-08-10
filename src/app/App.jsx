@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Link, Route, Routes, useLocation } from "react-router-dom";
 import { LazyMotion, MotionConfig, domAnimation } from "framer-motion";
 import useBaselineData from "./hooks/useBaselineData.js";
+import { editionNumber } from "@/lib/pipeline";
 import Home from "./pages/Home.jsx";
 import SiteNav from "./components/SiteNav.jsx";
 import SiteFooter from "./components/SiteFooter.jsx";
@@ -14,6 +15,8 @@ import VHS from "@/components/canvasui/VHS.jsx";
 // eager (it's the landing route and streams the feed).
 const HypeIndex = lazy(() => import("./pages/HypeIndex.jsx"));
 const Sources = lazy(() => import("./pages/Sources.jsx"));
+const SourceProfile = lazy(() => import("./pages/SourceProfile.jsx"));
+const StoryPage = lazy(() => import("./pages/StoryPage.jsx"));
 const About = lazy(() => import("./pages/About.jsx"));
 const NotFound = lazy(() => import("./pages/NotFound.jsx"));
 
@@ -57,7 +60,7 @@ function MastheadMeta({ dateLabel, updatedLabel }) {
     <div className="masthead-meta">
       <span id="masthead-date">{dateLabel}</span>
       <span className="masthead-rule" />
-      <span id="masthead-edition">No. 1 — Free edition</span>
+      <span id="masthead-edition">No. {editionNumber()} — Free edition</span>
       <span className="masthead-rule" />
       <span id="masthead-updated">{updatedLabel}</span>
     </div>
@@ -65,7 +68,7 @@ function MastheadMeta({ dateLabel, updatedLabel }) {
 }
 
 export default function App() {
-  const { stories, stats, sources, offline, loaded, settled, servedFromCache, reload } = useBaselineData();
+  const { stories, allStories, stats, sourceStats, sources, offline, loaded, settled, servedFromCache, reload } = useBaselineData();
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
   usePageTitle();
@@ -118,8 +121,10 @@ export default function App() {
           <Suspense fallback={<RouteFallback />}>
             <Routes>
               <Route path="/" element={<Home stories={stories} offline={offline} loaded={loaded} reload={reload} />} />
-              <Route path="/hype-index" element={<HypeIndex stats={stats} loaded={loaded} offline={offline} reload={reload} />} />
-              <Route path="/sources" element={<Sources sources={sources} loaded={loaded} offline={offline} reload={reload} />} />
+              <Route path="/hype-index" element={<HypeIndex stats={stats} sourceStats={sourceStats} allStories={allStories} loaded={loaded} offline={offline} reload={reload} />} />
+              <Route path="/sources" element={<Sources sources={sources} sourceStats={sourceStats} loaded={loaded} offline={offline} reload={reload} />} />
+              <Route path="/sources/:name" element={<SourceProfile allStories={allStories} sources={sources} sourceStats={sourceStats} loaded={loaded} offline={offline} reload={reload} />} />
+              <Route path="/story/:id" element={<StoryPage allStories={allStories} loaded={loaded} offline={offline} reload={reload} />} />
               <Route path="/about" element={<About showToast={showToast} />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

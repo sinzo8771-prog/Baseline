@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchAllFeeds } from "../../lib/feeds.js";
-import { composeStories, dailyStats } from "../../lib/pipeline.js";
-import { recordToday } from "../lib/hypeHistory.js";
+import { composeStories, dailyStats, sourceStats } from "../../lib/pipeline.js";
+import { recordToday, recordSourceStats } from "../lib/hypeHistory.js";
 
 // The printed edition is capped at 25 stories (1 lead + 24 in the grid).
 // Applying the cap here means the front page, the Hype Index page, the toast,
-// and the chip counts all measure the same edition.
+// and the chip counts all measure the same edition. The full deduped list
+// (allStories) is kept alongside so story permalinks can resolve any story
+// that was in today's composed set, not just the front-page 25.
 const EDITION_CAP = 25;
 
 // Stale-while-revalidate cache of the last good edition so a returning visitor
@@ -28,12 +30,12 @@ function readCachedEdition() {
   }
 }
 
-function writeCachedEdition(edition, stats) {
+function writeCachedEdition(edition, all, stats, sourceStats) {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(
       CACHE_KEY,
-      JSON.stringify({ savedAt: Date.now(), stories: edition, stats }),
+      JSON.stringify({ savedAt: Date.now(), stories: edition, all, stats, sourceStats }),
     );
   } catch {
     // Quota or private-mode failure is non-fatal; we just skip the cache.
@@ -41,9 +43,10 @@ function writeCachedEdition(edition, stats) {
 }
 
 function composeEdition(results) {
-  const full = composeStories(results);
-  const edition = full.slice(0, EDITION_CAP);
-  return { edition, stats: dailyStats(edition) };
+  const all = composeStories(results);
+  const edition = all.slice(0, EDITION_CAP);
+  const stats = dailyStats(edition);
+  return { edition, all, stats, sources: sourceStats(all) };
 }
 
 // Feed results -> the shape the Sources page renders. Each entry carries the
@@ -62,7 +65,9 @@ export default function useBaselineData() {
   // refreshes in the background. Mirrors the original vanilla app.js flow.
   const cached = useMemo(() => readCachedEdition(), []);
   const [stories, setStories] = useState(cached ? cached.stories : []);
+  const [allStories, setAllStories] = useState(cached ? cached.all ?? [] : []);
   const [stats, setStats] = useState(cached ? cached.stats : null);
+  const [sourceStatsList, setSourceStatsList] = useState(cached ? cached.sourceStats ?? [] : []);
   const [sources, setSources] = useState([]);
   const [offline, setOffline] = useState(false);
   const [loaded, setLoaded] = useState(Boolean(cached));
@@ -79,19 +84,24 @@ export default function useBaselineData() {
           // slow feed never holds the front page hostage.
           setLoaded(true);
           setServedFromCache(false);
-          const { edition, stats } = composeEdition(partial);
+          const { edition, all, stats, sources: srcStats } = composeEdition(partial);
           setStories(edition);
+          setAllStories(all);
           setStats(stats);
+          setSourceStatsList(srcStats);
           setSources(sourceStatuses(partial));
         },
       });
-      const { edition, stats } = composeEdition(finalResults);
+      const { edition, all, stats, sources: srcStats } = composeEdition(finalResults);
       setStories(edition);
+      setAllStories(all);
       setStats(stats);
+      setSourceStatsList(srcStats);
       setSources(sourceStatuses(finalResults));
       // Persist the fresh edition for instant paint on the next load.
-      writeCachedEdition(edition, stats);
+      writeCachedEdition(edition, all, stats, srcStats);
       recordToday(stats);
+      recordSourceStats(srcStats);
       // Every relay failed => the network (or the relay) is down, not just the
       // feeds napping. This is the only signal that distinguishes "offline"
       // from a quiet morning, so derive it from the results.
@@ -113,7 +123,7 @@ export default function useBaselineData() {
   }, [load]);
 
   return useMemo(
-    () => ({ stories, stats, sources, offline, loaded, settled, servedFromCache, reload: load }),
-    [stories, stats, sources, offline, loaded, settled, servedFromCache, load],
+    () => ({ stories, allStories, stats, sourceStats: sourceStatsList, sources, offline, loaded, settled, servedFromCache, reload: load }),
+    [stories, allStories, stats, sourceStatsList, sources, offline, loaded, settled, servedFromCache, load],
   );
 }
