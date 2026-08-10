@@ -80,7 +80,7 @@ self.addEventListener("fetch", (event) => {
           if (res.ok) cache.put(request, res.clone());
           return res;
         })
-        .catch(() => cached);
+        .catch(() => cached || new Response("Offline", { status: 503, headers: { "content-type": "text/plain" } }));
       return cached || network;
     })(),
   );
