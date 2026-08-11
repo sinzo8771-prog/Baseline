@@ -117,6 +117,8 @@ A note on the feeds: several publishers block Cloudflare's egress IPs as bots, s
 
 ## Local development
 
+Requires **Node.js 18+** (the Vite 6 and Wrangler 4 toolchain). No Cloudflare account is needed to run locally.
+
 ```bash
 npm install
 npm run dev
@@ -214,6 +216,16 @@ The Worker exposes a tiny, same-origin-only API:
 | `GET /api/news` | Retired — returns a `410` explaining the presses moved into the browser |
 
 CORS is restricted to the Worker's own origin so third parties can't use the relay as a free open proxy. `/api/feeds` and `/api/feed` are additionally rate-limited per IP (90 requests per 60 s, backed by the edge cache, failing open) so the public relay can't be scripted into an abuse target.
+
+Errors are JSON `{ error, message }`:
+
+| Status | Code | Description |
+| --- | --- | --- |
+| 404 | `unknown_feed` | No feed matches the `name` query param |
+| 502 | `upstream HTTP <n>` | Upstream returned a non-2xx status for that feed |
+| 504 | `fetch_failed` | Upstream unreachable, timed out (8 s), or returned an oversized body (refused at 1 MB) |
+| 429 | `rate_limited` | Per-IP limit exceeded (90 requests / 60 s) |
+| 410 | `moved_to_the_browser` | `/api/news` is retired — the presses now print in the browser |
 
 ## Adding or changing sources
 
