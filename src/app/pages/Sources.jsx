@@ -68,7 +68,7 @@ function FeedStatus({ sources }) {
           >
             {s.name}
           </Link>
-          <span className={s.ok ? "status ok" : "status err"}>{s.ok ? "reporting" : `down (${s.error ?? "no signal"})`}</span>
+          <span className={s.ok ? "status ok" : "status err"}>{s.ok ? "live" : `down (${s.error ?? "no signal"})`}</span>
         </li>
       ))}
     </ul>
@@ -87,17 +87,17 @@ export default function Sources({ sources, sourceStats: stats, loaded, offline, 
       {loaded ? (
         offline && !stats?.length ? (
           <EmptyState
-            kicker="OUT TO LUNCH"
-            text="The site is up, but the network is playing dead. Your browser can do everything except fetch. Try the presses again."
-            action={{ label: "Try the presses again", onClick: reload }}
+            kicker="THE PRESSES ARE JAMMED"
+            text="The latest wires could not be reached, and there is no saved edition on hand. Try the presses again."
+            action={{ label: "TRY AGAIN", onClick: reload }}
           />
         ) : (
           <>
             {offline ? (
               <p className="mb-4 border border-border/70 bg-card px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-foreground" role="status">
-                Showing the saved edition — the live feeds are down.{" "}
+                The latest wires could not be reached — showing the saved edition.{" "}
                 <button type="button" className="underline underline-offset-4 hover:text-foreground" onClick={reload}>
-                  Try again
+                  TRY AGAIN
                 </button>
               </p>
             ) : null}

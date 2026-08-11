@@ -62,9 +62,9 @@ export default function SourceProfile({ allStories, sources, sourceStats: stats,
   if (offline && !stat && !feed) {
     return (
       <EmptyState
-        kicker="PRESSES JAMMED"
-        text="The wires could not be reached, and no saved copy of this source is on hand."
-        action={{ label: "Try again", onClick: reload }}
+        kicker="THE PRESSES ARE JAMMED"
+        text="The latest wires could not be reached, and no saved copy of this source is on hand."
+        action={{ label: "TRY AGAIN", onClick: reload }}
       />
     );
   }
