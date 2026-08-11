@@ -19,11 +19,11 @@ The front page, printed from the live edition:
 
 ![Home — the live edition](screenshots/home.jpg)
 
-The Hype Index gauge, a story page's "Why this score" panel, and the source leaderboard:
+The Hype Index gauge, a story page's "Why this score" panel, the source leaderboard, and the methodology page:
 
-| Hype Index | Story | Sources |
-| --- | --- | --- |
-| ![Hype Index](screenshots/hype-index.jpg) | ![Story page](screenshots/story.jpg) | ![Sources](screenshots/sources.jpg) |
+| Hype Index | Story | Sources | Methodology |
+| --- | --- | --- | --- |
+| ![Hype Index](screenshots/hype-index.jpg) | ![Story page](screenshots/story.jpg) | ![Sources](screenshots/sources.jpg) | ![Methodology](screenshots/methodology.jpg) |
 
 Screenshots are refreshed manually from the live site; the feed-driven pages (story permalinks, hype percentages) naturally vary between captures.
 
