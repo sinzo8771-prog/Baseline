@@ -28,6 +28,17 @@ export const FEEDS = {
 // Must stay at or below the browser-side FEED_TIMEOUT_MS (src/lib/feeds.js), or the
 // relay holds upstream connections the browser has already abandoned.
 const UPSTREAM_TIMEOUT_MS = 8000;
+// A malformed or hostile upstream could otherwise hand back an enormous body and
+// eat the request budget (and the free-tier bill). Feeds are small (tens of KB);
+// anything past this cap is refused instead of buffered wholesale.
+const MAX_RELAY_BYTES = 1_000_000;
+// Lightweight abuse protection for the public relay (spec §5.5): a per-IP
+// fixed-window counter parked in the edge cache, with no auth system. A normal
+// page load is ~11 relay requests, so the window is generous for humans while
+// still making scripted scraping painful. Fails open: a cache hiccup never
+// blocks a legitimate reader.
+const RATE_WINDOW_MS = 60_000;
+const RATE_LIMIT_PER_WINDOW = 90;
 // A real browser UA lets most publisher RSS endpoints pass the request through.
 // A custom bot UA (e.g. "TheBaseline/1.0") causes many feeds to return 403/503.
 const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
@@ -35,6 +46,12 @@ const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    if (url.pathname === "/api/feeds" || url.pathname === "/api/feed") {
+      if (!(await allowRequest(request, url.pathname))) {
+        return json({ error: "rate_limited", message: "Too many requests from this address. Take a breath, then try again." }, 429);
+      }
+    }
 
     if (url.pathname === "/api/feeds") {
       return json(
@@ -83,7 +100,19 @@ async function relayFeed(name, request) {
     if (!res.ok) {
       return json({ error: `upstream HTTP ${res.status}`, message: `"${name}" returned ${res.status}.` }, 502);
     }
-    const relayed = new Response(res.body, {
+    // Read the body with a hard byte cap so an enormous or malformed feed can't
+    // consume unbounded resources (spec §5.4). Feeds are small; this never
+    // penalizes a real source.
+    let body;
+    try {
+      body = await readBodyBounded(res, MAX_RELAY_BYTES);
+    } catch {
+      return json(
+        { error: "fetch_failed", message: `"${name}" returned an oversized feed and was refused.` },
+        504,
+      );
+    }
+    const relayed = new Response(body, {
       status: 200,
       headers: {
         "content-type": "text/xml; charset=utf-8",
@@ -102,6 +131,56 @@ async function relayFeed(name, request) {
       { error: "fetch_failed", message: `Could not reach "${name}": ${String(err?.message ?? err)}` },
       504,
     );
+  }
+}
+
+// Read a Response body into a string, throwing if it exceeds `maxBytes`.
+// Works whether or not the upstream declared a Content-Length.
+async function readBodyBounded(res, maxBytes) {
+  const declared = Number(res.headers.get("content-length") || 0);
+  if (declared > maxBytes) throw new Error("oversized response");
+  const reader = res.body.getReader();
+  const chunks = [];
+  let total = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > maxBytes) throw new Error("oversized response");
+    chunks.push(value);
+  }
+  const buf = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    buf.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return new TextDecoder().decode(buf);
+}
+
+// Per-IP fixed-window rate limiter backed by the edge cache. Returns false (and
+// the caller answers 429) once a client exceeds RATE_LIMIT_PER_WINDOW requests
+// in RATE_WINDOW_MS. Any cache failure fails open.
+async function allowRequest(request, scope) {
+  const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+  const bucket = Math.floor(Date.now() / RATE_WINDOW_MS);
+  const key = new Request(`https://the-baseline-cache.local/ratelimit/${scope}/${ip}/${bucket}`, request);
+  try {
+    const cache = caches.default;
+    const cached = await cache.match(key);
+    let count = 0;
+    if (cached) {
+      const text = await cached.text();
+      count = Number.parseInt(text, 10) || 0;
+    }
+    if (count >= RATE_LIMIT_PER_WINDOW) return false;
+    const entry = new Response(String(count + 1), {
+      headers: { "cache-control": `public, max-age=${Math.ceil(RATE_WINDOW_MS / 1000)}` },
+    });
+    await cache.put(key, entry);
+    return true;
+  } catch {
+    return true;
   }
 }
 
