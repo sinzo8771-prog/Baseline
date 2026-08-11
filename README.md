@@ -48,15 +48,17 @@ The site never rewrites a headline and generates no content. It is a meter, not 
 
 - **Live RSS aggregation** — fetches 10 AI feeds in the browser on every load; a slow feed never holds the front page (stories stream in as each feed resolves).
 - **Hype Index** — a print-style gauge showing what share of today's stories are "enthusiastic", with **history**: today's reading vs. yesterday, plus a 7-day trend, persisted per-day in your browser.
-- **Spin scale** — every story is scored Measured → Warm → Hot → On Fire by a heuristic detector, shown as color-and-shape badges.
+- **Spin scale** — every story is scored Measured → Warm → Hot → On Fire by a signal-category detector, shown as color-and-shape badges; a `<details>` popover and the story page's "Why this score" panel explain the exact signals behind each score.
+- **Methodology** — a dedicated page stating what the score measures, what it does not, and where the detector can be fooled.
 - **Search** — filter the edition by any text in a headline, summary, or source name.
-- **Source drill-down** — a `?source=` URL filter isolates one outlet, with a one-click "stop filtering" chip.
-- **Sorting** — *Edited* (the default news judgment: freshness weighted by hype), *Newest*, *Hottest*, *By Source*.
+- **Source drill-down** — a `?source=` URL filter isolates one outlet, with a one-click "stop filtering" chip, plus `/sources/:name` profile pages.
+- **Sorting** — *Edited* (the default news judgment: freshness weighted by hype, with a source-diversity cap so one publisher never owns the front page), *Newest*, *Hottest*, *By Source*.
 - **Filter chips** — filter by hype level with live per-bucket counts; search, source, and hype filters compose.
 - **Two views** — *Edition* (the print-style list with lead story, glitch headline, and spin badges) and *Cards* (a 21st.dev NewsCards feed where each card's gradient band is keyed to its hype tier).
-- **Resilience** — an in-browser saved edition (SWR-style cache) paints instantly when offline; a "Showing the saved edition, refreshing…" banner offers retry, and every error state has a working "Try the presses again" button.
-- **Editorial print design** — serif masthead, paper texture, sticky utility nav, light/dark themes, subtle canvas flourishes (VHS footer, reveal effects) that respect reduced motion.
-- **SEO-ready** — Open Graph / Twitter / JSON-LD tags, `robots.txt`, `sitemap.xml`, `site.webmanifest`, and a generated 1200×630 OG image.
+- **Story permalinks** — `/story/:id` pages with verbatim headline, source, published time, "Why this score", native Share + copy-link, and `NewsArticle` JSON-LD.
+- **Resilience** — an in-browser saved edition (SWR-style cache) paints instantly when offline; a "SAVED EDITION · LAST UPDATED" banner offers retry, and every error state has a working "Try the presses again" button.
+- **Editorial print design** — serif masthead (with date, edition number, and story count), paper texture, sticky utility nav, light/dark themes, subtle canvas flourishes (VHS footer, reveal effects) that respect reduced motion.
+- **SEO-ready** — per-route title/description/canonical, Open Graph / Twitter / JSON-LD tags, `robots.txt`, `sitemap.xml`, `site.webmanifest`, and a generated 1200×630 OG image.
 - **OPML export** — one click to grab every source for your own reader.
 - **Crash-proofing** — a root `<ErrorBoundary>` catches render errors and prints a "STOP THE PRESSES" recovery screen instead of a blank page.
 
@@ -65,8 +67,11 @@ The site never rewrites a headline and generates no content. It is a meter, not 
 | Route | Page |
 | --- | --- |
 | `/` | **Home** — the edition: lead story, search, hype filter chips, sort control, Edition/Cards view toggle |
-| `/hype-index` | **Hype Index** — today's gauge, spin distribution, delta vs. yesterday, 7-day trend |
-| `/sources` | **Sources** — the ten feeds with live status, per-feed drill-down, OPML export |
+| `/hype-index` | **Hype Index** — today's gauge, spin distribution with percentages, WHY TODAY?, biggest hype shift, 7-day trend |
+| `/sources` | **Sources** — the ten feeds with live status, "Who's Shouting?" leaderboard, OPML export |
+| `/sources/:name` | **Source profile** — status, story count, avg intensity, distribution, trend, latest stories |
+| `/story/:id` | **Story** — verbatim headline, source, published time, Hype score, "Why this score", Share/Copy, original link |
+| `/methodology` | **Methodology** — the scoring method, what is not counted, and the detector's limits |
 | `/about` | **About** — the editorial stance |
 | `*` | **404** — a themed dead-end |
 
@@ -80,8 +85,8 @@ The site never rewrites a headline and generates no content. It is a meter, not 
 
 This site runs on Cloudflare's free tier, which enforces a sub-millisecond CPU budget per invocation — too small for server-side RSS parsing. So the work is split:
 
-- **Worker** (`src/index.js`): serves the built React app from `dist/`, lists sources, and relays feed XML from an allowlisted set. Pure I/O, trivial CPU. It also locks CORS down to its own origin so it can't be used as an open proxy.
-- **Browser**: fetches each feed through the Worker, parses it with the native `DOMParser`, scores hype, dedupes across feeds, ranks the edition, and renders. Fresh on every load.
+- **Worker** (`src/index.js`): serves the built React app from `dist/`, lists sources, and relays feed XML from an allowlisted set. Pure I/O, trivial CPU. CORS is locked to its own origin so it can't be used as an open proxy, upstream responses are capped at 1 MB, and `/api/feeds` + `/api/feed` are rate-limited per IP (90 req / 60 s, fails open).
+- **Browser**: fetches each feed through the Worker, parses it with the native `DOMParser`, scores hype by signal category, dedupes across feeds (prefix-aware), ranks the edition with a source-diversity cap, and renders. Fresh on every load.
 
 ```mermaid
 flowchart LR
@@ -131,7 +136,7 @@ npm run dev:react
 npm test
 ```
 
-Runs the unit suite with `node --test`: hype scoring, cross-feed dedupe, RSS parsing, pipeline composition, Hype Index history, and a guard that the browser-side source allowlist matches the Worker's.
+Runs the unit suite with `node --test`: hype scoring (signal categories + false positives), cross-feed dedupe (prefix + punctuation variants), RSS parsing, pipeline composition, edition ranking (freshness, diversity, hype), Hype Index history, and a guard that the browser-side source allowlist matches the Worker's.
 
 ## Build
 
@@ -173,26 +178,27 @@ Both need two repository secrets:
 
 ```
 src/
-  index.js                 # Worker: static assets, /api/feeds, /api/feed relay (allowlist)
+  index.js                 # Worker: static assets, /api/feeds, /api/feed relay (allowlist, rate-limited, body-capped)
   main.jsx                 # React entry point (wraps the app in <ErrorBoundary>)
   app/
-    App.jsx                # Shell: SiteNav, masthead, routes, VHS footer, toasts
+    App.jsx                # Shell: SiteNav, masthead (+edition metadata), routes, VHS footer, toasts, useSeo
     styles.css             # Print-style theme tokens (Tailwind v4)
     components/            # SiteNav, SiteFooter, StoryFeed, SpinBadge, SelectorChips,
                            # HypeMeter, EmptyState, ErrorBoundary
-    pages/                 # Home, HypeIndex, Sources, About, NotFound
+    pages/                 # Home, HypeIndex, Sources, SourceProfile, StoryPage, Methodology, About, NotFound
     hooks/                 # useBaselineData, useTheme
-    lib/                   # hypeHistory.js, exportOPML.js
+    lib/                   # hypeHistory.js, exportOPML.js, copyLink.js
   lib/
     feeds.js               # Source allowlist + browser-side fetch/parse helpers
                            # (must match src/index.js)
-    hype.js                # Spin-scoring heuristics
-    dedupe.js              # Cross-feed dedupe
+    hype.js                # Signal-category spin scoring (with explanations)
+    dedupe.js              # Cross-feed dedupe (prefix-aware)
+    ranking.js             # Edition ranking (freshness + hype + source diversity)
     pipeline.js            # Compose + score + stats
   components/
     ui/                    # shadcn-style primitives (button, card, badge, …)
     canvasui/              # Glitch, DecryptReveal, VHS, Asciify, RetroDither
-public/                    # OG image, robots.txt, sitemap, manifest, favicons
+public/                    # OG image, robots.txt, sitemap, manifest, favicons, sw.js
 test/                      # node --test unit suite
 .github/workflows/         # deploy.yml, preview-deploy.yml
 ```
@@ -204,10 +210,10 @@ The Worker exposes a tiny, same-origin-only API:
 | Endpoint | Purpose |
 | --- | --- |
 | `GET /api/feeds` | JSON list of `{ name, feed }` for every source (cache-control: 5 min + stale-while-revalidate) |
-| `GET /api/feed?name=OpenAI` | Relays that source's upstream RSS XML (browser UA, 8 s upstream timeout) |
+| `GET /api/feed?name=OpenAI` | Relays that source's upstream RSS XML (browser UA, 8 s upstream timeout, 1 MB body cap) |
 | `GET /api/news` | Retired — returns a `410` explaining the presses moved into the browser |
 
-CORS is restricted to the Worker's own origin so third parties can't use the relay as a free open proxy.
+CORS is restricted to the Worker's own origin so third parties can't use the relay as a free open proxy. `/api/feeds` and `/api/feed` are additionally rate-limited per IP (90 requests per 60 s, backed by the edge cache, failing open) so the public relay can't be scripted into an abuse target.
 
 ## Adding or changing sources
 
@@ -215,18 +221,19 @@ Edit the `SOURCES` array in `src/lib/feeds.js` **and** the `FEEDS` map in `src/i
 
 ## Hype scoring
 
-Heuristics live in `src/lib/hype.js`: hype words, emotion words, ALL CAPS, exclamation marks, emoji, and number-bragging. Score maps to Measured / Warm / Hot / On Fire. It is a detector, not a judge. Mostly.
+Heuristics live in `src/lib/hype.js`: signal categories — language, superlatives, benchmark, numerical, formatting, emotional — scored contextually (hedged research framing halves word weight, quoted words are ignored, money/facts don't fire, per-word stacking is bounded). Score maps to Measured / Warm / Hot / On Fire. It is a detector, not a judge. Mostly.
 
 ```mermaid
 flowchart LR
     S["story headline"] --> H{"hype signals?"}
-    H -- "hype words / ALL CAPS / ! / emoji / big numbers" --> P["score"]
+    H -- "language / superlatives / benchmark / numbers / formatting / emotion" --> P["contextual score"]
     P --> M["Measured"]
     P --> W["Warm"]
     P --> H2["Hot"]
     P --> F["On Fire"]
-    M & W & H2 & F --> D["dedupe + sort"]
-    D --> R["front page"]
+    M & W & H2 & F --> D["prefix-aware dedupe"]
+    D --> R["diversity-ranked edition"]
+    R --> FR["front page"]
 ```
 
 ## Hype Index history
@@ -244,12 +251,10 @@ The index only means something with a baseline, so each day's reading is written
 
 Ideas on the press, in rough priority order:
 
-- **Per-story structured data** — publication date, reading time, category, and a stable internal ID for every story.
-- **Permalinks** — a deep link that reproduces the exact edition (or story) it points at.
-- **PWA** — offline installability, icons, and a service worker around the saved-edition cache.
-- **Edge caching** — serve `/api/feed` responses from the CDN with short TTLs to cut upstream load.
-- **Source leaderboard** — who writes the most (and the least) hype, over time.
-- **`j`/`k` keyboard navigation** — move up and down the edition without a mouse.
+- **Component tests** — a small `@testing-library/react` smoke suite for the story modal's focus trap and route rendering.
+- **PWA installability** — a full app-shell service worker with offline install, beyond the current saved-edition cache.
+- **Edge-cached feeds** — serve `/api/feed` from the CDN with shorter TTLs to further cut upstream load.
+- **Own combined feed** — a `/feed.xml` of the deduped, scored edition for subscribers (needs a scheduled Worker writing to KV; deliberately not built while the site stays KV-free).
 
 ---
 
