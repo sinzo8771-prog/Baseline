@@ -7,6 +7,7 @@ import SelectorChips from "../components/SelectorChips.jsx";
 import SpinBadge from "../components/SpinBadge.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import { cn } from "@/lib/utils";
+import { sortStories } from "@/lib/ranking";
 
 const FILTERS = ["all", "Measured", "Warm", "Hot", "On Fire"];
 
@@ -88,33 +89,16 @@ function toNewsCard(story) {
 }
 
 // The default "Edited" order is a news judgment, not a timestamp dump: it
-// favors freshness (a story stops being front-page news after ~a day) and
-// breaks ties toward the hyped, so today's big stories lead the edition. The
-// other sorts are the pure views a power user wants.
+// favors freshness (a story stops being front-page news after ~a day), breaks
+// ties toward the hyped, and caps how many stories any one source can hold in
+// the top of the edition so a single outlet never owns the front page (spec
+// §27/§29). The other sorts are the pure views a power user wants.
 const SORTS = [
   { key: "edited", label: "Edited" },
   { key: "newest", label: "Newest" },
   { key: "hottest", label: "Hottest" },
   { key: "source", label: "By Source" },
 ];
-
-function sortStories(stories, sort) {
-  const recency = (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
-  const arr = [...stories];
-  if (sort === "newest") return arr.sort(recency);
-  if (sort === "hottest") {
-    return arr.sort((a, b) => (b.spinScore ?? 0) - (a.spinScore ?? 0) || recency(a, b));
-  }
-  if (sort === "source") {
-    return arr.sort((a, b) => a.source.localeCompare(b.source) || recency(a, b));
-  }
-  const editedScore = (s) => {
-    const ageH = Math.max(0, (Date.now() - new Date(s.publishedAt).getTime()) / 3.6e6);
-    const freshness = Math.max(0, 20 - ageH);
-    return freshness * 5 + (s.spinScore ?? 0);
-  };
-  return arr.sort((a, b) => editedScore(b) - editedScore(a) || recency(a, b));
-}
 
 function SkeletonCard() {
   return (
@@ -138,7 +122,17 @@ function LeadSkeleton() {
   );
 }
 
-export default function Home({ stories, offline, loaded, reload }) {
+// Editorial loading line — the press metaphor in the product's own voice,
+// still backed by a real timeout and error path (never a substitute for them).
+function PressingWires() {
+  return (
+    <p className="mb-4 text-[11px] uppercase tracking-[0.16em] text-muted-foreground" role="status" aria-live="polite">
+      Pressing the wires…
+    </p>
+  );
+}
+
+export default function Home({ stories, offline, loaded, reload, servedFromCache, savedAt }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [filter, setFilter] = useState("all");
   const [query, setQuery] = useState("");
@@ -208,6 +202,7 @@ export default function Home({ stories, offline, loaded, reload }) {
     <section id="latest" aria-label="Latest stories">
       {!loaded ? (
         <>
+          <PressingWires />
           <LeadSkeleton />
           <div className="mb-6 inline-flex items-center gap-1 rounded-full border border-border bg-card p-1">
             <div className="h-6 w-16 animate-pulse rounded-full skeleton" />
@@ -221,9 +216,9 @@ export default function Home({ stories, offline, loaded, reload }) {
         </>
       ) : offline && edition.length === 0 ? (
         <EmptyState
-          kicker="OUT TO LUNCH"
-          text="The site is up, but the network is playing dead. Your browser can do everything except fetch. Try the presses again."
-          action={{ label: "Try the presses again", onClick: reload }}
+          kicker="THE PRESSES ARE JAMMED"
+          text="The latest wires could not be reached, and there is no saved edition on hand. Your browser can do everything except fetch — try the presses again."
+          action={{ label: "TRY AGAIN", onClick: reload }}
         />
       ) : (
         <>
@@ -232,9 +227,17 @@ export default function Home({ stories, offline, loaded, reload }) {
               className="mb-4 border border-border/70 bg-card px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-foreground"
               role="status"
             >
-              Showing the saved edition — the live feeds are down.{" "}
+              {servedFromCache ? (
+                <>
+                  <span className="font-semibold text-foreground">SAVED EDITION</span>
+                  {savedAt ? ` · LAST UPDATED ${new Date(savedAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}` : null}
+                  {" — "}the latest wires could not be reached. Showing the last saved edition.{" "}
+                </>
+              ) : (
+                "The latest wires could not be reached. "
+              )}
               <button type="button" className="underline underline-offset-4 hover:text-foreground" onClick={reload}>
-                Try again
+                TRY AGAIN
               </button>
             </p>
           ) : null}

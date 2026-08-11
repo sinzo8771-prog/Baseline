@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Copy, ExternalLink } from "lucide-react";
+import { ArrowLeft, Copy, ExternalLink, Share2 } from "lucide-react";
 import SpinBadge from "../components/SpinBadge.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import { copyText, storyUrl } from "../lib/copyLink.js";
@@ -110,6 +110,23 @@ export default function StoryPage({ allStories, loaded, offline, reload }) {
     }
   };
 
+  // Native share when the platform offers it (mobile, some desktops); the
+  // copy button stays for everyone else. Preserves the story permalink either way.
+  const canShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
+  const onShare = async () => {
+    if (!story) return;
+    const url = storyUrl(story.id);
+    if (canShare) {
+      try {
+        await navigator.share({ title: story.title, text: `${story.title} — via The Baseline`, url });
+        return;
+      } catch {
+        // User dismissed the sheet or sharing failed; fall through to copy.
+      }
+    }
+    await onCopy();
+  };
+
   if (!loaded) {
     return (
       <section className="section">
@@ -123,9 +140,9 @@ export default function StoryPage({ allStories, loaded, offline, reload }) {
   if (offline && !story) {
     return (
       <EmptyState
-        kicker="PRESSES JAMMED"
-        text="The wires could not be reached, and no saved copy of this story is on hand. Try the presses again."
-        action={{ label: "Try again", onClick: reload }}
+        kicker="THE PRESSES ARE JAMMED"
+        text="The latest wires could not be reached, and no saved copy of this story is on hand. Try the presses again."
+        action={{ label: "TRY AGAIN", onClick: reload }}
       />
     );
   }
@@ -203,6 +220,14 @@ export default function StoryPage({ allStories, loaded, offline, reload }) {
             Read original <ExternalLink className="size-3.5" aria-hidden="true" />
           </a>
         ) : null}
+        <button
+          type="button"
+          onClick={onShare}
+          className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-2.5 text-xs font-medium uppercase tracking-[0.08em] text-foreground transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        >
+          <Share2 className="size-3.5" aria-hidden="true" />
+          {canShare ? "Share" : "Copy link"}
+        </button>
         <button
           type="button"
           onClick={onCopy}

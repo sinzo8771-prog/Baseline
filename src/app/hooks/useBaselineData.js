@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchAllFeeds } from "../../lib/feeds.js";
 import { composeStories, dailyStats, sourceStats } from "../../lib/pipeline.js";
+import { signalStats } from "../../lib/hype.js";
 import { recordToday, recordSourceStats } from "../lib/hypeHistory.js";
 
 // The printed edition is capped at 25 stories (1 lead + 24 in the grid).
@@ -46,6 +47,9 @@ function composeEdition(results) {
   const all = composeStories(results);
   const edition = all.slice(0, EDITION_CAP);
   const stats = dailyStats(edition);
+  // Signal-category breakdown powers the Hype Index "WHY TODAY?" panel and
+  // day-over-day "biggest shift" — always derived from real stories.
+  stats.signalBreakdown = signalStats(edition);
   return { edition, all, stats, sources: sourceStats(all) };
 }
 
@@ -73,6 +77,7 @@ export default function useBaselineData() {
   const [loaded, setLoaded] = useState(Boolean(cached));
   const [settled, setSettled] = useState(false);
   const [servedFromCache, setServedFromCache] = useState(Boolean(cached));
+  const [savedAt, setSavedAt] = useState(cached ? cached.savedAt : null);
 
   const load = useCallback(async () => {
     setSettled(false);
@@ -100,6 +105,7 @@ export default function useBaselineData() {
       setSources(sourceStatuses(finalResults));
       // Persist the fresh edition for instant paint on the next load.
       writeCachedEdition(edition, all, stats, srcStats);
+      setSavedAt(Date.now());
       recordToday(stats);
       recordSourceStats(srcStats);
       // Every relay failed => the network (or the relay) is down, not just the
@@ -123,7 +129,7 @@ export default function useBaselineData() {
   }, [load]);
 
   return useMemo(
-    () => ({ stories, allStories, stats, sourceStats: sourceStatsList, sources, offline, loaded, settled, servedFromCache, reload: load }),
-    [stories, allStories, stats, sourceStatsList, sources, offline, loaded, settled, servedFromCache, load],
+    () => ({ stories, allStories, stats, sourceStats: sourceStatsList, sources, offline, loaded, settled, servedFromCache, savedAt, reload: load }),
+    [stories, allStories, stats, sourceStatsList, sources, offline, loaded, settled, servedFromCache, savedAt, load],
   );
 }
