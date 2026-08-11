@@ -11,14 +11,27 @@
 
 A free, editorial-print AI news site that aggregates RSS from the AI industry and its chroniclers — verbatim. Headlines as published, spin as detected, hype as measured. No AI-generated content anywhere.
 
-![The Baseline](public/og-image.png)
-
 **Live site:** <https://the-baseline.baseline-news.workers.dev>
+
+## Screenshots
+
+The front page, printed from the live edition:
+
+![Home — the live edition](screenshots/home.jpg)
+
+The Hype Index gauge, a story page's "Why this score" panel, and the source leaderboard:
+
+| Hype Index | Story | Sources |
+| --- | --- | --- |
+| ![Hype Index](screenshots/hype-index.jpg) | ![Story page](screenshots/story.jpg) | ![Sources](screenshots/sources.jpg) |
+
+Screenshots are refreshed manually from the live site; the feed-driven pages (story permalinks, hype percentages) naturally vary between captures.
 
 ---
 
 ## Table of contents
 
+- [Screenshots](#screenshots)
 - [Why "hype removed"?](#why-hype-removed)
 - [Features](#features)
 - [Pages](#pages)
