@@ -1,4 +1,4 @@
-import { spinFromStory } from "./hype.js";
+import { spinFromStory, signalStats } from "./hype.js";
 import { dedupeStories } from "./dedupe.js";
 
 function hashId(str) {
@@ -35,6 +35,9 @@ export function dailyStats(stories) {
     hypePercent,
     bySpin,
     total: stories.length,
+    // Per-category signal counts drive the "WHY TODAY?" and "biggest shift"
+    // panels; recordToday persists them with the day's entry.
+    signalBreakdown: signalStats(stories),
     generatedAt: new Date().toISOString(),
   };
 }

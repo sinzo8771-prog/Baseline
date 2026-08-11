@@ -36,6 +36,10 @@ export function recordToday(stats) {
     hypePercent: stats.hypePercent,
     total: stats.total,
     bySpin: stats.bySpin,
+    // Per-category signal counts feed the "WHY TODAY?" / "biggest shift"
+    // panels. Recorded from real story data; absent on older entries, which
+    // the UI must treat as "not enough history".
+    signals: stats.signalBreakdown || undefined,
   };
   try {
     const history = readHypeHistory().filter((e) => e.date !== today);
