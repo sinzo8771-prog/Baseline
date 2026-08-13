@@ -15,7 +15,7 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     globals: true,
-    setupFiles: ["./test/setup.js"],
+    setupFiles: ["./vitest.setup.js"],
     // Component tests live in test/components/. The pure-logic unit suite in
     // test/ is node --test only; jsdom would only slow it down.
     include: ["test/components/**/*.test.{jsx,js}"],

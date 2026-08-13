@@ -8,9 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "deploy": "vite build && wrangler deploy",
-    "test": "node --test \"test/*.test.js\"",
+    "test": "node --test",
     "test:components": "vitest run",
-    "test:all": "node --test \"test/*.test.js\" && vitest run"
+    "test:all": "node --test && vitest run"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
