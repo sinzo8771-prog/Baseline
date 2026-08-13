@@ -3,6 +3,7 @@ import { Link, Route, Routes, useLocation } from "react-router-dom";
 import { LazyMotion, MotionConfig, domAnimation } from "framer-motion";
 import useBaselineData from "./hooks/useBaselineData.js";
 import { editionNumber } from "@/lib/pipeline";
+import Landing from "./pages/Landing.jsx";
 import Home from "./pages/Home.jsx";
 import SiteNav from "./components/SiteNav.jsx";
 import SiteFooter from "./components/SiteFooter.jsx";
@@ -11,8 +12,9 @@ import DecryptReveal from "@/components/canvasui/DecryptReveal.jsx";
 import VHS from "@/components/canvasui/VHS.jsx";
 
 // Secondary pages are code-split so /about, /sources, and /hype-index don't
-// ship their bytes to a visitor who only reads the front page. Home stays
-// eager (it's the landing route and streams the feed).
+// ship their bytes to a visitor who only reads the front page. The landing and
+// the edition stay eager (the landing streams the feed, and the edition is the
+// core reading surface).
 const HypeIndex = lazy(() => import("./pages/HypeIndex.jsx"));
 const Sources = lazy(() => import("./pages/Sources.jsx"));
 const SourceProfile = lazy(() => import("./pages/SourceProfile.jsx"));
@@ -39,6 +41,10 @@ const BASE_URL = "https://the-baseline.baseline-news.workers.dev";
 const ROUTE_META = {
   "/": {
     title: "The Baseline — AI news, hype removed.",
+    description: "A quiet interface for a very loud industry. Headlines as published, spin as detected, hype as measured — in one daily edition.",
+  },
+  "/edition": {
+    title: "Today's Edition — The Baseline",
     description: "A daily RSS edition from the AI industry and its chroniclers. Headlines as published, spin as detected, hype as measured.",
   },
   "/hype-index": {
@@ -165,7 +171,8 @@ export default function App() {
         <main>
           <Suspense fallback={<RouteFallback />}>
             <Routes>
-              <Route path="/" element={<Home stories={stories} offline={offline} loaded={loaded} reload={reload} servedFromCache={servedFromCache} savedAt={savedAt} />} />
+              <Route path="/" element={<Landing stories={stories} stats={stats} sourceStats={sourceStats} offline={offline} loaded={loaded} />} />
+              <Route path="/edition" element={<Home stories={stories} offline={offline} loaded={loaded} reload={reload} servedFromCache={servedFromCache} savedAt={savedAt} />} />
               <Route path="/hype-index" element={<HypeIndex stats={stats} sourceStats={sourceStats} allStories={allStories} loaded={loaded} offline={offline} reload={reload} />} />
               <Route path="/sources" element={<Sources sources={sources} sourceStats={sourceStats} loaded={loaded} offline={offline} reload={reload} />} />
               <Route path="/sources/:name" element={<SourceProfile allStories={allStories} sources={sources} sourceStats={sourceStats} loaded={loaded} offline={offline} reload={reload} />} />

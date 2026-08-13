@@ -15,7 +15,11 @@ A free, editorial-print AI news site that aggregates RSS from the AI industry an
 
 ## Screenshots
 
-The front page, printed from the live edition:
+The landing page — the front door that explains the product and leads into the news:
+
+![Landing — the front door](screenshots/landing.jpg)
+
+The live edition (now at `/edition`):
 
 ![Home — the live edition](screenshots/home.jpg)
 
@@ -79,7 +83,8 @@ The site never rewrites a headline and generates no content. It is a meter, not 
 
 | Route | Page |
 | --- | --- |
-| `/` | **Home** — the edition: lead story, search, hype filter chips, sort control, Edition/Cards view toggle |
+| `/` | **Landing** — the front door: value proposition, today's live snapshot, fresh-story preview, why/how-it-works, Hype Index + source previews, final CTA |
+| `/edition` | **Edition** — the full news experience: lead story, search, hype filter chips, sort control, Edition/Cards view toggle |
 | `/hype-index` | **Hype Index** — today's gauge, spin distribution with percentages, WHY TODAY?, biggest hype shift, 7-day trend |
 | `/sources` | **Sources** — the ten feeds with live status, "Who's Shouting?" leaderboard, OPML export |
 | `/sources/:name` | **Source profile** — status, story count, avg intensity, distribution, trend, latest stories |

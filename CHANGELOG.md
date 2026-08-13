@@ -2,6 +2,20 @@
 
 All notable changes to **The Baseline** are documented here, grouped by the V2 spec's categories. Format: date · what changed · (spec reference).
 
+## 2026-08-13 — Landing page & edition route split
+
+### Product (master plan §8–§23)
+- New **landing page at `/`** — the front door. Editorial value proposition ("A quiet interface for a very loud industry."), two CTAs, then a live snapshot of today's hype (real `stats.hypePercent` + honest change vs yesterday), the four latest stories from the live edition (same data, no second feed), "Why The Baseline", an explicitly labeled illustrative "How loud is the story" scale (mirrors the detector's own test fixtures), a NEWS→HYPE→WHY?→SOURCE→TREND signal loop, a real Hype Index preview with 7-day mini trend, a real "Who's shouting" source preview (average headline intensity, not credibility), and a final CTA. Every number is measured; "DATA TEMPORARILY UNAVAILABLE" / "first reading" / "No sources measured yet" guards where data is absent.
+- **Edition moved to `/edition`** — the full news experience (previously the homepage) now lives there. Nav + footer "Edition" link repointed; `/` stays the masthead/brand front door; no external story/source/index URLs broken.
+- Motion stays restrained (section reveal fade/drift) and honors `prefers-reduced-motion` via the existing `MotionConfig`.
+
+### SEO
+- `ROUTE_META` gained an `/edition` entry (previously fell back to the landing's meta); `/` description tuned to the landing. `sitemap.xml` adds `/edition` (priority 1.0) and demotes `/` to 0.9/weekly.
+
+### Docs
+- New `V2-MASTER-AUDIT.md` — audit of the repo against `THE_BASELINE_MASTER_AI_AGENT_PLAN.md`, covering Phases 1–3 (already-complete security/QA/a11y work) and a section-by-section Phase 4 landing audit, plus defects found (nav/footer link, sitemap+meta) — all fixed.
+- README updated: landing + edition routes in the Pages table and a landing screenshot placeholder.
+
 ## 2026-08-13 — Security & QA audit pass
 
 ### Security

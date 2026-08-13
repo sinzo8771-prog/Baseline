@@ -9,7 +9,7 @@ import useTheme from "../hooks/useTheme.js";
 // streams in.
 
 const NAV_LINKS = [
-  { to: "/", label: "Latest", end: true },
+  { to: "/edition", label: "Edition", end: true },
   { to: "/hype-index", label: "Hype Index" },
   { to: "/sources", label: "Sources" },
   { to: "/about", label: "About" },

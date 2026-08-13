@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 // the (calmed) VHS effect, so this component stays markup + classes.
 
 const NAV_LINKS = [
-  { to: "/", label: "Latest" },
+  { to: "/edition", label: "Edition" },
   { to: "/hype-index", label: "Hype Index" },
   { to: "/sources", label: "Sources" },
   { to: "/about", label: "About" },
