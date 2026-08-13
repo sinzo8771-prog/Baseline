@@ -1,0 +1,101 @@
+# Future Roadmap — The Baseline
+
+This is where ideas go to be *remembered*, not implemented. Per the master plan's
+stop condition (§56), P0/P1 are complete and **no new features should be added**
+without a fresh round of scoping. Everything below was surfaced by the 2026-08-13
+audits (security, accessibility, performance) or by earlier review; none of it is
+required for the current shipped build.
+
+Status legend: `open` — not started · `scoped` — shape/effort understood · `n/a` — decided not to do
+
+---
+
+## Hardening (security, from SECURITY-AUDIT.md)
+
+### Add a Content-Security-Policy (CSP) — `open`
+- **Why:** defense-in-depth. The site currently ships no CSP; a future injection
+  bug would be unmitigated.
+- **Complication:** the theme init script in `index.html` is inline, and Google
+  Fonts needs `style-src`/`font-src`. A workable baseline:
+  `default-src 'self'; script-src 'self' 'sha256-…'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; base-uri 'self'; form-action 'none'`
+- **Effort:** small. Must hash the inline theme script (or extract it to a file),
+  then verify via the deployed Worker response header.
+
+### Sanitize feed image URLs — `scoped`
+- **Why:** `story.image` is used verbatim as `<img src>` (only in the modal). It
+  cannot execute JS, but a misbehaving/malicious feed could point at an external
+  tracker or a `data:` blob.
+- **Shape:** reject non-`https?://` image URLs at parse time (mirror `safeHref`),
+  and add `referrerpolicy="no-referrer"` to feed images.
+- **Effort:** small; changes `src/lib/feeds.js` (or the modal), plus tests.
+
+### Remove dead `src/components/ui/news-cards.jsx` — `scoped`
+- **Why:** superseded by `CardsView`; no imports reference it. It still carries
+  its own `safeHref`/aria pattern code that future readers may copy.
+- **Effort:** trivial (delete file). Low priority; harmless as-is.
+
+---
+
+## Performance
+
+### Trim or split the 462 kB main chunk (149 kB gzip) — `open`
+- **Why:** the main bundle is dominated by the app + the three always-visible
+  WebGL masthead/footer effects (Asciify, DecryptReveal, VHS). They cannot be
+  route-split because they render on every page (and lazy-loading them would
+  hurt LCP — the masthead is above the fold).
+- **Candidates:**
+  1. Trim unused shader paths / reduce glyph counts in the canvas components.
+  2. Vendor-split `react-router-dom` + `lucide-react` if they exceed the
+     automatic chunking threshold.
+  3. Re-check after any future dependency bump — Vite 5+ already code-splits
+     dynamically; only the eager deps are fat.
+
+### Preload the LCP-critical masthead canvas — `n/a`
+- Decided against: the effects already pause off-screen and settle under reduced
+  motion; preloading adds complexity for marginal gain.
+
+---
+
+## Accessibility backlog (everything AA-required already ships)
+
+### Automated axe sweep in CI — `open`
+- **Why:** the 2026-08-13 pass was manual (browser automation unavailable in the
+  audit environment). An automated sweep (axe-core via Playwright/agent-browser)
+  would make the AA baseline re-verifiable on every deploy.
+- **Effort:** moderate; adds a dev-dependency + a `test:axe` script.
+
+### Screen-reader pass (NVDA/VoiceOver) — `open`
+- Manual pass with a real screen reader on the modal, charts, and trend cells.
+  No known issues, but nothing replaces a human SR session.
+
+---
+
+## Product / content backlog (intentionally NOT built)
+
+### Per-source "why it's loud" breakdown — `open`
+- Today the Sources page shows counts/averages; a per-source signal breakdown
+  (mirroring the Hype Index "WHY TODAY?" panel) would explain *why* an outlet is
+  hot. Requires storing per-source signal counts in `sourceStats`.
+
+### Historical archive of editions — `open`
+- localStorage keeps only a 30-day Hype Index baseline; full-edition archives
+  would need a backend (against the "no backend" constraint) or opt-in export.
+
+### OPML / follow-anywhere export — `scoped`
+- An `exportOPML.js` chunk already exists in the build output (currently unused).
+  A small "follow these sources" button on the Sources page could expose it.
+
+### Editorial notes / "The Baseline at a glance" section — `n/a`
+- Considered and rejected: the masthead tagline + toast already carry the
+  editorial voice; a dedicated section would dilute it.
+
+---
+
+## Changelog of decisions
+
+| Date | Decision | Status |
+|---|---|---|
+| 2026-08-13 | Add CSP, sanitize image URLs, remove dead cards file | open |
+| 2026-08-13 | Bundle trim candidates recorded; lazy-loading effects rejected (LCP) | open / n/a |
+| 2026-08-13 | Automated a11y sweep + SR pass | open |
+| 2026-08-13 | Product ideas parked (per-source breakdown, archives, OPML, notes) | open / n/a |

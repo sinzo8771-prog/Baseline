@@ -41,7 +41,7 @@ Status legend: **ALREADY DONE** = implemented and verified · **NEEDS POLISH** =
 | §26 Story modal accessibility | **DONE** | Shared `StoryModal` with focus trap, Escape, focus restore, ARIA dialog used by both StoryFeed and CardsView. |
 | §27 Component tests | **DONE** | `test/components/story-feed.test.jsx` (vitest + @testing-library/react): SignalBreakdown, SpinBadge popover, StoryModal focus behavior. 8 passing. |
 | §28 Feed reliability | **ALREADY DONE** | Timeout, per-feed isolation, partial render, offline, cached edition, SWR. One broken feed never breaks the edition. |
-| §29 Security regression | **ALREADY DONE** | Same-origin CORS, allowlist, 8 s upstream timeout, 1 MB body cap, per-IP rate limit, browser-UA relay. |
+| §29 Security regression | **ALREADY DONE** | Same-origin CORS, allowlist, 8 s upstream timeout, 1 MB body cap, per-IP rate limit, browser-UA relay. Re-verified in `SECURITY-AUDIT.md` (2026-08-13): live probes confirm allowlist-only (404 on unknown names), same-origin CORS (evil origin blocked), retired `/api/news` → 410. |
 | §30 SEO polish | **DONE** | Per-route title/description/canonical/OG/Twitter/JSON-LD; story pages get `NewsArticle` + `og:type=article`. |
 | §31 Favicon | **ALREADY DONE** | `favicon.ico` + 16/32 PNGs + manifest; Baseline-branded. |
 | §32 README reorder | **DONE** | Cards view, tests, structure, roadmap, and history sections refreshed. |

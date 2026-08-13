@@ -283,6 +283,8 @@ Ideas on the press, in rough priority order:
 - **Edge-cached feeds** — serve `/api/feed` from the CDN with shorter TTLs to further cut upstream load.
 - **Own combined feed** — a `/feed.xml` of the deduped, scored edition for subscribers (needs a scheduled Worker writing to KV; deliberately not built while the site stays KV-free).
 
+Parked ideas from the audits (CSP, feed-image sanitization, dead-code removal, bundle trim, automated a11y sweep) are tracked in [`FUTURE-ROADMAP.md`](./FUTURE-ROADMAP.md). Release gates live in [`QA-CHECKLIST.md`](./QA-CHECKLIST.md), and the security review in [`SECURITY-AUDIT.md`](./SECURITY-AUDIT.md).
+
 ---
 
 *Verbatim in, hype measured out.*

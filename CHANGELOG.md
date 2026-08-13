@@ -2,6 +2,20 @@
 
 All notable changes to **The Baseline** are documented here, grouped by the V2 spec's categories. Format: date · what changed · (spec reference).
 
+## 2026-08-13 — Security & QA audit pass
+
+### Security
+- New `SECURITY-AUDIT.md` — full audit of the Worker relay (SSRF allowlist, same-origin CORS, rate limit, body cap), the RSS→render XSS path, the service worker, and localStorage. No critical/high findings.
+- **Fixed (medium):** `SourceProfile` no longer double-decodes the route param. `react-router` v7 percent-decodes params itself; re-decoding threw an uncaught `URIError` on malformed URLs like `/sources/%` and double-decoded names with literal `%`.
+
+### Accessibility
+- Helper labels raised off `text-muted-foreground/60–80` (3.29–4.06:1, below WCAG AA 4.5:1 in light mode) to full-strength `text-muted-foreground` (6.46:1 light / 8.07:1 dark). Decorative `TrendCell` glyph (aria-hidden + sr-only) unchanged.
+
+### QA
+- New `QA-CHECKLIST.md` — the pre-release gate: test command matrix, functional/security/a11y/perf checklists, and a production smoke pass (all routes/APIs 200 or expected, live asset hash matches local build).
+- New `FUTURE-ROADMAP.md` — parked ideas surfaced by the audits (CSP, feed-image sanitization, dead-code removal, bundle trim, automated a11y sweep), per the master plan's stop condition (§56). No new features added.
+- Deployed `f0859a8`; verified the live Worker serves the identical `index-BAwtj85w.js` bundle.
+
 ## 2026-08-13 — Final polish batch: audit, explanation, accessibility, docs
 
 ### Audit
