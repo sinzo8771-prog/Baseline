@@ -2,6 +2,45 @@
 
 All notable changes to **The Baseline** are documented here, grouped by the V2 spec's categories. Format: date · what changed · (spec reference).
 
+## 2026-08-13 — Final polish batch: audit, explanation, accessibility, docs
+
+### Audit
+- `V2-FINAL-AUDIT.md` produced — a section-by-section re-audit of the whole implementation with a status legend (ALREADY DONE / NEEDS POLISH / MISSING / BROKEN) and a defect list. Every defect recorded there is fixed below.
+
+### Accessibility (P0)
+- Trend cells (Sources leaderboard and source profiles) are now real accessible elements: `TrendCell` renders an `aria-label` sentence ("Louder than yesterday by 12%…"), a visually hidden copy, and marks the glyph `aria-hidden` so a bare arrow is never announced as the whole meaning (§27).
+
+### Hype explanation (P1)
+- New `SignalBreakdown` component: every fired signal listed with its exact `+N pts`, plus the hedged-framing note ("Hedged research framing halves word weight") and the standing disclaimer "A Hype score measures how loudly a headline talks, not whether the story is true" (§15, §21).
+- `SpinBadge` popover now opens the full breakdown ("Why Hot · 29/100") instead of a comma-joined string; `StoryPage`'s "Why this score" panel uses the same shared component.
+- The story modal's focus trap, Escape handling, and focus restore were extracted into a shared `StoryModal` used by both the Edition feed and the Cards view (§36).
+
+### Source trend magnitude (P1)
+- `sourceTrendReading` in `src/app/lib/hypeHistory.js` returns direction + delta + percentage (with a sensible points fallback when the previous day had no average). Sources and source profiles now say *how much* louder/quieter a feed is, not just up/down/flat.
+
+### Cards view (P1)
+- Replaced the generic gradient NewsCards feed with `CardsView`: an editorial wire-card grid (hairline separators, serif headlines, SpinBadge, Read affordance, overlay open button) that matches the print identity of the Edition view (§32).
+
+### Hype Index hero (P1)
+- The `/hype-index` stat block now leads with a hero number (the real share of today's stories that are enthusiastic), a plain-English caption, and an honest change line ("Up 8 points from yesterday's 55%.") — the redundant "Today" grid cell is gone (§10).
+
+### Mirrored feeds (P1)
+- Anthropic's GitHub-mirror feed is now labeled **"mirrored feed"** wherever it appears (leaderboard, profile), with a transparency note that it is a community-run mirror updated on a delay (§26, §29).
+
+### Methodology (P2)
+- The methodology page leads with a prominent callout: "A high Hype score does not mean a story is false." (§16, §63).
+
+### SEO (P2)
+- Story pages now emit `og:type=article` (§43).
+
+### Tests
+- Component-test infrastructure: vitest + `@testing-library/react` + jsdom with polyfills for `matchMedia`, `ResizeObserver`, and `AbortSignal.timeout` (`test/setup.js`). Suite covers `SignalBreakdown`, `SpinBadge` popover, and `StoryModal` focus behavior (open, Escape, focus restore) (§55).
+- Four new `sourceTrendReading` unit tests. Total suite: 68 `node --test` + 8 component = 76 passing.
+
+### Docs
+- `README.md` refreshed: Cards view described as the editorial wire-card grid, component-test suite documented, roadmap cleared of the completed item.
+- `baseline-review.md` — the last open P4 finding (component tests) is now **DONE**.
+
 ## 2026-08-11 — Final V2 batch: ranking, dedupe, sharing, mobile QA, docs
 
 ### Security

@@ -102,8 +102,11 @@ export function recordSourceStats(sourceStats, d = new Date()) {
 }
 
 // Compare a source's average headline intensity against its previous available
-// day. Returns "up" | "down" | "flat", or null when there's no prior reading.
-export function sourceTrend(history, name) {
+// day. Returns the reading { direction, delta, pct } where `delta` is the
+// change in intensity points (0–100) and `pct` is the relative change against
+// the previous reading (null when the previous average was 0). Returns null
+// when there's no prior reading to compare against.
+export function sourceTrendReading(history, name) {
   const today = history.find((e) => e.sources.some((s) => s.name === name));
   if (!today) return null;
   const todayEntry = today.sources.find((s) => s.name === name);
@@ -116,6 +119,15 @@ export function sourceTrend(history, name) {
     }
   }
   if (!todayEntry || !prevEntry) return null;
-  if (todayEntry.avgHype === prevEntry.avgHype) return "flat";
-  return todayEntry.avgHype > prevEntry.avgHype ? "up" : "down";
+  const delta = todayEntry.avgHype - prevEntry.avgHype;
+  const direction = delta === 0 ? "flat" : delta > 0 ? "up" : "down";
+  const pct = prevEntry.avgHype === 0 ? null : Math.round((delta / prevEntry.avgHype) * 100);
+  return { direction, delta, pct };
+}
+
+// Shortcut for callers that only need the direction ("up" | "down" | "flat",
+// or null when there's no prior reading).
+export function sourceTrend(history, name) {
+  const reading = sourceTrendReading(history, name);
+  return reading ? reading.direction : null;
 }

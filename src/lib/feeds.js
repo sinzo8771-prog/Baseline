@@ -6,9 +6,12 @@
 
 // Feed URLs mirror the Worker's FEEDS map in src/index.js. Keep the two in sync.
 // Anthropic has no official RSS; the Olshansk/rss-feeds GitHub mirror is updated hourly.
+// `mirror` marks sources whose feed is a community-run mirror rather than the
+// outlet's own channel, so the UI can label them transparently instead of
+// pretending they are first-party.
 export const SOURCES = [
   { name: "OpenAI",          feed: "https://openai.com/blog/rss.xml" },
-  { name: "Anthropic",       feed: "https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_anthropic_news.xml" },
+  { name: "Anthropic",       feed: "https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_anthropic_news.xml", mirror: true },
   { name: "Google DeepMind", feed: "https://deepmind.google/blog/rss.xml" },
   { name: "Hugging Face",    feed: "https://huggingface.co/blog/feed.xml" },
   { name: "The Verge AI",    feed: "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml" },
@@ -18,6 +21,12 @@ export const SOURCES = [
   { name: "TechCrunch AI",   feed: "https://techcrunch.com/category/artificial-intelligence/feed/" },
   { name: "Wired AI",        feed: "https://www.wired.com/feed/tag/ai/latest/rss" },
 ];
+
+// A source is a mirror when its SOURCES entry says so. Derived rather than
+// hand-listed so the label can never drift from the source of truth.
+export function isMirroredFeed(name) {
+  return Boolean(SOURCES.find((s) => s.name === name)?.mirror);
+}
 
 // Keep only the newest stories per feed; the page shows at most 50 total, so this
 // bounds the client-side dedupe (O(n^2)) without missing anything that would make the cut.

@@ -152,7 +152,8 @@ Docs: README, baseline-review.md, CHANGELOG.md (§68, §69).
 
 ## Remaining open items
 
-Only three low-severity gaps remain, all already logged:
+Only two low-severity gaps remain, both already logged:
 - `§52` Observability: no lightweight metrics (latency/failure/dedupe counts) tracked.
 - `§55` History tests: missing a corrupted-`localStorage` fixture.
-- `§55` UI tests: no component/smoke suite (see `baseline-review.md` P4).
+
+> The `§55` UI/component-tests gap and the open P4 item in `baseline-review.md` are now **DONE** — see the final polish batch (`test/components/story-feed.test.jsx`, vitest + `@testing-library/react`).

@@ -1,5 +1,6 @@
 import { Flame, MoveUpRight, Square, Triangle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import SignalBreakdown from "./SignalBreakdown.jsx";
 
 // Semantic badge mapped onto the site's paper / ink / vermillion palette via
 // the shadcn theme tokens. Variants differ by more than hue so the scale stays
@@ -12,7 +13,7 @@ const VARIANT = {
   "On Fire": { cls: "bg-foreground text-background border-transparent", icon: Flame, filled: true },
 };
 
-export default function SpinBadge({ spin, flags, className }) {
+export default function SpinBadge({ spin, flags, signals, hedged, score, className }) {
   const variant = VARIANT[spin] || VARIANT.Measured;
   const Icon = variant.icon;
   const reason = flags?.length ? flags.join(", ") : "no hype signals";
@@ -42,10 +43,16 @@ export default function SpinBadge({ spin, flags, className }) {
             ?
             <span className="sr-only">Why was this flagged {spin}?</span>
           </summary>
-          <span
-            className="absolute left-0 top-7 z-20 w-56 max-w-[calc(100vw-2rem)] rounded-md border border-border bg-popover px-3 py-2 text-[11px] normal-case leading-snug tracking-normal text-popover-foreground shadow-md"
-          >
-            {reason}
+          <span className="absolute left-0 top-7 z-20 w-64 max-w-[calc(100vw-2rem)] rounded-md border border-border bg-popover px-3 py-2 text-[11px] normal-case leading-snug tracking-normal text-popover-foreground shadow-md">
+            <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              Why {spin}
+              {typeof score === "number" ? <span className="ml-1 font-normal normal-case tracking-normal">{score}/100</span> : null}
+            </span>
+            {signals?.length ? (
+              <SignalBreakdown signals={signals} hedged={hedged} />
+            ) : (
+              <span>{reason}</span>
+            )}
           </span>
         </details>
       ) : null}

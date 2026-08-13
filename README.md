@@ -61,13 +61,13 @@ The site never rewrites a headline and generates no content. It is a meter, not 
 
 - **Live RSS aggregation** — fetches 10 AI feeds in the browser on every load; a slow feed never holds the front page (stories stream in as each feed resolves).
 - **Hype Index** — a print-style gauge showing what share of today's stories are "enthusiastic", with **history**: today's reading vs. yesterday, plus a 7-day trend, persisted per-day in your browser.
-- **Spin scale** — every story is scored Measured → Warm → Hot → On Fire by a signal-category detector, shown as color-and-shape badges; a `<details>` popover and the story page's "Why this score" panel explain the exact signals behind each score.
+- **Spin scale** — every story is scored Measured → Warm → Hot → On Fire by a signal-category detector, shown as color-and-shape badges; a `<details>` popover and the story page's "Why this score" panel explain the exact signals behind each score, each with its own point contribution, plus the standing disclaimer that a Hype score measures loudness, not truth.
 - **Methodology** — a dedicated page stating what the score measures, what it does not, and where the detector can be fooled.
 - **Search** — filter the edition by any text in a headline, summary, or source name.
 - **Source drill-down** — a `?source=` URL filter isolates one outlet, with a one-click "stop filtering" chip, plus `/sources/:name` profile pages.
 - **Sorting** — *Edited* (the default news judgment: freshness weighted by hype, with a source-diversity cap so one publisher never owns the front page), *Newest*, *Hottest*, *By Source*.
 - **Filter chips** — filter by hype level with live per-bucket counts; search, source, and hype filters compose.
-- **Two views** — *Edition* (the print-style list with lead story, glitch headline, and spin badges) and *Cards* (a 21st.dev NewsCards feed where each card's gradient band is keyed to its hype tier).
+- **Two views** — *Edition* (the print-style list with lead story, glitch headline, and spin badges) and *Cards* (an editorial wire-card grid — hairline separators, serif headlines, spin badges, overlay open button — that mirrors the print identity).
 - **Story permalinks** — `/story/:id` pages with verbatim headline, source, published time, "Why this score", native Share + copy-link, and `NewsArticle` JSON-LD.
 - **Resilience** — an in-browser saved edition (SWR-style cache) paints instantly when offline; a "SAVED EDITION · LAST UPDATED" banner offers retry, and every error state has a working "Try the presses again" button.
 - **Editorial print design** — serif masthead (with date, edition number, and story count), paper texture, sticky utility nav, light/dark themes, subtle canvas flourishes (VHS footer, reveal effects) that respect reduced motion.
@@ -148,10 +148,13 @@ npm run dev:react
 ## Tests
 
 ```bash
-npm test
+npm test             # unit suite (node --test)
+npm run test:components   # component suite (vitest + @testing-library/react)
+npm run test:all     # both
 ```
 
-Runs the unit suite with `node --test`: hype scoring (signal categories + false positives), cross-feed dedupe (prefix + punctuation variants), RSS parsing, pipeline composition, edition ranking (freshness, diversity, hype), Hype Index history, and a guard that the browser-side source allowlist matches the Worker's.
+- **Unit suite** (`node --test`, `test/*.test.js`): hype scoring (signal categories + false positives), cross-feed dedupe (prefix + punctuation variants), RSS parsing, pipeline composition, edition ranking (freshness, diversity, hype), Hype Index history, and a guard that the browser-side source allowlist matches the Worker's.
+- **Component suite** (`vitest`, `test/components/`): renders the real components in jsdom — `SignalBreakdown` (signal list + disclaimer), `SpinBadge` (sr-only reason + the click-to-open popover), and `StoryModal` through `StoryFeed` (open, focus trap, Escape to close, focus restore).
 
 ## Build
 
@@ -195,11 +198,11 @@ Both need two repository secrets:
 src/
   index.js                 # Worker: static assets, /api/feeds, /api/feed relay (allowlist, rate-limited, body-capped)
   main.jsx                 # React entry point (wraps the app in <ErrorBoundary>)
-  app/
+    app/
     App.jsx                # Shell: SiteNav, masthead (+edition metadata), routes, VHS footer, toasts, useSeo
     styles.css             # Print-style theme tokens (Tailwind v4)
-    components/            # SiteNav, SiteFooter, StoryFeed, SpinBadge, SelectorChips,
-                           # HypeMeter, EmptyState, ErrorBoundary
+    components/            # SiteNav, SiteFooter, StoryFeed, StoryModal, CardsView, SpinBadge,
+                           # SignalBreakdown, TrendCell, SelectorChips, HypeMeter, EmptyState, ErrorBoundary
     pages/                 # Home, HypeIndex, Sources, SourceProfile, StoryPage, Methodology, About, NotFound
     hooks/                 # useBaselineData, useTheme
     lib/                   # hypeHistory.js, exportOPML.js, copyLink.js
@@ -214,7 +217,7 @@ src/
     ui/                    # shadcn-style primitives (button, card, badge, …)
     canvasui/              # Glitch, DecryptReveal, VHS, Asciify, RetroDither
 public/                    # OG image, robots.txt, sitemap, manifest, favicons, sw.js
-test/                      # node --test unit suite
+test/                      # node --test unit suite (test/*.test.js) + vitest component suite (test/components/)
 .github/workflows/         # deploy.yml, preview-deploy.yml
 ```
 
@@ -263,7 +266,7 @@ flowchart LR
 
 ## Hype Index history
 
-The index only means something with a baseline, so each day's reading is written to `localStorage` (`baseline-hype-history-v1`, capped at 30 days). The Hype Index page then shows **today vs. yesterday** ("63% today, up 8 from yesterday") and a **7-day trend line**. If a previous day is missing — a first visit, a private-mode browser — the delta and trend quietly hide rather than fabricate a story.
+The index only means something with a baseline, so each day's reading is written to `localStorage` (`baseline-hype-history-v1`, capped at 30 days). The Hype Index page then shows **today vs. yesterday** ("63% today, up 8 from yesterday") and a **7-day trend line**. Per-source history powers the trend arrows on the Sources leaderboard and source profiles, which report the magnitude of a shift ("Louder than yesterday by 12%"). If a previous day is missing — a first visit, a private-mode browser — the delta and trend quietly hide rather than fabricate a story.
 
 ## Accessibility
 
@@ -276,7 +279,6 @@ The index only means something with a baseline, so each day's reading is written
 
 Ideas on the press, in rough priority order:
 
-- **Component tests** — a small `@testing-library/react` smoke suite for the story modal's focus trap and route rendering.
 - **PWA installability** — a full app-shell service worker with offline install, beyond the current saved-edition cache.
 - **Edge-cached feeds** — serve `/api/feed` from the CDN with shorter TTLs to further cut upstream load.
 - **Own combined feed** — a `/feed.xml` of the deduped, scored edition for subscribers (needs a scheduled Worker writing to KV; deliberately not built while the site stays KV-free).

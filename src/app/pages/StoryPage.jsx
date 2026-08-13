@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, Copy, ExternalLink, Share2 } from "lucide-react";
 import SpinBadge from "../components/SpinBadge.jsx";
+import SignalBreakdown from "../components/SignalBreakdown.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import { copyText, storyUrl } from "../lib/copyLink.js";
 import { cn } from "@/lib/utils";
@@ -55,6 +56,7 @@ function useStoryMeta(story) {
       setMeta("og:title", story.title),
       setMeta("og:description", description),
       setMeta("og:url", url),
+      setMeta("og:type", "article"),
     ];
 
     const script = document.createElement("script");
@@ -84,6 +86,7 @@ function useStoryMeta(story) {
         ["og:title", prevs[0]],
         ["og:description", prevs[1]],
         ["og:url", prevs[2]],
+        ["og:type", prevs[3]],
       ];
       for (const [prop, val] of metas) {
         const el = document.querySelector(`meta[property="${prop}"]`);
@@ -157,8 +160,6 @@ export default function StoryPage({ allStories, loaded, offline, reload }) {
     );
   }
 
-  const reason = story.flags?.length ? story.flags.join(", ") : "no hype signals";
-
   return (
     <section className="section">
       <Link
@@ -182,7 +183,7 @@ export default function StoryPage({ allStories, loaded, offline, reload }) {
       </h1>
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
-        <SpinBadge spin={story.spin} flags={story.flags} />
+        <SpinBadge spin={story.spin} flags={story.flags} signals={story.signals} hedged={story.hedged} score={story.spinScore} />
         <span className="font-mono text-sm text-muted-foreground">
           {story.spinScore}/100 intensity
         </span>
@@ -192,13 +193,7 @@ export default function StoryPage({ allStories, loaded, offline, reload }) {
         <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
           Why this score
         </h2>
-        <p className="mt-2 text-[13px] leading-relaxed text-foreground">
-          Headline contains {reason}.
-        </p>
-        <p className="mt-2 text-xs text-muted-foreground">
-          The Baseline is a detector, not a judgment. Scores measure how loudly
-          a headline is talking, not whether it is true.
-        </p>
+        <SignalBreakdown signals={story.signals} hedged={story.hedged} className="mt-2" />
       </div>
 
       {story.summary ? (

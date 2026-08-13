@@ -3,7 +3,8 @@ import { Link, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import SpinBadge from "../components/SpinBadge.jsx";
 import EmptyState from "../components/EmptyState.jsx";
-import { readSourceHistory, sourceTrend } from "../lib/hypeHistory.js";
+import { readSourceHistory, sourceTrendReading } from "../lib/hypeHistory.js";
+import { isMirroredFeed } from "../../lib/feeds.js";
 
 const TIERS = ["Measured", "Warm", "Hot", "On Fire"];
 
@@ -44,7 +45,7 @@ export default function SourceProfile({ allStories, sources, sourceStats: stats,
   const feed = useMemo(() => sources?.find((s) => s.name === decoded) || null, [sources, decoded]);
 
   const history = readSourceHistory();
-  const trend = sourceTrend(history, decoded);
+  const trendReading = sourceTrendReading(history, decoded);
 
   useEffect(() => {
     if (decoded) document.title = `${decoded} — The Baseline`;
@@ -96,7 +97,37 @@ export default function SourceProfile({ allStories, sources, sourceStats: stats,
         <span className={`rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.06em] ${statusOk ? "border-border text-muted-foreground" : "border-primary/50 text-primary"}`}>
           {statusText}
         </span>
+        {isMirroredFeed(decoded) ? (
+          <span className="rounded-sm border border-border/70 px-1.5 py-1 text-[10px] uppercase tracking-[0.1em] text-muted-foreground/80">
+            mirrored feed
+          </span>
+        ) : null}
       </div>
+
+      {trendReading ? (
+        <p className="mt-2 text-sm text-muted-foreground">
+          {trendReading.direction === "up"
+            ? "Louder than yesterday"
+            : trendReading.direction === "down"
+              ? "Quieter than yesterday"
+              : "Same intensity as yesterday"}
+          {trendReading.direction !== "flat" && trendReading.pct !== null && trendReading.pct !== 0
+            ? ` by ${Math.abs(trendReading.pct)}% (${trendReading.delta > 0 ? "+" : ""}${trendReading.delta} pts)`
+            : trendReading.direction !== "flat"
+              ? ` by ${Math.abs(trendReading.delta)} pts`
+              : ""}
+          . <span className="text-muted-foreground/70">Compared with the previous recorded day.</span>
+        </p>
+      ) : (
+        <p className="mt-2 text-sm text-muted-foreground/70">No prior reading recorded for this source yet.</p>
+      )}
+
+      {isMirroredFeed(decoded) ? (
+        <p className="mt-2 max-w-2xl text-xs text-muted-foreground/80">
+          This feed is a community-run mirror of {decoded}'s announcements, not {decoded}'s own channel. It is updated on
+          a delay and may occasionally differ from the official feed.
+        </p>
+      ) : null}
 
       <dl className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-border bg-border sm:grid-cols-4">
         <div className="bg-card p-4">
@@ -110,7 +141,13 @@ export default function SourceProfile({ allStories, sources, sourceStats: stats,
         <div className="bg-card p-4">
           <dt className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">Trend</dt>
           <dd className="mt-1 font-serif text-2xl font-bold text-foreground">
-            {trend === "up" ? "↑" : trend === "down" ? "↓" : trend === "flat" ? "→" : "·"}
+            {!trendReading
+              ? "·"
+              : trendReading.direction === "up"
+                ? "↑"
+                : trendReading.direction === "down"
+                  ? "↓"
+                  : "→"}
           </dd>
         </div>
         <div className="bg-card p-4">

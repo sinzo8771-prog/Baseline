@@ -1,15 +1,10 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import EmptyState from "../components/EmptyState.jsx";
-import { readSourceHistory, sourceTrend } from "../lib/hypeHistory.js";
+import TrendCell from "../components/TrendCell.jsx";
+import { readSourceHistory, sourceTrendReading } from "../lib/hypeHistory.js";
+import { isMirroredFeed } from "../../lib/feeds.js";
 import exportOPML from "../lib/exportOPML.js";
-
-function TrendGlyph({ trend }) {
-  if (trend === "up") return <span className="text-primary" title="Louder than yesterday">↑</span>;
-  if (trend === "down") return <span className="text-muted-foreground" title="Quieter than yesterday">↓</span>;
-  if (trend === "flat") return <span className="text-muted-foreground" title="Same as yesterday">→</span>;
-  return <span className="text-muted-foreground/50" title="No prior reading">·</span>;
-}
 
 function Leaderboard({ stats, history }) {
   if (!stats || stats.length === 0) {
@@ -37,11 +32,16 @@ function Leaderboard({ stats, history }) {
               >
                 {s.name}
               </Link>
+              {isMirroredFeed(s.name) ? (
+                <span className="ml-2 inline-block rounded-sm border border-border/70 px-1.5 py-px text-[9px] uppercase tracking-[0.1em] text-muted-foreground/70">
+                  mirrored feed
+                </span>
+              ) : null}
             </td>
             <td className="py-2.5 pr-4 text-right tabular-nums text-muted-foreground">{s.count}</td>
             <td className="py-2.5 pr-4 text-right tabular-nums text-foreground">{s.avgHype}</td>
             <td className="py-2.5 text-right">
-              <TrendGlyph trend={sourceTrend(history, s.name)} />
+              <TrendCell reading={sourceTrendReading(history, s.name)} />
             </td>
           </tr>
         ))}

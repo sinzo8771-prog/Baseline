@@ -54,7 +54,6 @@ function StatBlock({ stats, history, series }) {
   const avg = series.length ? Math.round(series.reduce((sum, e) => sum + e.hypePercent, 0) / series.length) : null;
 
   const cells = [
-    { label: "Today", value: `${stats.hypePercent}%`, big: true },
     { label: "Yesterday", value: yesterday === null ? "—" : `${yesterday}%` },
     {
       label: "Change",
@@ -68,14 +67,31 @@ function StatBlock({ stats, history, series }) {
 
   return (
     <div>
-      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-md border border-border bg-border sm:grid-cols-5">
+      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+        <span className="font-serif text-6xl font-black leading-none tracking-tight text-foreground sm:text-7xl">
+          {stats.hypePercent}<span className="text-3xl font-bold text-muted-foreground sm:text-4xl">%</span>
+        </span>
+        <span className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
+          of today's stories are enthusiastic
+        </span>
+      </div>
+      <div className="mt-2 text-sm text-muted-foreground">
+        {change === null ? (
+          "No baseline yet — today is your first reading."
+        ) : (
+          <>
+            {change > 0 ? "Up" : change < 0 ? "Down" : "Flat"} {Math.abs(change)} points from yesterday's {yesterday}%.
+          </>
+        )}
+      </div>
+      <div className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-border bg-border sm:grid-cols-5">
         {cells.map((cell) => (
           <div key={cell.label} className="bg-card p-4">
             <div className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">{cell.label}</div>
             <div
               className={
                 "font-serif font-bold text-foreground " +
-                (cell.big ? "text-3xl " : "text-2xl ") +
+                "text-2xl " +
                 (cell.highlight ? (cell.up ? "text-primary" : "") : "")
               }
             >

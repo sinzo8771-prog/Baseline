@@ -8,6 +8,7 @@ import {
   recordSourceStats,
   readSourceHistory,
   sourceTrend,
+  sourceTrendReading,
 } from "../src/app/lib/hypeHistory.js";
 
 function fakeWindow() {
@@ -126,4 +127,40 @@ test("sourceTrend returns null when a source has no prior reading", () => {
   recordSourceStats([{ name: "Only", count: 1, avgHype: 50 }], new Date(2026, 7, 9));
   const history = readSourceHistory();
   assert.equal(sourceTrend(history, "Missing"), null);
+});
+
+test("sourceTrendReading reports magnitude (direction, delta, pct)", () => {
+  fakeWindow();
+  recordSourceStats([{ name: "OpenAI", count: 2, avgHype: 50 }], new Date(2026, 7, 8));
+  recordSourceStats([{ name: "OpenAI", count: 3, avgHype: 60 }], new Date(2026, 7, 9));
+  const history = readSourceHistory();
+  const reading = sourceTrendReading(history, "OpenAI");
+  assert.deepEqual(reading, { direction: "up", delta: 10, pct: 20 });
+});
+
+test("sourceTrendReading uses points when the previous average was 0", () => {
+  fakeWindow();
+  recordSourceStats([{ name: "Quiet", count: 2, avgHype: 0 }], new Date(2026, 7, 8));
+  recordSourceStats([{ name: "Quiet", count: 2, avgHype: 14 }], new Date(2026, 7, 9));
+  const history = readSourceHistory();
+  const reading = sourceTrendReading(history, "Quiet");
+  assert.equal(reading.direction, "up");
+  assert.equal(reading.delta, 14);
+  assert.equal(reading.pct, null);
+});
+
+test("sourceTrendReading is flat when intensity is unchanged", () => {
+  fakeWindow();
+  recordSourceStats([{ name: "Wired", count: 2, avgHype: 12 }], new Date(2026, 7, 8));
+  recordSourceStats([{ name: "Wired", count: 3, avgHype: 12 }], new Date(2026, 7, 9));
+  const history = readSourceHistory();
+  const reading = sourceTrendReading(history, "Wired");
+  assert.deepEqual(reading, { direction: "flat", delta: 0, pct: 0 });
+});
+
+test("sourceTrendReading returns null when a source has no prior reading", () => {
+  fakeWindow();
+  recordSourceStats([{ name: "Only", count: 1, avgHype: 50 }], new Date(2026, 7, 9));
+  const history = readSourceHistory();
+  assert.equal(sourceTrendReading(history, "Missing"), null);
 });

@@ -22,6 +22,16 @@ export default function Methodology() {
       <h2 className="section-title">Methodology</h2>
       <p className="section-note">Verbatim in. Hype measured out. The score is a measurement of language, not a judgment on the story.</p>
 
+      <div className="mb-8 rounded-md border-2 border-primary/60 bg-card p-5">
+        <p className="font-serif text-lg font-black leading-snug text-foreground">
+          A high Hype score does not mean a story is false.
+        </p>
+        <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+          It means the headline is intense. The Baseline measures how loudly an announcement talks — not whether it is
+          true, useful, or trustworthy. An honest, accurate story can score "On Fire"; a false one can score "Measured".
+        </p>
+      </div>
+
       <div className="max-w-2xl space-y-8">
         <div className="about-copy text-sm leading-relaxed">
           The Baseline does not write news. It aggregates headlines verbatim from RSS feeds and measures one thing:

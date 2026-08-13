@@ -2,7 +2,7 @@
 
 Repo: `sinzo8771-prog/Baseline` · Stack: React 19 + Vite + Tailwind 4, Cloudflare Worker host + feed relay.
 
-Status: the findings below were recorded against an earlier snapshot. P0–P3 are now implemented and shipped; each is marked **DONE** with a pointer to where it landed. One P4 item remains open.
+Status: the findings below were recorded against an earlier snapshot. P0–P4 are now implemented and shipped; each is marked **DONE** with a pointer to where it landed.
 
 ---
 
@@ -31,4 +31,4 @@ Status: the findings below were recorded against an earlier snapshot. P0–P3 ar
 ## P4 — Minor
 
 - [x] **No `favicon.ico`.** Fixed — `public/favicon.ico` is served alongside the 16/32 PNGs.
-- [ ] **No component tests.** Still open: `test/` covers the pure logic well (`node --test`), but there is no `@testing-library/react` suite for `StoryFeed`'s focus trap or `App` routing.
+- [x] **No component tests.** **DONE** — a `@testing-library/react` + vitest suite now covers `StoryFeed`'s modal focus trap, Escape-to-close, focus restore, and the `SpinBadge`/`SignalBreakdown` explanation popover (`test/components/story-feed.test.jsx`, run via `npm run test:components`).
