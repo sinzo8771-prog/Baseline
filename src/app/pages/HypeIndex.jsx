@@ -151,7 +151,7 @@ function Distribution({ stats }) {
             <div key={tier} className="flex items-center gap-3">
               <span className="w-24 shrink-0 text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
                 {tier}
-                <span className="ml-1 block normal-case tracking-normal text-muted-foreground/60">{TIER_RANGES[tier]}</span>
+                <span className="ml-1 block normal-case tracking-normal text-muted-foreground">{TIER_RANGES[tier]}</span>
               </span>
               <div
                 className="h-3 flex-1 overflow-hidden rounded-[2px] bg-accent"

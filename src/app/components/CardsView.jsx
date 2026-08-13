@@ -46,7 +46,7 @@ export default function CardsView({ stories }) {
               <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                 {story.source}
               </span>
-              <span className="text-[10px] uppercase tracking-[0.06em] text-muted-foreground/70">
+              <span className="text-[10px] uppercase tracking-[0.06em] text-muted-foreground">
                 {fmtDate(story.publishedAt)}
               </span>
             </div>

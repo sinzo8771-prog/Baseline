@@ -37,8 +37,10 @@ function Distribution({ bySpin }) {
 }
 
 export default function SourceProfile({ allStories, sources, sourceStats: stats, loaded, offline, reload }) {
-  const { name } = useParams();
-  const decoded = decodeURIComponent(name);
+  // useParams already percent-decodes the segment (react-router decodePath);
+  // re-decoding here would corrupt names with literal "%" and throw URIError
+  // on malformed input like "/sources/%".
+  const { name: decoded } = useParams();
 
   const storyList = useMemo(() => allStories.filter((s) => s.source === decoded), [allStories, decoded]);
   const stat = useMemo(() => stats?.find((s) => s.name === decoded) || null, [stats, decoded]);
@@ -98,7 +100,7 @@ export default function SourceProfile({ allStories, sources, sourceStats: stats,
           {statusText}
         </span>
         {isMirroredFeed(decoded) ? (
-          <span className="rounded-sm border border-border/70 px-1.5 py-1 text-[10px] uppercase tracking-[0.1em] text-muted-foreground/80">
+          <span className="rounded-sm border border-border/70 px-1.5 py-1 text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
             mirrored feed
           </span>
         ) : null}
@@ -116,14 +118,14 @@ export default function SourceProfile({ allStories, sources, sourceStats: stats,
             : trendReading.direction !== "flat"
               ? ` by ${Math.abs(trendReading.delta)} pts`
               : ""}
-          . <span className="text-muted-foreground/70">Compared with the previous recorded day.</span>
+          . <span className="text-muted-foreground">Compared with the previous recorded day.</span>
         </p>
       ) : (
-        <p className="mt-2 text-sm text-muted-foreground/70">No prior reading recorded for this source yet.</p>
+        <p className="mt-2 text-sm text-muted-foreground">No prior reading recorded for this source yet.</p>
       )}
 
       {isMirroredFeed(decoded) ? (
-        <p className="mt-2 max-w-2xl text-xs text-muted-foreground/80">
+        <p className="mt-2 max-w-2xl text-xs text-muted-foreground">
           This feed is a community-run mirror of {decoded}'s announcements, not {decoded}'s own channel. It is updated on
           a delay and may occasionally differ from the official feed.
         </p>
