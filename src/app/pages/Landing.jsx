@@ -183,14 +183,19 @@ function Why() {
     },
   ];
   return (
-    <div className="grid gap-x-10 gap-y-8 sm:grid-cols-3">
-      {points.map((p) => (
-        <div key={p.title}>
-          <h3 className="font-serif text-lg font-bold text-foreground">{p.title}</h3>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{p.body}</p>
-        </div>
+    <ol className="divide-y divide-border/60 border-y border-border/60">
+      {points.map((p, i) => (
+        <li key={p.title} className="grid gap-3 py-6 sm:grid-cols-[5rem_1fr] sm:gap-6 sm:py-7">
+          <span className="font-serif text-3xl font-black leading-none text-muted-foreground/40 sm:pt-0.5" aria-hidden="true">
+            {String(i + 1).padStart(2, "0")}
+          </span>
+          <div>
+            <h3 className="font-serif text-xl font-bold text-foreground">{p.title}</h3>
+            <p className="mt-2 max-w-[58ch] text-sm leading-relaxed text-muted-foreground">{p.body}</p>
+          </div>
+        </li>
       ))}
-    </div>
+    </ol>
   );
 }
 

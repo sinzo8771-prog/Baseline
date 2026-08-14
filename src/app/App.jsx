@@ -42,6 +42,19 @@ function Toast({ message }) {
 
 const BASE_URL = "https://the-baseline.baseline-news.workers.dev";
 
+// The canvas effects need a concrete color string (canvas fillStyle cannot
+// resolve CSS var()), but the tagline's decrypt reveal must stay on the site's
+// own accent. Resolve --vermillion from the live theme (theme-init.js already
+// set data-theme before this runs) so the canvas never drifts from the token.
+function accentColor() {
+  try {
+    const v = getComputedStyle(document.documentElement).getPropertyValue("--vermillion").trim();
+    return v || "#b93c22";
+  } catch {
+    return "#b93c22";
+  }
+}
+
 const ROUTE_META = {
   "/": {
     title: "The Baseline — AI news, hype removed.",
@@ -197,6 +210,7 @@ export default function App() {
     <LazyMotion features={domAnimation} strict>
       <MotionConfig reducedMotion="user">
         <ScrollToTop />
+        <a href="#main" className="skip-link">Skip to content</a>
         <header className="masthead">
           <MastheadMeta dateLabel={dateLabel} storyCount={stories.length} updatedLabel={updatedLabel} />
           <Asciify baseStrength={0.2} radius={0.45} charset="ascii" background="auto" glow={0.5} aberration={0.5}>
@@ -204,14 +218,14 @@ export default function App() {
               <Link to="/" className="masthead-link">THE BASELINE</Link>
             </h1>
           </Asciify>
-          <DecryptReveal color="#D94A2B" background="auto" scramble={0.12} cell={8} radius={320} colored={0.6}>
+          <DecryptReveal color={accentColor()} background="auto" scramble={0.12} cell={8} radius={320} colored={0.6}>
             <p className="masthead-tagline">AI news, hype removed.</p>
           </DecryptReveal>
         </header>
 
         <SiteNav />
 
-        <main>
+        <main id="main">
           <Suspense fallback={<RouteFallback />}>
             <Routes>
               <Route path="/" element={<Landing stories={stories} stats={stats} sourceStats={sourceStats} offline={offline} loaded={loaded} />} />

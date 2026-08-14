@@ -32,8 +32,6 @@
   --chart-1: var(--vermillion);
   --chart-2: var(--ink);
   --chart-3: var(--ink-soft);
-  --chart-4: #a9712b;
-  --chart-5: #3a7ca5;
 }
 
 @theme inline {
@@ -59,8 +57,6 @@
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
   --radius-sm: calc(var(--radius) - 2px);
   --radius-md: var(--radius);
   --radius-lg: calc(var(--radius) + 2px);
