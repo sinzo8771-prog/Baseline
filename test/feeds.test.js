@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DOMParser } from "@xmldom/xmldom";
-import { parseFeed, stripTags, decodeEntities, SOURCES, MAX_PER_FEED, SUMMARY_MAX } from "../src/lib/feeds.js";
+import { parseFeed, stripTags, decodeEntities, SOURCES, MAX_PER_FEED, SUMMARY_MAX, sanitizeImageUrl } from "../src/lib/feeds.js";
 import { FEEDS } from "../src/index.js";
 
 // DOMParser (class) passed to parseFeed so the same tests run in Node and would run in a browser.
@@ -113,4 +113,41 @@ test("decodeEntities never throws on out-of-range numeric entities", () => {
 test("stripTags decodes entities that survive CDATA", () => {
   assert.equal(stripTags("China&#8217;s <b>Alibaba</b>"), "China’s Alibaba");
   assert.equal(stripTags("<p>Para &amp; more</p>"), "Para & more");
+});
+
+test("sanitizeImageUrl accepts http(s) images and rejects everything else", () => {
+  assert.equal(sanitizeImageUrl("https://cdn.example.com/img.jpg"), "https://cdn.example.com/img.jpg");
+  assert.equal(sanitizeImageUrl("http://cdn.example.com/img.jpg"), "http://cdn.example.com/img.jpg");
+  assert.equal(sanitizeImageUrl("data:image/png;base64,AAAA"), null);
+  assert.equal(sanitizeImageUrl("javascript:alert(1)"), null);
+  assert.equal(sanitizeImageUrl("blob:https://evil.example/abc"), null);
+  assert.equal(sanitizeImageUrl("/relative/path.jpg"), null);
+  assert.equal(sanitizeImageUrl("ftp://cdn.example.com/img.jpg"), null);
+  assert.equal(sanitizeImageUrl(""), null);
+  assert.equal(sanitizeImageUrl(null), null);
+  assert.equal(sanitizeImageUrl(undefined), null);
+});
+
+test("parseFeed drops non-http(s) images from parsed stories", () => {
+  const malicious = `<rss version="2.0"><channel><item>
+    <title>With a sketchy image</title>
+    <link>https://example.com/img</link>
+    <pubDate>Wed, 05 Aug 2026 10:00:00 GMT</pubDate>
+    <enclosure url="data:image/svg+xml;base64,PHN2Zz4=" type="image/svg+xml" />
+  </item></channel></rss>`;
+  const stories = parseFeed(malicious, "Example", DOMParser);
+  assert.equal(stories.length, 1);
+  assert.equal(stories[0].image, null);
+});
+
+test("parseFeed keeps a legitimate https image", () => {
+  const legit = `<rss version="2.0"><channel><item>
+    <title>With a fine image</title>
+    <link>https://example.com/img</link>
+    <pubDate>Wed, 05 Aug 2026 10:00:00 GMT</pubDate>
+    <enclosure url="https://cdn.example.com/photo.jpg" type="image/jpeg" />
+  </item></channel></rss>`;
+  const stories = parseFeed(legit, "Example", DOMParser);
+  assert.equal(stories.length, 1);
+  assert.equal(stories[0].image, "https://cdn.example.com/photo.jpg");
 });

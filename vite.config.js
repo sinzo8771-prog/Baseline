@@ -16,5 +16,17 @@ export default defineConfig({
   build: {
     outDir: "dist",
     assetsDir: "assets",
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Stable third-party vendor chunks: the router and icon set are used
+          // across every page, so hoisting them out of the app bundle lets the
+          // edition/landing JS shrink and cache independently.
+          react: ["react", "react-dom", "react-router-dom"],
+          "lucide-icons": ["lucide-react"],
+          motion: ["framer-motion"],
+        },
+      },
+    },
   },
 });

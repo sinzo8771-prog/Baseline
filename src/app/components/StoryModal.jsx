@@ -100,6 +100,7 @@ export default function StoryModal({ story, onClose, overlayColor = "bg-backgrou
                   src={story.image}
                   alt=""
                   loading="lazy"
+                  referrerpolicy="no-referrer"
                   className="w-full h-auto max-h-[300px] object-cover"
                   onError={(e) => { e.currentTarget.style.display = "none"; }}
                 />

@@ -71,6 +71,18 @@ export function stripTags(text) {
   return decodeEntities(plain.trim());
 }
 
+// Only http(s) images are allowed into a story. Rejects data:, javascript:,
+// blob:, or any other scheme at parse time, so a hostile feed can't smuggle a
+// markup payload or a local-file reference into an <img src>. Also rejects
+// relative URLs (feeds should carry absolute image URLs). Mirrors the safeHref
+// pattern used for story links.
+export function sanitizeImageUrl(url) {
+  if (typeof url !== "string" || !url) return null;
+  const trimmed = url.trim();
+  if (/^https?:\/\/\S+$/i.test(trimmed)) return trimmed;
+  return null;
+}
+
 function firstByTag(root, tag) {
   const nodes = root.getElementsByTagName(tag);
   return nodes.length > 0 ? nodes[0] : null;
@@ -169,7 +181,7 @@ export function parseFeed(xml, sourceName, DOMParserCtor = globalThis.DOMParser)
       const rawDate = (dateEl?.textContent ?? "").trim();
       const date = new Date(rawDate);
 
-      const image = getImageFromNode(node);
+      const image = sanitizeImageUrl(getImageFromNode(node));
 
       return {
         title,
