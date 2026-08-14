@@ -95,7 +95,7 @@ export default function SourceProfile({ allStories, sources, sourceStats: stats,
       </Link>
 
       <div className="flex flex-wrap items-center gap-3">
-        <h2 className="font-serif text-3xl font-black text-foreground">{decoded}</h2>
+        <h1 className="font-serif text-3xl font-black text-foreground">{decoded}</h1>
         <span className={`rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.06em] ${statusOk ? "border-border text-muted-foreground" : "border-primary/50 text-primary"}`}>
           {statusText}
         </span>
@@ -162,14 +162,14 @@ export default function SourceProfile({ allStories, sources, sourceStats: stats,
 
       {stat ? (
         <div className="mt-6 max-w-2xl rounded-md border border-border bg-card p-5">
-          <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Hype distribution</h3>
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Hype distribution</h2>
           <Distribution bySpin={stat.bySpin} />
         </div>
       ) : null}
 
       {storyList.length > 0 ? (
         <div className="mt-8">
-          <h3 className="text-sm font-semibold uppercase tracking-[0.08em] text-muted-foreground">In today's edition</h3>
+          <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-muted-foreground">In today's edition</h2>
           <ul className="mt-4 space-y-4">
             {storyList.map((story) => (
               <li key={story.id} className="rounded-md border border-border/70 bg-card p-4">

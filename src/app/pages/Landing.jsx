@@ -42,9 +42,9 @@ function Hero() {
   return (
     <section aria-label="Introduction" className="pb-10 pt-8 sm:pb-12 sm:pt-10">
       <m.div {...fade}>
-        <h2 className="max-w-[15ch] font-serif text-5xl font-black leading-[0.98] tracking-[-0.02em] text-foreground sm:text-7xl">
+        <h1 className="max-w-[15ch] font-serif text-5xl font-black leading-[0.98] tracking-[-0.02em] text-foreground sm:text-7xl">
           A quiet interface for a very loud industry.
-        </h2>
+        </h1>
         <p className="mt-6 max-w-[52ch] text-[15px] leading-relaxed text-muted-foreground sm:text-base">
           The Baseline reads the AI press all day, prints the headlines verbatim, and measures how
           loudly each one is being told. No summary. No spin added. Just the news, and the signal
@@ -197,7 +197,7 @@ function Why() {
             {String(i + 1).padStart(2, "0")}
           </span>
           <div>
-            <h3 className="font-serif text-xl font-bold text-foreground">{p.title}</h3>
+            <h2 className="font-serif text-xl font-bold text-foreground">{p.title}</h2>
             <p className="mt-2 max-w-[58ch] text-sm leading-relaxed text-muted-foreground">{p.body}</p>
           </div>
         </li>
@@ -254,7 +254,7 @@ function SignalLoop() {
           <span className="absolute right-3 top-3 font-serif text-2xl font-black leading-none text-muted-foreground/30" aria-hidden="true">
             {i + 1}
           </span>
-          <h3 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary">{item.step}</h3>
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary">{item.step}</h2>
           <p className="mt-2 text-sm leading-snug text-muted-foreground">{item.body}</p>
         </li>
       ))}

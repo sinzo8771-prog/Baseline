@@ -79,7 +79,7 @@ export default function Sources({ sources, sourceStats: stats, loaded, offline, 
   const history = readSourceHistory();
   return (
     <section id="sources" className="section">
-      <h2 className="section-title">Who's Shouting?</h2>
+      <h1 className="section-title">Who's Shouting?</h1>
       <p className="section-note">
         Average headline intensity per source — a measurement, not a judgment. The wire room reports who is talking, and how loud. Dead sources are skipped automatically.
       </p>
@@ -102,9 +102,9 @@ export default function Sources({ sources, sourceStats: stats, loaded, offline, 
               </p>
             ) : null}
             <Leaderboard stats={stats} history={history} />
-            <h3 className="mt-8 text-sm font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            <h2 className="mt-8 text-sm font-semibold uppercase tracking-[0.08em] text-muted-foreground">
               Who's on the wire
-            </h3>
+            </h2>
             <FeedStatus sources={sources} />
           </>
         )

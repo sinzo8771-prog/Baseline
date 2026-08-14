@@ -297,7 +297,7 @@ function BiggestShift({ stats, history }) {
 function Panel({ title, children }) {
   return (
     <div className="rounded-md border border-border bg-card p-5">
-      <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{title}</h3>
+      <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{title}</h2>
       {children}
     </div>
   );
@@ -309,7 +309,7 @@ export default function HypeIndex({ stats, allStories, loaded, offline, reload }
 
   return (
     <section id="hype-index" className="section">
-      <h2 className="section-title">The Hype Index</h2>
+      <h1 className="section-title">The Hype Index</h1>
       <p className="section-note">Share of today's stories that are, let's say, enthusiastic.</p>
 
       {loaded && !offline && stats ? (

@@ -159,6 +159,7 @@ export default function Home({ stories, offline, loaded, reload, servedFromCache
 
   return (
     <section id="latest" aria-label="Latest stories">
+      <h1 className="sr-only">Today's Edition</h1>
       {!loaded ? (
         <>
           <PressingWires />

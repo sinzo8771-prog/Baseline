@@ -23,7 +23,7 @@ function fmtDate(dateKey) {
 function Panel({ title, children }) {
   return (
     <div className="rounded-md border border-border bg-card p-5">
-      <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{title}</h3>
+      <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{title}</h2>
       {children}
     </div>
   );

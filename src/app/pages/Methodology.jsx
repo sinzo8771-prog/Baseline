@@ -19,7 +19,7 @@ const SIGNAL_NOTES = {
 export default function Methodology() {
   return (
     <section id="methodology" className="section">
-      <h2 className="section-title">Methodology</h2>
+      <h1 className="section-title">Methodology</h1>
       <p className="section-note">Verbatim in. Hype measured out. The score is a measurement of language, not a judgment on the story.</p>
 
       <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">The ledger is open</p>
@@ -44,7 +44,7 @@ export default function Methodology() {
 
         {/* The scale */}
         <div className="rounded-md border border-border bg-card p-5">
-          <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">The scale</h3>
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">The scale</h2>
           <div className="mt-3 grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2">
             {TIERS.map((t) => (
               <div key={t}>
@@ -57,7 +57,7 @@ export default function Methodology() {
 
         {/* What is counted */}
         <div className="rounded-md border border-border bg-card p-5">
-          <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">What is counted</h3>
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">What is counted</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Six families of signals are detected. Headlines that stack different families score louder than headlines that lean
             on a single word.
@@ -76,7 +76,7 @@ export default function Methodology() {
 
         {/* What is not counted */}
         <div className="rounded-md border border-border bg-card p-5">
-          <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">What is not counted</h3>
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">What is not counted</h2>
           <ul className="mt-3 list-disc space-y-1.5 pl-4 text-sm text-muted-foreground">
             <li>Facts and figures: “Company reports $1 billion investment” adds no hype points. Money is not spin.</li>
             <li>“Benchmark” as a noun (“benchmark tables”, “model eval”) — only claims of beating, shattering, or topping benchmarks count.</li>
@@ -88,7 +88,7 @@ export default function Methodology() {
 
         {/* How the day's number is composed */}
         <div className="rounded-md border border-border bg-card p-5">
-          <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">What the day's number actually measures</h3>
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">What the day's number actually measures</h2>
           <ul className="mt-3 list-disc space-y-1.5 pl-4 text-sm text-muted-foreground">
             <li>The reading is measured on today's edition: the most recent 25 stories across the tracked feeds. Because the mix is by recency, a prolific outlet can nudge the day's number — the Index reports the mix as it was, rather than rebalancing it.</li>
             <li>Near-duplicate and syndicated headlines are collapsed into a single story, so one announcement reported across many outlets is counted once, not once per outlet.</li>
@@ -98,7 +98,7 @@ export default function Methodology() {
 
         {/* Known limits */}
         <div className="rounded-md border border-border bg-card p-5">
-          <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Known limits, stated plainly</h3>
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Known limits, stated plainly</h2>
           <ul className="mt-3 list-disc space-y-1.5 pl-4 text-sm text-muted-foreground">
             <li>The detector is heuristic — it reads words, not meaning. Sarcasm, irony, and understatement can fool it.</li>
             <li>Slang and acronyms not in the word lists are invisible to it.</li>

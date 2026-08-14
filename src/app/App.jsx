@@ -214,9 +214,9 @@ export default function App() {
         <header className="masthead">
           <MastheadMeta dateLabel={dateLabel} storyCount={stories.length} updatedLabel={updatedLabel} />
           <Asciify baseStrength={0.2} radius={0.45} charset="ascii" background="auto" glow={0.5} aberration={0.5}>
-            <h1 className="masthead-title">
+            <span className="masthead-title">
               <Link to="/" className="masthead-link">THE BASELINE</Link>
-            </h1>
+            </span>
           </Asciify>
           <DecryptReveal color={accentColor()} background="auto" scramble={0.12} cell={8} radius={320} colored={0.6}>
             <p className="masthead-tagline">AI news, hype removed.</p>
