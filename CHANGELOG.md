@@ -2,6 +2,40 @@
 
 All notable changes to **The Baseline** are documented here, grouped by the V2 spec's categories. Format: date · what changed · (spec reference).
 
+## 2026-08-14 — Polish pass (updated plan Phases 2–8)
+
+### Hierarchy
+- **Navigation grouped** into primary (Edition / Hype Index / Sources) and secondary (Saved / Review / Methodology / About), visually quieter and separated by a hairline; Methodology now reachable from the nav (§17).
+- The Hype score figure (`N/100`) sits beside the spin badge on every story surface — feed cards, cards view, modal, landing snapshot — so score is read with the headline (§8).
+- Landing hero tightened so the live snapshot sits higher above the fold (§7).
+
+### Hype identity
+- **"WHY TODAY?" now answers**: the panel derives a dominant signal family ("Unusually aggressive language is doing most of the shouting — N% of today's signals") and names the single loudest headline at N/100, gated on real data; older caches show `DATA UNAVAILABLE`.
+- **Trend bars get a ruled 25% measurement grid** and numeric values under each day label on desktop.
+- The honest phrase is standardized everywhere: **"Hype measures loudness, not truth."** — Hype Index footer, landing snapshot, story page, methodology banner.
+
+### Page personality
+- Hype = instrument: "Calibrated against N recorded days in this browser." on the reading.
+- Sources = newsroom: "The wire room reports who is talking, and how loud." + "Who's on the wire".
+- Story = investigation: a quiet "The story file" overline above the headline.
+- Methodology = transparency: "The ledger is open" kicker.
+
+### Data trust
+- **Small editions are flagged**: `isSmallSample` (`MIN_SAMPLE = 8`) adds a quiet "Small edition — N stories isn't enough…" note on the Hype Index and landing snapshot instead of presenting a thin day as a firm reading.
+- Methodology gains "What the day's number actually measures" — the reading is on today's recency-based 25-story mix (a prolific outlet can nudge it; the Index reports the mix as-is rather than rebalancing), and near-duplicate/syndicated headlines collapse to one story.
+
+### Accessibility
+- **Single `<h1>` per page**: the masthead is no longer a heading; each page owns its own `h1` (page titles promoted from `h2`; direct subsections promoted from `h3`), so heading levels run sequentially with no skips (§semantic structure).
+- **Reduced motion** now also freezes the loading skeletons (`.animate-pulse`) under `prefers-reduced-motion` (§reduced motion).
+
+### SEO
+- **Route-accurate Open Graph tags**: `og:title` / `og:description` / `og:url` now track the current route (previously every shared link previewed as the homepage); 404 routes get their own title (§42, §43).
+- Sitemap `lastmod` refreshed.
+
+### Regression
+- Removed dead code: the whole `src/components/ui/` directory (unused shadcn primitives — button/badge/card/progress/separator). Shrinks the emitted CSS 61.5→49.2 KB.
+- Full suite green: 103 `node --test` + 36 component = 139 passing; build clean.
+
 ## 2026-08-13 — Landing page & edition route split
 
 ### Product (master plan §8–§23)

@@ -81,7 +81,7 @@ The Baseline's threat surface is small and well-contained by design: the Worker 
 |---|---|---|
 | **Low** | No `Content-Security-Policy` header/meta. The app uses inline scripts (theme init) and Google Fonts, so a strict CSP needs care — but a permissive-script CSP (`default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:`) would add defense-in-depth against any future injection. | Add CSP meta in `index.html` (or via Worker header) after verifying the inline theme script's nonce/hash. |
 | **Low** | Story `image` URLs come from feeds and are used verbatim as `<img src>` (no scheme check). `<img src>` cannot execute JS, but a malicious/misbehaving feed could reference an external tracker. | Consider `safeHref`-style validation or a referrerpolicy on feed images. |
-| **Low** | `src/components/ui/news-cards.jsx` is dead code (no longer imported) yet still ships pattern code with a `safeHref`. | Remove the file in a future cleanup pass. |
+| **Low** | `src/components/ui/` was dead code (the shadcn primitives were never imported; `news-cards.jsx` was superseded by `CardsView`). | **Resolved 2026-08-14:** the whole `ui/` directory removed in the Phase 8 regression pass. |
 
 ---
 

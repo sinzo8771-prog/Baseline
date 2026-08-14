@@ -103,7 +103,7 @@ The site never rewrites a headline and generates no content. It is a meter, not 
 
 ## Stack
 
-- **Frontend**: React 19 + Vite + Tailwind CSS 4 (shadcn-style primitives), `react-router-dom` for routing, `framer-motion` for motion, `lucide-react` for icons. Static build output into `dist/`.
+- **Frontend**: React 19 + Vite + Tailwind CSS 4, `react-router-dom` for routing, `framer-motion` for motion, `lucide-react` for icons. Static build output into `dist/`.
 - **Hosting**: a Cloudflare Worker serves the built app (`env.ASSETS` → `dist/`) and relays feed XML at `/api/feed` (with a source list at `/api/feeds`).
 - **RSS parsing** happens entirely in the browser (the Worker is pure I/O, so the free-tier CPU cap is respected).
 
@@ -229,7 +229,6 @@ src/
     ranking.js             # Edition ranking (freshness + hype + source diversity)
     pipeline.js            # Compose + score + stats
   components/
-    ui/                    # shadcn-style primitives (button, card, badge, …)
     canvasui/              # Glitch, DecryptReveal, VHS, Asciify, RetroDither
 public/                    # OG image, robots.txt, sitemap, manifest, favicons, sw.js
 test/                      # node --test unit suite (test/*.test.js) + vitest component suite (test/components/)
@@ -288,7 +287,8 @@ The index only means something with a baseline, so each day's reading is written
 - Keyboard-navigable story modal with a focus trap, Escape to close, and focus restored on close.
 - Full keyboard navigation on the edition: `j`/`k` move the story selection, `Enter` opens, `/` focuses search, `?` lists the shortcuts — all bypassed while typing or inside the modal.
 - ARIA-metered hype gauge and `role="status"` banners for offline/refreshing states.
-- Reduced-motion support across canvas effects, decrypted headlines, and the VHS footer.
+- Reduced-motion support across canvas effects, decrypted headlines, and the VHS footer — and the loading skeletons freeze too.
+- One `<h1>` per page (the masthead is not a heading); heading levels run sequentially — page title → subsection → story — with no skipped levels.
 - Color-blind-safe spin badges (shape *and* color), AA-safe chip contrast, and `line-clamp`-ed titles that never push the grid.
 
 ## Roadmap

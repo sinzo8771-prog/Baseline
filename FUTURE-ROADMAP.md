@@ -38,6 +38,9 @@ Status legend: `open` — not started · `scoped` — shape/effort understood ·
   its own `safeHref`/aria pattern code that future readers may copy.
 - **Effort:** trivial (delete file). Low priority; harmless as-is.
 - **Shipped 2026-08-14:** file deleted; build passes with no references.
+- **Superseded 2026-08-14 (Phase 8):** the *entire* `src/components/ui/`
+  directory was removed — the shadcn primitives (`button`/`badge`/`card`/
+  `progress`/`separator`) were never imported. Emitted CSS shrank 61.5→49.2 KB.
 
 ---
 
@@ -150,3 +153,9 @@ Status legend: `open` — not started · `scoped` — shape/effort understood ·
 | 2026-08-14 | Improvement plan Tier 2 shipped (card slots, last-visit badges, save-for-later) | done |
 | 2026-08-14 | Improvement plan Tier 3 shipped (week-in-review page, Cmd+K palette) | done |
 | 2026-08-14 | Improvement plan fully executed (Tiers 0-3); remaining ideas scoped for later | done |
+| 2026-08-14 | Polish pass Phases 2-3 (hierarchy, hype identity): nav grouping, score-with-headline, WHY TODAY answers, ruled trend, honest phrase | done |
+| 2026-08-14 | Polish pass Phase 4 (personality): instrument/wire-room/story-file/ledger framings | done |
+| 2026-08-14 | Polish pass Phase 5 (data trust): small-edition flag, measurement-basis docs | done |
+| 2026-08-14 | Polish pass Phase 6 (a11y): single h1/page, sequential headings, reduced-motion skeletons | done |
+| 2026-08-14 | Polish pass Phase 7 (SEO): route-accurate OG tags, 404 metadata, fresh sitemap | done |
+| 2026-08-14 | Polish pass Phase 8 (regression): removed dead `ui/` primitives, full suite green | done |

@@ -99,7 +99,7 @@ This is the pre-release gate for the site. It captures everything that must hold
 
 ## Known limitations (accepted)
 
-- No `Content-Security-Policy` header (inline theme script + Google Fonts make it fiddly). Low risk — no XSS vector found. Roadmap item.
-- Feed image URLs are used verbatim as `<img src>` (no scheme check). Not XSS-capable; possible tracking concern. Roadmap item.
-- `src/components/ui/news-cards.jsx` is dead code (superseded by CardsView). Harmless; roadmap cleanup.
+- *(Resolved 2026-08-14)* CSP shipped via the Worker header (inline theme script extracted to `public/theme-init.js`).
+- *(Resolved 2026-08-14)* Feed image URLs sanitized (`sanitizeImageUrl`) + `referrerpolicy="no-referrer"` on feed images.
+- *(Resolved 2026-08-14)* Dead `src/components/ui/` directory removed in the Phase 8 regression pass.
 - `npm audit` reports 4 vulnerabilities (2 moderate, 2 high) in build tooling, untriaged — no runtime exposure.
