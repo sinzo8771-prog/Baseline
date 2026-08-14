@@ -115,13 +115,16 @@ Status legend: `open` — not started · `scoped` — shape/effort understood ·
   (typing + dialog guards); `j`/`k` move story selection, Enter opens, Escape
   closes, `/` focuses search, `?` toggles help.
 
-### Tier 2 — medium effort (`scoped`)
-- **Consistent story card grid** — cards with and without feed images render at
-  different weights; normalize height or design a deliberate text-only variant.
-- **"New since your last visit" badge** — localStorage last-visit timestamp,
-  badge stories published after it (no badges on first visit).
-- **Save-for-later / reading list** — localStorage-backed saved story IDs, `/saved`
-  route, bookmark toggle on every story surface.
+### Tier 2 — medium effort (all shipped)
+- **Consistent story card grid** — `done`: every card reserves a fixed-height
+  image slot; missing images render a deliberate halftone "NO PHOTO" placeholder
+  (and swap in on image-load error) instead of a void that skews row heights.
+- **"New since your last visit" badge** — `done`: `lastVisit.js` persists the
+  previous session timestamp on visibility-hidden/unmount; stories published
+  after it carry a NEW chip in both views; a first visit badges nothing.
+- **Save-for-later / reading list** — `done`: `savedStories.js` keeps full
+  snapshots in localStorage, `/saved` renders them (still working after a story
+  ages out), and a `BookmarkButton` sits on every story surface.
 
 ### Tier 3 — speculative (`scoped`)
 - **Weekly recap page** — `/week-in-review` computed purely from the 30-day
@@ -141,4 +144,5 @@ Status legend: `open` — not started · `scoped` — shape/effort understood ·
 | 2026-08-13 | Automated a11y sweep + SR pass | open |
 | 2026-08-13 | Product ideas parked (per-source breakdown, archives, OPML, notes) | open / n/a |
 | 2026-08-14 | Improvement plan Tier 1 shipped (sparklines, print CSS, prev/next, shortcuts) | done |
-| 2026-08-14 | Tier 2 / Tier 3 items scoped and parked (cards, last-visit, saved, recap, palette) | scoped |
+| 2026-08-14 | Improvement plan Tier 2 shipped (card slots, last-visit badges, save-for-later) | done |
+| 2026-08-14 | Tier 3 items scoped and parked (weekly recap, command palette) | scoped |

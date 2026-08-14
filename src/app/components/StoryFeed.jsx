@@ -6,6 +6,8 @@ import SpinBadge from "./SpinBadge.jsx";
 import StoryModal from "./StoryModal.jsx";
 import Glitch from "@/components/canvasui/Glitch.jsx";
 import useKeyboardShortcuts from "../hooks/useKeyboardShortcuts.js";
+import BookmarkButton from "./BookmarkButton.jsx";
+import { isNewSinceLastVisit } from "../lib/lastVisit.js";
 
 function fmtDate(iso) {
   const d = new Date(iso);
@@ -14,10 +16,15 @@ function fmtDate(iso) {
     : d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
-function Meta({ story }) {
+function Meta({ story, isNew = false }) {
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
       <SpinBadge spin={story.spin} flags={story.flags} signals={story.signals} hedged={story.hedged} score={story.spinScore} />
+      {isNew ? (
+        <span className="rounded-sm border border-primary/60 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-primary">
+          New
+        </span>
+      ) : null}
       <span className="text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
         {story.source} — {fmtDate(story.publishedAt)}
       </span>
@@ -25,7 +32,30 @@ function Meta({ story }) {
   );
 }
 
-function CardShell({ story, isLead = false, onOpen, active = false }) {
+function CardImage({ story }) {
+  const [failed, setFailed] = useState(false);
+  const show = Boolean(story.image) && !failed;
+  return (
+    <div
+      className={cn(
+        "card-img-slot mb-4 -mx-5 -mt-5 rounded-t-md sm:-mx-6 sm:-mt-6 sm:rounded-t-md",
+        !show && "card-img-placeholder",
+      )}
+    >
+      {show ? (
+        <img
+          src={story.image}
+          alt=""
+          loading="lazy"
+          className="transition-opacity duration-200 group-hover:opacity-90"
+          onError={() => setFailed(true)}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function CardShell({ story, isLead = false, onOpen, active = false, isNew = false }) {
   return (
     <m.article
       id={`story-${story.id}`}
@@ -40,18 +70,8 @@ function CardShell({ story, isLead = false, onOpen, active = false }) {
       )}
       style={isLead ? { borderTopColor: "var(--vermillion)" } : undefined}
     >
-      {story.image ? (
-        <div className="mb-4 -mx-5 -mt-5 rounded-t-md overflow-hidden sm:-mx-6 sm:-mt-6 sm:rounded-t-md">
-          <img
-            src={story.image}
-            alt=""
-            loading="lazy"
-            className="w-full h-auto max-h-[200px] object-cover transition-opacity duration-200 group-hover:opacity-90"
-            onError={(e) => { e.currentTarget.style.display = "none"; }}
-          />
-        </div>
-      ) : null}
-      <Meta story={story} />
+            <CardImage story={story} />
+      <Meta story={story} isNew={isNew} />
       <h2
         className={cn(
           "mt-3 break-words font-serif font-bold leading-snug tracking-[-0.01em] text-foreground",
@@ -63,6 +83,10 @@ function CardShell({ story, isLead = false, onOpen, active = false }) {
       {isLead && story.summary ? (
         <p className="mt-3 max-w-[60ch] text-[15px] leading-relaxed text-muted-foreground">{story.summary}</p>
       ) : null}
+      <BookmarkButton
+        story={story}
+        className="absolute right-3 top-3 z-10 size-8 bg-card/80 backdrop-blur-sm"
+      />
       <span className="mt-3 inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.08em] text-primary opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
         Read <ExternalLink className="size-3" aria-hidden="true" />
       </span>
@@ -77,7 +101,7 @@ function CardShell({ story, isLead = false, onOpen, active = false }) {
   );
 }
 
-export default function StoryFeed({ stories }) {
+export default function StoryFeed({ stories, lastVisit = null }) {
   const [selectedId, setSelectedId] = useState(null);
   const [activeId, setActiveId] = useState(null);
   const triggerRef = useRef(null);
@@ -152,7 +176,8 @@ export default function StoryFeed({ stories }) {
   // wrapping every On Fire card in its own WebGL loop would pin the GPU on
   // mobile. Only the lead earns the effect.
   const renderCard = (story, { lead: isLead = false } = {}) => {
-    const card = <CardShell story={story} isLead={isLead} active={story.id === activeId} onOpen={() => open(story)} />;
+    const isNew = isNewSinceLastVisit(story.publishedAt, lastVisit);
+    const card = <CardShell story={story} isLead={isLead} active={story.id === activeId} isNew={isNew} onOpen={() => open(story)} />;
     if (isLead && story.spin === "On Fire") {
       return (
         <Glitch key={story.id} intensity={0.85} interval={4} duration={0.3} slices={20} rgbShift={5}>

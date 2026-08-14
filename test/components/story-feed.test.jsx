@@ -107,3 +107,67 @@ describe("StoryModal (via StoryFeed)", () => {
     expect(screen.getByRole("button", { name: /close story/i })).toHaveFocus();
   });
 });
+
+describe("StoryFeed consistent image slots", () => {
+  const withImage = { ...storyWithSignals, image: "https://example.com/a.jpg" };
+  const withoutImage = { ...storyWithSignals, id: "s2", title: "Text-only bulletin", image: undefined };
+
+  it("renders an image inside a fixed-height slot", () => {
+    const { container } = render(
+      <MemoryRouter>
+        <StoryFeed stories={[withImage]} />
+      </MemoryRouter>,
+    );
+    const img = container.querySelector(".card-img-slot img");
+    expect(img).not.toBeNull();
+    expect(img.getAttribute("src")).toBe("https://example.com/a.jpg");
+    expect(img.getAttribute("alt")).toBe("");
+  });
+
+  it("renders the text-only placeholder when no image exists", () => {
+    const { container } = render(
+      <MemoryRouter>
+        <StoryFeed stories={[withoutImage]} />
+      </MemoryRouter>,
+    );
+    expect(container.querySelector(".card-img-placeholder")).not.toBeNull();
+    expect(container.querySelector(".card-img-slot img")).toBeNull();
+  });
+
+  it("falls back to the placeholder when an image fails to load", async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <MemoryRouter>
+        <StoryFeed stories={[withImage]} />
+      </MemoryRouter>,
+    );
+    const img = container.querySelector(".card-img-slot img");
+    img.dispatchEvent(new Event("error"));
+    await waitFor(() => expect(container.querySelector(".card-img-placeholder")).not.toBeNull());
+    expect(container.querySelector(".card-img-slot img")).toBeNull();
+  });
+});
+
+describe("StoryFeed NEW badges", () => {
+  const visit = Date.parse("2026-08-13T10:00:00Z");
+  const fresh = { ...storyWithSignals, id: "n1", title: "Filed after my last visit", publishedAt: "2026-08-13T12:00:00Z" };
+  const old = { ...storyWithSignals, id: "o1", title: "Filed before my last visit", publishedAt: "2026-08-12T09:00:00Z" };
+
+  it("badges stories published after the last visit", () => {
+    render(
+      <MemoryRouter>
+        <StoryFeed stories={[fresh, old]} lastVisit={visit} />
+      </MemoryRouter>,
+    );
+    expect(screen.getAllByText("New").length).toBe(1);
+  });
+
+  it("badges nothing on a first visit (no baseline)", () => {
+    render(
+      <MemoryRouter>
+        <StoryFeed stories={[fresh]} lastVisit={null} />
+      </MemoryRouter>,
+    );
+    expect(screen.queryByText("New")).not.toBeInTheDocument();
+  });
+});

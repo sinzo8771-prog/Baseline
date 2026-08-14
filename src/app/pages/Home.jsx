@@ -96,7 +96,7 @@ function PressingWires() {
   );
 }
 
-export default function Home({ stories, offline, loaded, reload, servedFromCache, savedAt }) {
+export default function Home({ stories, offline, loaded, reload, servedFromCache, savedAt, lastVisit = null }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [filter, setFilter] = useState("all");
   const [query, setQuery] = useState("");
@@ -312,9 +312,9 @@ export default function Home({ stories, offline, loaded, reload, servedFromCache
             />
           ) : (
             view === "cards" ? (
-              <CardsView stories={sorted} />
+              <CardsView stories={sorted} lastVisit={lastVisit} />
             ) : (
-              <StoryFeed stories={sorted} />
+              <StoryFeed stories={sorted} lastVisit={lastVisit} />
             )
           )}
         </>

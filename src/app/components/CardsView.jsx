@@ -4,6 +4,8 @@ import { ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import SpinBadge from "./SpinBadge.jsx";
 import StoryModal from "./StoryModal.jsx";
+import BookmarkButton from "./BookmarkButton.jsx";
+import { isNewSinceLastVisit } from "../lib/lastVisit.js";
 
 function fmtDate(iso) {
   const d = new Date(iso);
@@ -16,7 +18,7 @@ function fmtDate(iso) {
 // feed. Each card is source / time / verbatim headline / a score line / a
 // "read original" affordance, separated by rules rather than gradients or
 // shadow-boxes — matching the print identity of the Edition view.
-export default function CardsView({ stories }) {
+export default function CardsView({ stories, lastVisit = null }) {
   const [selectedId, setSelectedId] = useState(null);
   const triggerRef = useRef(null);
   const selectedStory = stories.find((s) => s.id === selectedId) || null;
@@ -49,11 +51,21 @@ export default function CardsView({ stories }) {
               <span className="text-[10px] uppercase tracking-[0.06em] text-muted-foreground">
                 {fmtDate(story.publishedAt)}
               </span>
+              {isNewSinceLastVisit(story.publishedAt, lastVisit) ? (
+                <span className="rounded-sm border border-primary/60 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-primary">
+                  New
+                </span>
+              ) : null}
             </div>
 
             <h3 className="mt-3 line-clamp-4 break-words font-serif text-lg font-bold leading-snug text-foreground">
               {story.title}
             </h3>
+
+            <BookmarkButton
+              story={story}
+              className="absolute right-3 top-3 z-10 size-8 bg-card/80 backdrop-blur-sm"
+            />
 
             <div className="mt-auto pt-4">
               <div className="flex items-center justify-between gap-3 border-t border-border/70 pt-3">

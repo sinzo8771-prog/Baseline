@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { to: "/edition", label: "Edition", end: true },
   { to: "/hype-index", label: "Hype Index" },
   { to: "/sources", label: "Sources" },
+  { to: "/saved", label: "Saved" },
   { to: "/about", label: "About" },
 ];
 

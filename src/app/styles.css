@@ -462,6 +462,42 @@ body {
   html { scroll-behavior: auto; }
 }
 
+/* Consistent image slot for story cards: every card reserves the same fixed
+   height so a feed that never ships images can't make the grid look patchy.
+   The text-only placeholder is a deliberate editorial mark (subtle halftone
+   texture + a double-rule) rather than an empty void. */
+.card-img-slot {
+  height: 176px;
+  overflow: hidden;
+}
+.card-img-slot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.card-img-placeholder {
+  height: 176px;
+  background:
+    repeating-linear-gradient(45deg, transparent 0 6px, rgba(0, 0, 0, 0.045) 6px 7px),
+    var(--paper-dim);
+  border-bottom: 2px double var(--rule);
+  position: relative;
+}
+.card-img-placeholder::after {
+  content: "NO PHOTO — THE WIRES CAME IN TEXT-ONLY";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--ink-soft);
+  opacity: 0.7;
+}
+
 /* ------------------------------------------------------------------ */
 /* Print stylesheet — Cmd+P on the edition should read like a printed  */
 /* edition, not a web page. Kill the chrome, force paper + ink, keep   */

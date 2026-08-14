@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Link, Route, Routes, useLocation } from "react-router-dom";
 import { LazyMotion, MotionConfig, domAnimation } from "framer-motion";
 import useBaselineData from "./hooks/useBaselineData.js";
+import { readLastVisit, writeLastVisit } from "./lib/lastVisit.js";
 import { editionNumber } from "@/lib/pipeline";
 import Landing from "./pages/Landing.jsx";
 import Home from "./pages/Home.jsx";
@@ -21,6 +22,7 @@ const SourceProfile = lazy(() => import("./pages/SourceProfile.jsx"));
 const StoryPage = lazy(() => import("./pages/StoryPage.jsx"));
 const About = lazy(() => import("./pages/About.jsx"));
 const Methodology = lazy(() => import("./pages/Methodology.jsx"));
+const Saved = lazy(() => import("./pages/Saved.jsx"));
 const NotFound = lazy(() => import("./pages/NotFound.jsx"));
 
 function RouteFallback() {
@@ -62,6 +64,10 @@ const ROUTE_META = {
   "/methodology": {
     title: "Methodology — The Baseline",
     description: "How the Hype score works — what it measures, what it does not, and where the detector can be fooled.",
+  },
+  "/saved": {
+    title: "Saved — The Baseline",
+    description: "Your save-for-later reading list, kept in the browser.",
   },
 };
 
@@ -124,6 +130,20 @@ export default function App() {
   const toastTimer = useRef(null);
   useSeo();
 
+  // Baseline for the "NEW since your last visit" badge: the previous session's
+  // timestamp, read once on mount. The visit is only recorded when the tab is
+  // hidden or closed (so a reload mid-read doesn't swallow the badge), matching
+  // the lightweight localStorage pattern used by the hype history.
+  const lastVisitRef = useRef(readLastVisit());
+  useEffect(() => {
+    const persist = () => writeLastVisit();
+    document.addEventListener("visibilitychange", persist);
+    return () => {
+      document.removeEventListener("visibilitychange", persist);
+      writeLastVisit();
+    };
+  }, []);
+
   const showToast = (message) => {
     setToast(message);
     window.clearTimeout(toastTimer.current);
@@ -172,13 +192,14 @@ export default function App() {
           <Suspense fallback={<RouteFallback />}>
             <Routes>
               <Route path="/" element={<Landing stories={stories} stats={stats} sourceStats={sourceStats} offline={offline} loaded={loaded} />} />
-              <Route path="/edition" element={<Home stories={stories} offline={offline} loaded={loaded} reload={reload} servedFromCache={servedFromCache} savedAt={savedAt} />} />
+              <Route path="/edition" element={<Home stories={stories} offline={offline} loaded={loaded} reload={reload} servedFromCache={servedFromCache} savedAt={savedAt} lastVisit={lastVisitRef.current} />} />
               <Route path="/hype-index" element={<HypeIndex stats={stats} sourceStats={sourceStats} allStories={allStories} loaded={loaded} offline={offline} reload={reload} />} />
               <Route path="/sources" element={<Sources sources={sources} sourceStats={sourceStats} loaded={loaded} offline={offline} reload={reload} />} />
               <Route path="/sources/:name" element={<SourceProfile allStories={allStories} sources={sources} sourceStats={sourceStats} loaded={loaded} offline={offline} reload={reload} />} />
               <Route path="/story/:id" element={<StoryPage stories={stories} allStories={allStories} loaded={loaded} offline={offline} reload={reload} />} />
               <Route path="/about" element={<About showToast={showToast} />} />
               <Route path="/methodology" element={<Methodology />} />
+              <Route path="/saved" element={<Saved stories={stories} />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

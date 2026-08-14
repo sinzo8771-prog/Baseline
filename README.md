@@ -75,6 +75,8 @@ The site never rewrites a headline and generates no content. It is a meter, not 
 - **Story permalinks** — `/story/:id` pages with verbatim headline, source, published time, "Why this score", native Share + copy-link, and `NewsArticle` JSON-LD. Each page links **Previous / Next** through the day's ranked edition order, hiding the missing direction at the list boundaries.
 - **Keyboard shortcuts** — `j`/`k` move a selection between stories, `Enter` opens the selected story, `Escape` closes the modal, `/` focuses search, and `?` toggles the shortcuts help. Keys are never hijacked while typing in an input or inside the modal's focus trap.
 - **Print-friendly** — `Cmd+P` on the edition renders like a physical paper: nav, search, chips, toggles, canvas effects, and buttons are stripped, content is forced to paper + ink, and external links print with their URLs.
+- **Save-for-later** — a bookmark on every story surface (feed cards, cards view, modal, permalink page) keeps a story in your browser at `/saved`, as a snapshot that still renders even after it ages out of today's edition.
+- **New since your last visit** — stories published after your previous session carry a small NEW badge; a first visit (no stored baseline) badges nothing.
 - **Resilience** — an in-browser saved edition (SWR-style cache) paints instantly when offline; a "SAVED EDITION · LAST UPDATED" banner offers retry, and every error state has a working "Try the presses again" button.
 - **Editorial print design** — serif masthead (with date, edition number, and story count), paper texture, sticky utility nav, light/dark themes, subtle canvas flourishes (VHS footer, reveal effects) that respect reduced motion.
 - **SEO-ready** — per-route title/description/canonical, Open Graph / Twitter / JSON-LD tags, `robots.txt`, `sitemap.xml`, `site.webmanifest`, and a generated 1200×630 OG image.
@@ -91,6 +93,7 @@ The site never rewrites a headline and generates no content. It is a meter, not 
 | `/sources` | **Sources** — the ten feeds with live status, "Who's Shouting?" leaderboard, OPML export |
 | `/sources/:name` | **Source profile** — status, story count, avg intensity, distribution, trend, latest stories |
 | `/story/:id` | **Story** — verbatim headline, source, published time, Hype score, "Why this score", Share/Copy, original link |
+| `/saved` | **Saved** — your save-for-later reading list (kept in the browser, still renders aged-out stories) |
 | `/methodology` | **Methodology** — the scoring method, what is not counted, and the detector's limits |
 | `/about` | **About** — the editorial stance |
 | `*` | **404** — a themed dead-end |
@@ -161,7 +164,7 @@ npm run test:all     # both
 ```
 
 - **Unit suite** (`node --test`, `test/*.test.js`): hype scoring (signal categories + false positives), cross-feed dedupe (prefix + punctuation variants), RSS parsing, pipeline composition, edition ranking (freshness, diversity, hype), Hype Index history, and a guard that the browser-side source allowlist matches the Worker's.
-- **Component suite** (`vitest`, `test/components/`): renders the real components in jsdom — `SignalBreakdown` (signal list + disclaimer), `SpinBadge` (sr-only reason + the click-to-open popover), `StoryModal` through `StoryFeed` (open, focus trap, Escape to close, focus restore), `TrendCell` (sparkline rendering), `StoryPage` (prev/next nav at list boundaries), and the `useKeyboardShortcuts` hook (typing guard, enabled toggle, preventDefault).
+- **Component suite** (`vitest`, `test/components/`): renders the real components in jsdom — `SignalBreakdown` (signal list + disclaimer), `SpinBadge` (sr-only reason + the click-to-open popover), `StoryModal` through `StoryFeed` (open, focus trap, Escape to close, focus restore), `TrendCell` (sparkline rendering), `StoryPage` (prev/next nav at list boundaries), the `useKeyboardShortcuts` hook (typing guard, enabled toggle, preventDefault), consistent image slots (placeholder + error fallback), NEW badges, and the Saved page (empty state + aged-out story rendering).
 
 ## Build
 
@@ -209,10 +212,12 @@ src/
     App.jsx                # Shell: SiteNav, masthead (+edition metadata), routes, VHS footer, toasts, useSeo
     styles.css             # Print-style theme tokens (Tailwind v4)
     components/            # SiteNav, SiteFooter, StoryFeed, StoryModal, CardsView, SpinBadge,
-                           # SignalBreakdown, TrendCell, SelectorChips, HypeMeter, EmptyState, ErrorBoundary
-    pages/                 # Home, HypeIndex, Sources, SourceProfile, StoryPage, Methodology, About, NotFound
+                           # SignalBreakdown, TrendCell, SelectorChips, HypeMeter, EmptyState,
+                           # ErrorBoundary, BookmarkButton
+    pages/                 # Home, HypeIndex, Sources, SourceProfile, StoryPage, Saved,
+                           # Methodology, About, NotFound
     hooks/                 # useBaselineData, useTheme, useKeyboardShortcuts
-    lib/                   # hypeHistory.js, exportOPML.js, copyLink.js
+    lib/                   # hypeHistory.js, lastVisit.js, savedStories.js, exportOPML.js, copyLink.js
   lib/
     feeds.js               # Source allowlist + browser-side fetch/parse helpers
                            # (must match src/index.js)

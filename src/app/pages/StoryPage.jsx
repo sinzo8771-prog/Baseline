@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, Copy, ExternalLink, Share2 } from "lucide-react"
 import SpinBadge from "../components/SpinBadge.jsx";
 import SignalBreakdown from "../components/SignalBreakdown.jsx";
 import EmptyState from "../components/EmptyState.jsx";
+import BookmarkButton from "../components/BookmarkButton.jsx";
 import { copyText, storyUrl } from "../lib/copyLink.js";
 import { sortStories } from "@/lib/ranking";
 import { cn } from "@/lib/utils";
@@ -247,6 +248,7 @@ export default function StoryPage({ allStories, stories, loaded, offline, reload
           <Copy className="size-3.5" aria-hidden="true" />
           {copied ? "Link copied" : "Copy link"}
         </button>
+        <BookmarkButton story={story} />
       </div>
 
       {prev || next ? (

@@ -4,6 +4,7 @@ import { Copy, ExternalLink, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import SpinBadge from "./SpinBadge.jsx";
 import SignalBreakdown from "./SignalBreakdown.jsx";
+import BookmarkButton from "./BookmarkButton.jsx";
 import { copyText, storyUrl } from "../lib/copyLink.js";
 
 function safeHref(link) {
@@ -148,6 +149,7 @@ export default function StoryModal({ story, onClose, overlayColor = "bg-backgrou
                 <Copy className="size-3.5" aria-hidden="true" />
                 {copied ? "Link copied" : "Copy link"}
               </button>
+              <BookmarkButton story={story} />
               <a
                 href={`/story/${encodeURIComponent(story.id)}`}
                 onClick={onClose}
