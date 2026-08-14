@@ -42,6 +42,16 @@ export function dailyStats(stories) {
   };
 }
 
+// A single headline can move a 5-story edition by 20 points but barely dent a
+// 25-story one. Below this many stories the Hype percentage is too sensitive to
+// read as a meaningful daily measurement, so the UI labels it honestly instead
+// of presenting a small-sample figure as definitive.
+export const MIN_SAMPLE = 8;
+
+export function isSmallSample(total) {
+  return Number.isFinite(total) && total > 0 && total < MIN_SAMPLE;
+}
+
 // Per-source analytics for the "Who's shouting?" leaderboard. `avgHype` is the
 // mean headline-intensity score (0-100), so it is a measurement, not a
 // judgment on the outlet. Sorted loudest-first.

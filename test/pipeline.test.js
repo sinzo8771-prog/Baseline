@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { composeStories, dailyStats, sourceStats, editionNumber, dailyShift } from "../src/lib/pipeline.js";
+import { composeStories, dailyStats, sourceStats, editionNumber, dailyShift, isSmallSample } from "../src/lib/pipeline.js";
 
 const results = [
   {
@@ -90,4 +90,13 @@ test("dailyShift reports deltas only when they differ", () => {
 test("dailyShift returns empty when either day is missing", () => {
   assert.deepEqual(dailyShift(null, {}), []);
   assert.deepEqual(dailyShift({}, null), []);
+});
+
+test("isSmallSample flags editions too small to read firmly", () => {
+  assert.equal(isSmallSample(0), false); // no edition at all
+  assert.equal(isSmallSample(2), true);
+  assert.equal(isSmallSample(7), true);
+  assert.equal(isSmallSample(8), false); // at/above the minimum, read firmly
+  assert.equal(isSmallSample(25), false);
+  assert.equal(isSmallSample(undefined), false);
 });

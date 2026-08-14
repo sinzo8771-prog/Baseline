@@ -4,6 +4,7 @@ import HypeMeter from "../components/HypeMeter.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import { readHypeHistory, hypeTrend } from "../lib/hypeHistory.js";
 import { signalShares, biggestSignalShift, TIER_RANGES, CATEGORY_ORDER, CATEGORY_LABEL } from "@/lib/hype";
+import { isSmallSample } from "@/lib/pipeline";
 
 function weekdayLabel(dateKey) {
   const [y, m, d] = dateKey.split("-").map(Number);
@@ -84,6 +85,11 @@ function StatBlock({ stats, history, series }) {
           </>
         )}
       </div>
+      {isSmallSample(stats.total) && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          Small edition — {stats.total} stories isn't enough for this percentage to mean much yet.
+        </p>
+      )}
       <div className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-border bg-border sm:grid-cols-5">
         {cells.map((cell) => (
           <div key={cell.label} className="bg-card p-4">

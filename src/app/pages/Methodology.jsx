@@ -83,6 +83,16 @@ export default function Methodology() {
           </ul>
         </div>
 
+        {/* How the day's number is composed */}
+        <div className="rounded-md border border-border bg-card p-5">
+          <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">What the day's number actually measures</h3>
+          <ul className="mt-3 list-disc space-y-1.5 pl-4 text-sm text-muted-foreground">
+            <li>The reading is measured on today's edition: the most recent 25 stories across the tracked feeds. Because the mix is by recency, a prolific outlet can nudge the day's number — the Index reports the mix as it was, rather than rebalancing it.</li>
+            <li>Near-duplicate and syndicated headlines are collapsed into a single story, so one announcement reported across many outlets is counted once, not once per outlet.</li>
+            <li>On mornings when only a handful of stories have landed, the page says so: a small edition is flagged instead of presented as a firm reading.</li>
+          </ul>
+        </div>
+
         {/* Known limits */}
         <div className="rounded-md border border-border bg-card p-5">
           <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Known limits, stated plainly</h3>

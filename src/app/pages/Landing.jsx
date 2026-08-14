@@ -6,6 +6,7 @@ import HypeMeter from "../components/HypeMeter.jsx";
 import SpinBadge from "../components/SpinBadge.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import { readHypeHistory, hypeTrend } from "../lib/hypeHistory.js";
+import { isSmallSample } from "@/lib/pipeline";
 
 function fmtDate(iso) {
   const d = new Date(iso);
@@ -108,6 +109,11 @@ function Snapshot({ stats, stories, loaded, offline, history }) {
           "Flat from yesterday."
         )}
       </p>
+      {isSmallSample(stats.total) && (
+        <p className="text-xs text-muted-foreground">
+          Small edition — {stats.total} stories isn't enough for this percentage to mean much yet.
+        </p>
+      )}
       <HypeMeter percent={stats.hypePercent} />
       <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
         <Link to="/hype-index" className="underline underline-offset-4 hover:text-foreground">See the full index</Link>
