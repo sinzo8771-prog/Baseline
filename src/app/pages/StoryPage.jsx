@@ -202,6 +202,7 @@ export default function StoryPage({ allStories, stories, loaded, offline, reload
           {story.spinScore}/100 intensity
         </span>
       </div>
+      <p className="mt-2 text-xs text-muted-foreground">Hype measures loudness, not truth.</p>
 
       <div className="mt-6 max-w-2xl rounded-md border border-border bg-card p-5">
         <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">

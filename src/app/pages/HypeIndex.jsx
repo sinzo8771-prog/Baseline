@@ -6,6 +6,17 @@ import { readHypeHistory, hypeTrend } from "../lib/hypeHistory.js";
 import { signalShares, biggestSignalShift, TIER_RANGES, CATEGORY_ORDER, CATEGORY_LABEL } from "@/lib/hype";
 import { isSmallSample } from "@/lib/pipeline";
 
+// Plain-English gloss for the dominant signal family, used by "WHY TODAY?" so
+// the reading says what is doing the shouting, not just which row is longest.
+const CATEGORY_READ = {
+  language: "Unusually aggressive language",
+  superlatives: "Superlative claims",
+  benchmark: "Benchmark-beating claims",
+  numerical: "Promotional multipliers",
+  formatting: "Shouty formatting",
+  emotional: "Emotional language",
+};
+
 function weekdayLabel(dateKey) {
   const [y, m, d] = dateKey.split("-").map(Number);
   const date = new Date(y, m - 1, d);
@@ -18,9 +29,13 @@ function TrendBars({ series }) {
   const max = Math.max(...series.map((e) => e.hypePercent), 1);
   return (
     <div
-      className="mt-3 flex h-14 items-end gap-1.5"
+      className="mt-3 flex h-16 items-end gap-1.5"
       role="img"
       aria-label={`Hype Index over the last ${series.length} days: ${series.map((e) => `${e.date}: ${e.hypePercent}%`).join(", ")}`}
+      style={{
+        backgroundImage:
+          "repeating-linear-gradient(0deg, transparent 0 calc(25% - 1px), var(--rule) calc(25% - 1px) 25%)",
+      }}
     >
       {series.map((entry, i) => {
         const isToday = i === 0;
@@ -36,8 +51,11 @@ function TrendBars({ series }) {
               }}
               title={`${entry.date}: ${entry.hypePercent}%`}
             />
-            <span className="text-[9px] uppercase tracking-[0.12em] text-muted-foreground">
+            <span className="text-center text-[9px] uppercase leading-tight tracking-[0.12em] text-muted-foreground">
               {isToday ? "today" : weekdayLabel(entry.date)}
+              <span className="hidden tabular-nums normal-case tracking-normal text-foreground/70 sm:block">
+                {entry.hypePercent}%
+              </span>
             </span>
           </div>
         );
@@ -180,26 +198,66 @@ function Distribution({ stats }) {
   );
 }
 
-// "WHY TODAY?" — the share of today's detected signals by category, computed
-// from the real stories in the edition. If the day's data has no breakdown
-// (older cache), the panel says so instead of inventing shares.
-function WhyToday({ stats }) {
+// "WHY TODAY?" — answers the question with the day's real data, not a repeat
+// of the score. Two honest readings are derived and only shown when true: which
+// signal family is doing the shouting (from the edition's own breakdown), and
+// the single loudest headline (from the edition's stories). If the saved
+// edition predates the breakdown, the panel says so instead of inventing one.
+function WhyToday({ stats, allStories }) {
   const breakdown = stats?.signalBreakdown;
   const shares = useMemo(() => signalShares(breakdown), [breakdown]);
   const keys = breakdown ? CATEGORY_ORDER.filter((k) => shares[k] !== undefined) : [];
-  if (keys.length === 0) {
+
+  const dominant = keys.length
+    ? [...keys].sort((a, b) => shares[b] - shares[a])[0]
+    : null;
+
+  const loudest = useMemo(() => {
+    if (!Array.isArray(allStories) || allStories.length === 0) return null;
+    return [...allStories].sort((a, b) => (b.spinScore ?? 0) - (a.spinScore ?? 0))[0];
+  }, [allStories]);
+
+  const readings = [];
+  if (dominant && shares[dominant] > 0) {
+    readings.push(
+      <li key="dominant" className="text-sm text-muted-foreground">
+        <span className="font-semibold text-foreground">{CATEGORY_READ[dominant]}</span> is doing most of the
+        shouting — {shares[dominant]}% of today's signals.
+      </li>,
+    );
+  }
+  if (loudest && loudest.spinScore > 0) {
+    readings.push(
+      <li key="loudest" className="text-sm text-muted-foreground">
+        Loudest headline: <span className="font-serif font-bold text-foreground">“{loudest.title}”</span> at{" "}
+        {loudest.spinScore}/100.
+      </li>,
+    );
+  }
+
+  if (keys.length === 0 && readings.length === 0) {
     return <p className="mt-3 text-sm text-muted-foreground">DATA UNAVAILABLE — the saved edition predates the signal breakdown.</p>;
   }
-  const sorted = [...keys].sort((a, b) => shares[b] - shares[a]);
+
   return (
-    <ul className="mt-3 space-y-1.5">
-      {sorted.map((key) => (
-        <li key={key} className="flex items-baseline justify-between gap-3 border-b border-border/50 py-1.5 last:border-0">
-          <span className="text-sm text-foreground">{CATEGORY_LABEL[key]}</span>
-          <span className="tabular-nums text-sm text-muted-foreground">{shares[key]}%</span>
-        </li>
-      ))}
-    </ul>
+    <div>
+      {readings.length > 0 ? (
+        <ul className="mt-3 space-y-1.5">
+          {readings}
+          <li className="border-t border-border/50 pt-1.5 text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
+            Signal mix
+          </li>
+        </ul>
+      ) : null}
+      <ul className="mt-1.5 space-y-1.5">
+        {keys.map((key) => (
+          <li key={key} className="flex items-baseline justify-between gap-3 border-b border-border/50 py-1.5 last:border-0">
+            <span className="text-sm text-foreground">{CATEGORY_LABEL[key]}</span>
+            <span className="tabular-nums text-sm text-muted-foreground">{shares[key]}%</span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -240,7 +298,7 @@ function Panel({ title, children }) {
   );
 }
 
-export default function HypeIndex({ stats, loaded, offline, reload }) {
+export default function HypeIndex({ stats, allStories, loaded, offline, reload }) {
   const history = useMemo(() => readHypeHistory(), [loaded, stats]);
   const { series } = useMemo(() => hypeTrend(history), [history]);
 
@@ -272,7 +330,7 @@ export default function HypeIndex({ stats, loaded, offline, reload }) {
 
           {/* WHY TODAY + BIGGEST SHIFT */}
           <div className="grid gap-4 lg:grid-cols-2">
-            <Panel title="Why today?"> <WhyToday stats={stats} /> </Panel>
+            <Panel title="Why today?"> <WhyToday stats={stats} allStories={allStories} /> </Panel>
             <Panel title="Biggest hype shift"> <BiggestShift stats={stats} history={history} /> </Panel>
           </div>
 
@@ -284,7 +342,7 @@ export default function HypeIndex({ stats, loaded, offline, reload }) {
           <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
             <Link to="/methodology" className="underline underline-offset-4 hover:text-foreground">How the score works</Link>
             <span aria-hidden="true">·</span>
-            <span>The Hype Index measures headlines, not the stories behind them. History stays in your browser.</span>
+            <span>Hype measures loudness, not truth. History stays in your browser.</span>
           </p>
         </div>
       ) : offline ? (

@@ -23,7 +23,8 @@ export default function Methodology() {
       <p className="section-note">Verbatim in. Hype measured out. The score is a measurement of language, not a judgment on the story.</p>
 
       <div className="mb-8 rounded-md border-2 border-primary/60 bg-card p-5">
-        <p className="font-serif text-lg font-black leading-snug text-foreground">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">Hype measures loudness, not truth.</p>
+        <p className="mt-2 font-serif text-lg font-black leading-snug text-foreground">
           A high Hype score does not mean a story is false.
         </p>
         <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">

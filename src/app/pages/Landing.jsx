@@ -118,7 +118,7 @@ function Snapshot({ stats, stories, loaded, offline, history }) {
       <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
         <Link to="/hype-index" className="underline underline-offset-4 hover:text-foreground">See the full index</Link>
         <span aria-hidden="true">·</span>
-        <span>Measures headline intensity, not whether the stories are true.</span>
+        <span>Hype measures loudness, not truth.</span>
       </p>
     </div>
   );
