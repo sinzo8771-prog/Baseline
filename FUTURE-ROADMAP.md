@@ -79,6 +79,12 @@ Status legend: `open` — not started · `scoped` — shape/effort understood ·
 - Manual pass with a real screen reader on the modal, charts, and trend cells.
   No known issues, but nothing replaces a human SR session.
 
+### Skipped-test hygiene — `done`
+- Every `it.skip` / `describe.skip` in `test/` must carry a reason comment on
+  the line immediately above stating why it's skipped and what needs to happen
+  to un-skip it. Unexplained skips rot the same way comment-free `// TODO`s do.
+- One-time sweep on 2026-08-14 confirmed zero unexplained skips remain.
+
 ---
 
 ## Product / content backlog (intentionally NOT built)
@@ -159,3 +165,6 @@ Status legend: `open` — not started · `scoped` — shape/effort understood ·
 | 2026-08-14 | Polish pass Phase 6 (a11y): single h1/page, sequential headings, reduced-motion skeletons | done |
 | 2026-08-14 | Polish pass Phase 7 (SEO): route-accurate OG tags, 404 metadata, fresh sitemap | done |
 | 2026-08-14 | Polish pass Phase 8 (regression): removed dead `ui/` primitives, full suite green | done |
+| 2026-08-14 | CommandPalette a11y: nested-interactive fixed (li>button replaced by li owning click+Enter); axe 7/7 green | done |
+| 2026-08-14 | Skip-hygiene convention codified: every `it.skip`/`describe.skip` must carry a reason comment above it; one-time sweep: zero unexplained skips remain | done |
+| 2026-08-14 | `⌘K`/`Ctrl K` discoverability: visible pill hint in edition search box, wired to live App.jsx shortcut | done |

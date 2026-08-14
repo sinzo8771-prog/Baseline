@@ -158,16 +158,20 @@ export default function CommandPalette({ open, onClose, stories }) {
             </li>
           ) : (
             results.slice(0, 12).map((result, i) => (
-              <li key={result.id} role="option" aria-selected={i === cursor}>
-                <button
-                  type="button"
-                  onMouseEnter={() => setCursor(i)}
-                  onClick={() => run(result)}
-                  className={cn(
-                    "flex w-full items-center gap-3 rounded px-3 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-                    i === cursor ? "bg-accent" : "hover:bg-accent/50",
-                  )}
-                >
+              <li
+                key={result.id}
+                role="option"
+                aria-selected={i === cursor}
+                tabIndex={-1}
+                onClick={() => run(result)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") run(result);
+                }}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded px-3 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                  i === cursor ? "bg-accent" : "hover:bg-accent/50",
+                )}
+              >
                   <span
                     className={cn(
                       "inline-flex h-6 shrink-0 items-center rounded px-1.5 font-mono text-[10px] uppercase tracking-[0.08em]",
@@ -192,8 +196,7 @@ export default function CommandPalette({ open, onClose, stories }) {
                   ) : result.kind === "story" ? (
                     <ExternalLink className="size-3.5 shrink-0 text-muted-foreground/60" aria-hidden="true" />
                   ) : null}
-                </button>
-              </li>
+                </li>
             ))
           )}
         </ul>

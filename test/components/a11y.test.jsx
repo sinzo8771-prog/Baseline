@@ -91,7 +91,7 @@ describe("axe accessibility", () => {
     await assertNoViolations(container);
   });
 
-  it.skip("CommandPalette (open) has no violations", async () => {
+  it("CommandPalette (open) has no violations", async () => {
     const { container } = render(
       <MemoryRouter>
         <CommandPalette open={true} onClose={() => {}} stories={paletteStories} />
