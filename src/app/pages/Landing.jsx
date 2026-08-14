@@ -40,7 +40,7 @@ function Kicker({ children }) {
 // hero is the value proposition, not a second copy of the masthead.
 function Hero() {
   return (
-    <section aria-label="Introduction" className="pb-12 pt-10 sm:pb-16 sm:pt-14">
+    <section aria-label="Introduction" className="pb-10 pt-8 sm:pb-12 sm:pt-10">
       <m.div {...fade}>
         <h2 className="max-w-[15ch] font-serif text-5xl font-black leading-[0.98] tracking-[-0.02em] text-foreground sm:text-7xl">
           A quiet interface for a very loud industry.
@@ -149,6 +149,7 @@ function StoryPreview({ stories, loaded, offline }) {
           <li key={story.id} className="group py-4">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <SpinBadge spin={story.spin} flags={story.flags} signals={story.signals} hedged={story.hedged} score={story.spinScore} />
+              <span className="font-mono text-[11px] tabular-nums text-muted-foreground">{story.spinScore}/100</span>
               <span className="text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
                 {story.source} — {fmtDate(story.publishedAt)}
               </span>

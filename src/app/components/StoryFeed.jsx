@@ -20,6 +20,7 @@ function Meta({ story, isNew = false }) {
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
       <SpinBadge spin={story.spin} flags={story.flags} signals={story.signals} hedged={story.hedged} score={story.spinScore} />
+      <span className="font-mono text-[11px] tabular-nums text-muted-foreground">{story.spinScore}/100</span>
       {isNew ? (
         <span className="rounded-sm border border-primary/60 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-primary">
           New

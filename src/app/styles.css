@@ -215,12 +215,30 @@ body {
     color: var(--ink);
     text-decoration: none;
     font-size: 13px;
+    font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     display: inline-flex;
     align-items: center;
     min-height: 44px;
     padding: 0 12px;
+  }
+
+  .site-nav-divider {
+    width: 1px;
+    height: 18px;
+    background: var(--rule);
+    margin: 0 8px;
+    flex-shrink: 0;
+  }
+
+  /* Secondary destinations stay on the same rail but one visual step back:
+     quieter color, normal weight. The active state still underlines in
+     vermillion so "where am I" is never ambiguous. */
+  .site-nav-secondary { display: contents; }
+  .site-nav-secondary a {
+    color: var(--ink-soft);
+    font-weight: 400;
   }
   .site-nav-links a:hover { text-decoration: underline; text-underline-offset: 4px; }
   .site-nav-links a.active {

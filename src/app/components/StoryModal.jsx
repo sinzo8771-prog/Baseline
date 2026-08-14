@@ -80,6 +80,7 @@ export default function StoryModal({ story, onClose, overlayColor = "bg-backgrou
           <header className="flex items-center justify-between gap-4 border-b border-border p-4 sm:p-6">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <SpinBadge spin={story.spin} flags={story.flags} signals={story.signals} hedged={story.hedged} score={story.spinScore} />
+              <span className="font-mono text-[11px] tabular-nums text-muted-foreground">{story.spinScore}/100</span>
               <span className="text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
                 {story.source} · {fmtTime(story.publishedAt)}
               </span>

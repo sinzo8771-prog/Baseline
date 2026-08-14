@@ -8,12 +8,19 @@ import useTheme from "../hooks/useTheme.js";
 // one newspaper. Sticky keeps the section links reachable while the edition
 // streams in.
 
-const NAV_LINKS = [
+// Primary destinations are the product itself: the edition to read, the Hype
+// Index to measure, the sources to judge. Secondary links stay one row back,
+// visually quieter — the objective is hierarchy, not feature deletion.
+const PRIMARY_LINKS = [
   { to: "/edition", label: "Edition", end: true },
   { to: "/hype-index", label: "Hype Index" },
   { to: "/sources", label: "Sources" },
+];
+
+const SECONDARY_LINKS = [
   { to: "/saved", label: "Saved" },
   { to: "/week-in-review", label: "Review" },
+  { to: "/methodology", label: "Methodology" },
   { to: "/about", label: "About" },
 ];
 
@@ -25,7 +32,7 @@ export default function SiteNav() {
         THE BASELINE
       </Link>
       <div className="site-nav-links">
-        {NAV_LINKS.map(({ to, label, end }) => (
+        {PRIMARY_LINKS.map(({ to, label, end }) => (
           <NavLink
             key={to}
             to={to}
@@ -35,6 +42,19 @@ export default function SiteNav() {
             {label}
           </NavLink>
         ))}
+        <span className="site-nav-divider" aria-hidden="true" />
+        <span className="site-nav-secondary">
+          {SECONDARY_LINKS.map(({ to, label, end }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              className={({ isActive }) => (isActive ? "active" : undefined)}
+            >
+              {label}
+            </NavLink>
+          ))}
+        </span>
       </div>
       <button
         className="theme-toggle"
