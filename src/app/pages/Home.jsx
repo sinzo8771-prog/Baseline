@@ -8,6 +8,7 @@ import SpinBadge from "../components/SpinBadge.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import useKeyboardShortcuts from "../hooks/useKeyboardShortcuts.js";
 import { cn } from "@/lib/utils";
+import Input from "@/components/ui/input";
 import { sortStories } from "@/lib/ranking";
 
 const FILTERS = ["all", "Measured", "Warm", "Hot", "On Fire"];
@@ -209,17 +210,17 @@ export default function Home({ stories, offline, loaded, reload, servedFromCache
           ) : null}
 
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="search-box">
+            <div className="relative">
               <Search className="search-icon" aria-hidden="true" />
               <label className="sr-only" htmlFor="story-search">Search the edition</label>
-              <input
+              <Input
                 id="story-search"
                 ref={searchRef}
-                className="search-input"
                 type="search"
                 placeholder="Search the edition…"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                className="pe-11"
               />
               {query ? (
                 <button
@@ -231,7 +232,11 @@ export default function Home({ stories, offline, loaded, reload, servedFromCache
                   <X className="size-3.5" aria-hidden="true" />
                 </button>
               ) : (
-                <kbd className="search-kbd" aria-hidden="true">{CMD_LABEL}</kbd>
+                <span className="pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-2 text-muted-foreground">
+                  <kbd className="inline-flex h-5 max-h-full items-center rounded border border-border bg-accent px-1 font-[inherit] text-[0.625rem] font-medium text-muted-foreground/70">
+                    {CMD_LABEL}
+                  </kbd>
+                </span>
               )}
             </div>
             <div className="flex flex-wrap items-center gap-3">

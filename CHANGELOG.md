@@ -32,14 +32,14 @@ All notable changes to **The Baseline** are documented here, grouped by the V2 s
 - Added `vitest-axe` (`axe-core` 4.13) + `test/components/a11y.test.jsx` covering the six highest-value interactive surfaces — StoryModal, CommandPalette, TrendCell, Sources, HypeIndex, WeekInReview (empty + partial), and Saved (empty + populated). 7/7 passing.
 - Fixed `nested-interactive` axe violation in CommandPalette: listbox rows are now `<li role="option" tabIndex={-1}>` that own `onClick` and `onKeyDown(Enter)` directly (inner `<button>` removed). Existing focus-trap, arrow-key, Escape, and focus-return behavior is unchanged.
 - Skip-hygiene convention codified: every `it.skip` / `describe.skip` must carry a reason comment on the line immediately above it; one-time sweep found zero unexplained skips remain.
-- `⌘K` / `Ctrl K` discoverability: a muted pill hint is now visible inside the edition search box (replaces the clear button while empty) — the `?` help overlay already listed the shortcut.
+- `⌘K` / `Ctrl K` discoverability: replaced the hand-rolled kbd pill in the edition search box with the `originui/Input` component from 21st.dev (id:158, fetched via MCP; CLI install blocked by paid-membership requirement, so the component was added manually as `src/components/ui/input.jsx` — actively imported by Home.jsx, so `ui/` is no longer dead code). The `?` help overlay already listed the shortcut.
 
 ### SEO
 - **Route-accurate Open Graph tags**: `og:title` / `og:description` / `og:url` now track the current route (previously every shared link previewed as the homepage); 404 routes get their own title (§42, §43).
 - Sitemap `lastmod` refreshed.
 
 ### Regression
-- Removed dead code: the whole `src/components/ui/` directory (unused shadcn primitives — button/badge/card/progress/separator). Shrinks the emitted CSS 61.5→49.2 KB.
+- Removed dead code from `src/components/ui/`: the unused shadcn primitives (button/badge/card/progress/separator). Emitted CSS shrank 61.5→49.2 KB. `input.jsx` was later added (actively imported by Home.jsx) so the directory is no longer dead.
 - Full suite green: 103 `node --test` + 36 component = 139 passing; build clean.
 
 ## 2026-08-13 — Landing page & edition route split
