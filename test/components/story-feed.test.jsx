@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { act } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
@@ -142,7 +143,9 @@ describe("StoryFeed consistent image slots", () => {
       </MemoryRouter>,
     );
     const img = container.querySelector(".card-img-slot img");
-    img.dispatchEvent(new Event("error"));
+    act(() => {
+      img.dispatchEvent(new Event("error"));
+    });
     await waitFor(() => expect(container.querySelector(".card-img-placeholder")).not.toBeNull());
     expect(container.querySelector(".card-img-slot img")).toBeNull();
   });
