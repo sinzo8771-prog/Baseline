@@ -68,11 +68,13 @@ The site never rewrites a headline and generates no content. It is a meter, not 
 - **Spin scale** — every story is scored Measured → Warm → Hot → On Fire by a signal-category detector, shown as color-and-shape badges; a `<details>` popover and the story page's "Why this score" panel explain the exact signals behind each score, each with its own point contribution, plus the standing disclaimer that a Hype score measures loudness, not truth.
 - **Methodology** — a dedicated page stating what the score measures, what it does not, and where the detector can be fooled.
 - **Search** — filter the edition by any text in a headline, summary, or source name.
-- **Source drill-down** — a `?source=` URL filter isolates one outlet, with a one-click "stop filtering" chip, plus `/sources/:name` profile pages.
+- **Source drill-down** — a `?source=` URL filter isolates one outlet, with a one-click "stop filtering" chip, plus `/sources/:name` profile pages. The Sources leaderboard's Trend column pairs the direction glyph with a 7-day intensity sparkline.
 - **Sorting** — *Edited* (the default news judgment: freshness weighted by hype, with a source-diversity cap so one publisher never owns the front page), *Newest*, *Hottest*, *By Source*.
 - **Filter chips** — filter by hype level with live per-bucket counts; search, source, and hype filters compose.
 - **Two views** — *Edition* (the print-style list with lead story, glitch headline, and spin badges) and *Cards* (an editorial wire-card grid — hairline separators, serif headlines, spin badges, overlay open button — that mirrors the print identity).
-- **Story permalinks** — `/story/:id` pages with verbatim headline, source, published time, "Why this score", native Share + copy-link, and `NewsArticle` JSON-LD.
+- **Story permalinks** — `/story/:id` pages with verbatim headline, source, published time, "Why this score", native Share + copy-link, and `NewsArticle` JSON-LD. Each page links **Previous / Next** through the day's ranked edition order, hiding the missing direction at the list boundaries.
+- **Keyboard shortcuts** — `j`/`k` move a selection between stories, `Enter` opens the selected story, `Escape` closes the modal, `/` focuses search, and `?` toggles the shortcuts help. Keys are never hijacked while typing in an input or inside the modal's focus trap.
+- **Print-friendly** — `Cmd+P` on the edition renders like a physical paper: nav, search, chips, toggles, canvas effects, and buttons are stripped, content is forced to paper + ink, and external links print with their URLs.
 - **Resilience** — an in-browser saved edition (SWR-style cache) paints instantly when offline; a "SAVED EDITION · LAST UPDATED" banner offers retry, and every error state has a working "Try the presses again" button.
 - **Editorial print design** — serif masthead (with date, edition number, and story count), paper texture, sticky utility nav, light/dark themes, subtle canvas flourishes (VHS footer, reveal effects) that respect reduced motion.
 - **SEO-ready** — per-route title/description/canonical, Open Graph / Twitter / JSON-LD tags, `robots.txt`, `sitemap.xml`, `site.webmanifest`, and a generated 1200×630 OG image.
@@ -159,7 +161,7 @@ npm run test:all     # both
 ```
 
 - **Unit suite** (`node --test`, `test/*.test.js`): hype scoring (signal categories + false positives), cross-feed dedupe (prefix + punctuation variants), RSS parsing, pipeline composition, edition ranking (freshness, diversity, hype), Hype Index history, and a guard that the browser-side source allowlist matches the Worker's.
-- **Component suite** (`vitest`, `test/components/`): renders the real components in jsdom — `SignalBreakdown` (signal list + disclaimer), `SpinBadge` (sr-only reason + the click-to-open popover), and `StoryModal` through `StoryFeed` (open, focus trap, Escape to close, focus restore).
+- **Component suite** (`vitest`, `test/components/`): renders the real components in jsdom — `SignalBreakdown` (signal list + disclaimer), `SpinBadge` (sr-only reason + the click-to-open popover), `StoryModal` through `StoryFeed` (open, focus trap, Escape to close, focus restore), `TrendCell` (sparkline rendering), `StoryPage` (prev/next nav at list boundaries), and the `useKeyboardShortcuts` hook (typing guard, enabled toggle, preventDefault).
 
 ## Build
 
@@ -209,7 +211,7 @@ src/
     components/            # SiteNav, SiteFooter, StoryFeed, StoryModal, CardsView, SpinBadge,
                            # SignalBreakdown, TrendCell, SelectorChips, HypeMeter, EmptyState, ErrorBoundary
     pages/                 # Home, HypeIndex, Sources, SourceProfile, StoryPage, Methodology, About, NotFound
-    hooks/                 # useBaselineData, useTheme
+    hooks/                 # useBaselineData, useTheme, useKeyboardShortcuts
     lib/                   # hypeHistory.js, exportOPML.js, copyLink.js
   lib/
     feeds.js               # Source allowlist + browser-side fetch/parse helpers
@@ -276,6 +278,7 @@ The index only means something with a baseline, so each day's reading is written
 ## Accessibility
 
 - Keyboard-navigable story modal with a focus trap, Escape to close, and focus restored on close.
+- Full keyboard navigation on the edition: `j`/`k` move the story selection, `Enter` opens, `/` focuses search, `?` lists the shortcuts — all bypassed while typing or inside the modal.
 - ARIA-metered hype gauge and `role="status"` banners for offline/refreshing states.
 - Reduced-motion support across canvas effects, decrypted headlines, and the VHS footer.
 - Color-blind-safe spin badges (shape *and* color), AA-safe chip contrast, and `line-clamp`-ed titles that never push the grid.
@@ -288,7 +291,7 @@ Ideas on the press, in rough priority order:
 - **Edge-cached feeds** — serve `/api/feed` from the CDN with shorter TTLs to further cut upstream load.
 - **Own combined feed** — a `/feed.xml` of the deduped, scored edition for subscribers (needs a scheduled Worker writing to KV; deliberately not built while the site stays KV-free).
 
-Parked ideas from the audits (CSP, feed-image sanitization, dead-code removal, bundle trim, automated a11y sweep) are tracked in [`FUTURE-ROADMAP.md`](./FUTURE-ROADMAP.md). Release gates live in [`QA-CHECKLIST.md`](./QA-CHECKLIST.md), and the security review in [`SECURITY-AUDIT.md`](./SECURITY-AUDIT.md).
+Parked ideas from the audits (CSP, feed-image sanitization, dead-code removal, bundle trim — all shipped 2026-08-14 — plus the automated a11y sweep) and the improvement plan's Tier 2/3 scope (consistent card grid, "new since your last visit", save-for-later, weekly recap, command palette) are tracked in [`FUTURE-ROADMAP.md`](./FUTURE-ROADMAP.md). Release gates live in [`QA-CHECKLIST.md`](./QA-CHECKLIST.md), and the security review in [`SECURITY-AUDIT.md`](./SECURITY-AUDIT.md).
 
 ---
 

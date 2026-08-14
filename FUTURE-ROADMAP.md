@@ -12,7 +12,7 @@ Status legend: `open` — not started · `scoped` — shape/effort understood ·
 
 ## Hardening (security, from SECURITY-AUDIT.md)
 
-### Add a Content-Security-Policy (CSP) — `open`
+### Add a Content-Security-Policy (CSP) — `done`
 - **Why:** defense-in-depth. The site currently ships no CSP; a future injection
   bug would be unmitigated.
 - **Complication:** the theme init script in `index.html` is inline, and Google
@@ -20,25 +20,30 @@ Status legend: `open` — not started · `scoped` — shape/effort understood ·
   `default-src 'self'; script-src 'self' 'sha256-…'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; base-uri 'self'; form-action 'none'`
 - **Effort:** small. Must hash the inline theme script (or extract it to a file),
   then verify via the deployed Worker response header.
+- **Shipped 2026-08-14:** inline theme script extracted to `public/theme-init.js`;
+  CSP served on `text/html` responses only (see `src/index.js`).
 
-### Sanitize feed image URLs — `scoped`
+### Sanitize feed image URLs — `done`
 - **Why:** `story.image` is used verbatim as `<img src>` (only in the modal). It
   cannot execute JS, but a misbehaving/malicious feed could point at an external
   tracker or a `data:` blob.
 - **Shape:** reject non-`https?://` image URLs at parse time (mirror `safeHref`),
   and add `referrerpolicy="no-referrer"` to feed images.
 - **Effort:** small; changes `src/lib/feeds.js` (or the modal), plus tests.
+- **Shipped 2026-08-14:** `sanitizeImageUrl` in `feeds.js`, applied at parse;
+  `referrerpolicy="no-referrer"` on the modal image; 3 new parse tests.
 
-### Remove dead `src/components/ui/news-cards.jsx` — `scoped`
+### Remove dead `src/components/ui/news-cards.jsx` — `done`
 - **Why:** superseded by `CardsView`; no imports reference it. It still carries
   its own `safeHref`/aria pattern code that future readers may copy.
 - **Effort:** trivial (delete file). Low priority; harmless as-is.
+- **Shipped 2026-08-14:** file deleted; build passes with no references.
 
 ---
 
 ## Performance
 
-### Trim or split the 462 kB main chunk (149 kB gzip) — `open`
+### Trim or split the 462 kB main chunk (149 kB gzip) — `done`
 - **Why:** the main bundle is dominated by the app + the three always-visible
   WebGL masthead/footer effects (Asciify, DecryptReveal, VHS). They cannot be
   route-split because they render on every page (and lazy-loading them would
@@ -49,6 +54,9 @@ Status legend: `open` — not started · `scoped` — shape/effort understood ·
      automatic chunking threshold.
   3. Re-check after any future dependency bump — Vite 5+ already code-splits
      dynamically; only the eager deps are fat.
+- **Shipped 2026-08-14:** `manualChunks` in `vite.config.js` splits `react`
+  (react + react-dom + react-router-dom), `lucide-icons`, and `motion`
+  (framer-motion); main chunk dropped 477→338 KB (152→105 KB gzip).
 
 ### Preload the LCP-critical masthead canvas — `n/a`
 - Decided against: the effects already pause off-screen and settle under reduced
@@ -91,11 +99,46 @@ Status legend: `open` — not started · `scoped` — shape/effort understood ·
 
 ---
 
+## Improvement plan (2026-08-14) — baseline-improvement-plan.md
+
+### Tier 1 — quick UI/UX wins (all shipped)
+- **Sparkline in Sources trend column** — `done`: `sourceSeries()` in
+  `hypeHistory.js` returns the last 7 daily readings; `TrendCell` renders a
+  decorative 40×16 SVG line beside the existing direction glyph.
+- **Print stylesheet** — `done`: `@media print` rules hide nav/search/chips/
+  toggles/buttons/canvas, force paper + ink, keep masthead and headlines, and
+  print external URLs after links.
+- **Prev/next on story pages** — `done`: `StoryPage` computes its position in
+  the ranked "Edited" order and shows Previous/Next at the list boundaries;
+  back link repointed to `/edition`.
+- **Keyboard shortcuts** — `done`: shared `useKeyboardShortcuts` hook
+  (typing + dialog guards); `j`/`k` move story selection, Enter opens, Escape
+  closes, `/` focuses search, `?` toggles help.
+
+### Tier 2 — medium effort (`scoped`)
+- **Consistent story card grid** — cards with and without feed images render at
+  different weights; normalize height or design a deliberate text-only variant.
+- **"New since your last visit" badge** — localStorage last-visit timestamp,
+  badge stories published after it (no badges on first visit).
+- **Save-for-later / reading list** — localStorage-backed saved story IDs, `/saved`
+  route, bookmark toggle on every story surface.
+
+### Tier 3 — speculative (`scoped`)
+- **Weekly recap page** — `/week-in-review` computed purely from the 30-day
+  localStorage history (biggest swing, loudest source, calmest day, trend line);
+  honest empty/partial state under 7 days.
+- **Command palette (Cmd+K)** — fuzzy-searchable modal reusing the StoryModal
+  focus-trap pattern; distinct from Tier 1.4's `/` search shortcut.
+
+---
+
 ## Changelog of decisions
 
 | Date | Decision | Status |
 |---|---|---|
-| 2026-08-13 | Add CSP, sanitize image URLs, remove dead cards file | open |
-| 2026-08-13 | Bundle trim candidates recorded; lazy-loading effects rejected (LCP) | open / n/a |
+| 2026-08-13 | Add CSP, sanitize image URLs, remove dead cards file | done |
+| 2026-08-13 | Bundle trim candidates recorded; lazy-loading effects rejected (LCP) | done / n/a |
 | 2026-08-13 | Automated a11y sweep + SR pass | open |
 | 2026-08-13 | Product ideas parked (per-source breakdown, archives, OPML, notes) | open / n/a |
+| 2026-08-14 | Improvement plan Tier 1 shipped (sparklines, print CSS, prev/next, shortcuts) | done |
+| 2026-08-14 | Tier 2 / Tier 3 items scoped and parked (cards, last-visit, saved, recap, palette) | scoped |
