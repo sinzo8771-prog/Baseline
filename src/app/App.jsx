@@ -96,8 +96,15 @@ function useSeo() {
     // Story pages manage their own title/canonical/OG/JSON-LD (with cleanup);
     // never fight them here.
     if (pathname.startsWith("/story/")) return;
-    const meta = ROUTE_META[pathname] ?? (pathname.startsWith("/sources/") ? ROUTE_META["/sources"] : ROUTE_META["/"]);
+    const known = ROUTE_META[pathname];
+    const meta = known
+      ? known
+      : pathname.startsWith("/sources/")
+        ? ROUTE_META["/sources"]
+        : { title: "Page not found — The Baseline", description: ROUTE_META["/"].description };
     document.title = meta.title;
+
+    const url = BASE_URL + pathname;
 
     let canonical = document.querySelector('link[rel="canonical"]');
     if (!canonical) {
@@ -105,7 +112,7 @@ function useSeo() {
       canonical.setAttribute("rel", "canonical");
       document.head.appendChild(canonical);
     }
-    canonical.setAttribute("href", BASE_URL + pathname);
+    canonical.setAttribute("href", url);
 
     let description = document.querySelector('meta[name="description"]');
     if (!description) {
@@ -114,6 +121,22 @@ function useSeo() {
       document.head.appendChild(description);
     }
     description.setAttribute("content", meta.description);
+
+    // Open Graph mirrors the route so a shared link previews the page it
+    // actually points at, not the homepage. Story routes are excluded above —
+    // they own their own OG tags (StoryPage.jsx).
+    const setMeta = (prop, content) => {
+      let el = document.querySelector(`meta[property="${prop}"]`);
+      if (!el) {
+        el = document.createElement("meta");
+        el.setAttribute("property", prop);
+        document.head.appendChild(el);
+      }
+      el.setAttribute("content", content);
+    };
+    setMeta("og:title", meta.title);
+    setMeta("og:description", meta.description);
+    setMeta("og:url", url);
   }, [pathname]);
 }
 
