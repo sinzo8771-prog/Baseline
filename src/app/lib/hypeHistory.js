@@ -149,3 +149,63 @@ export function sourceSeries(history, name, limit = 7) {
   // History is newest-first; the sparkline plots left-to-right, so reverse.
   return series.reverse();
 }
+
+// Weekly recap computed purely from the stored hype history — the same honest
+// read the Hype Index page uses, just over a longer window. Everything here is
+// measured from recorded days; an empty history yields an empty summary, never
+// a fabricated week.
+//
+// Returns { days, series, average, biggestSwing, loudestDay, calmestDay,
+// weekOverWeek } where:
+//   - days: number of recorded days included (≤ 7)
+//   - series: newest-first { date, hypePercent } for the last 7 recorded days
+//   - biggestSwing: { from, to, delta } for the single largest day-over-day
+//     move among consecutive *recorded* days (delta is absolute points; from/to
+//     are the two day readings). null when fewer than two recorded days exist.
+//   - loudestDay / calmestDay: { date, hypePercent } extremes over the series
+//   - weekOverWeek: { current, previous } average Hype Index for the most recent
+//     ~7 recorded days vs the 7 recorded days before that, or null when the
+//     history has fewer than 8 days to compare.
+export function weekSummary(history) {
+  if (!Array.isArray(history) || history.length === 0) return null;
+  const days = history.slice(0, 7);
+
+  let biggestSwing = null;
+  for (let i = 0; i + 1 < days.length; i++) {
+    const a = days[i];
+    const b = days[i + 1];
+    const delta = Math.abs(a.hypePercent - b.hypePercent);
+    if (!biggestSwing || delta > biggestSwing.delta) {
+      biggestSwing = { from: a, to: b, delta };
+    }
+  }
+
+  let loudestDay = days[0];
+  let calmestDay = days[0];
+  for (const d of days) {
+    if (d.hypePercent > loudestDay.hypePercent) loudestDay = d;
+    if (d.hypePercent < calmestDay.hypePercent) calmestDay = d;
+  }
+
+  const average = Math.round(days.reduce((sum, d) => sum + d.hypePercent, 0) / days.length);
+
+  const avgOf = (slice) =>
+    slice.length === 0
+      ? null
+      : Math.round(slice.reduce((sum, d) => sum + d.hypePercent, 0) / slice.length);
+
+  const current = avgOf(days);
+  const prevDays = history.slice(7, 14);
+  const previous = avgOf(prevDays);
+  const weekOverWeek = previous === null || current === null ? null : { current, previous };
+
+  return {
+    days: days.length,
+    series: days,
+    average,
+    biggestSwing,
+    loudestDay,
+    calmestDay,
+    weekOverWeek,
+  };
+}

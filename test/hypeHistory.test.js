@@ -10,6 +10,7 @@ import {
   sourceTrend,
   sourceTrendReading,
   sourceSeries,
+  weekSummary,
 } from "../src/app/lib/hypeHistory.js";
 
 function fakeWindow() {
@@ -196,4 +197,59 @@ test("sourceSeries honors the limit and guards bad input", () => {
   assert.deepEqual(sourceSeries([], "OpenAI"), []);
   assert.deepEqual(sourceSeries(null, "OpenAI"), []);
   assert.deepEqual(sourceSeries(history, "Missing"), []);
+});
+
+test("weekSummary returns null for empty or invalid history", () => {
+  assert.equal(weekSummary([]), null);
+  assert.equal(weekSummary(null), null);
+  assert.equal(weekSummary(undefined), null);
+});
+
+test("weekSummary caps at 7 days and computes average + extremes", () => {
+  const days = [];
+  for (let i = 0; i < 10; i++) {
+    days.push({ date: `2026-08-${String(14 - i).padStart(2, "0")}`, hypePercent: 50 + i });
+  }
+  const summary = weekSummary(days);
+  assert.equal(summary.days, 7);
+  assert.equal(summary.series.length, 7);
+  // Series is newest-first, capped at 7: the stored days 50..59 keep 50..56.
+  assert.deepEqual(summary.series.map((d) => d.hypePercent), [50, 51, 52, 53, 54, 55, 56]);
+  assert.equal(summary.average, 53);
+  assert.equal(summary.loudestDay.hypePercent, 56);
+  assert.equal(summary.calmestDay.hypePercent, 50);
+});
+
+test("weekSummary finds the biggest day-over-day swing among recorded days", () => {
+  const history = [
+    { date: "2026-08-14", hypePercent: 80 },
+    { date: "2026-08-13", hypePercent: 40 },
+    { date: "2026-08-12", hypePercent: 42 },
+    { date: "2026-08-11", hypePercent: 41 },
+  ];
+  const summary = weekSummary(history);
+  assert.equal(summary.biggestSwing.delta, 40);
+  assert.equal(summary.biggestSwing.from.hypePercent, 80);
+  assert.equal(summary.biggestSwing.to.hypePercent, 40);
+});
+
+test("weekSummary reports null biggestSwing for a single recorded day", () => {
+  const summary = weekSummary([{ date: "2026-08-14", hypePercent: 60 }]);
+  assert.equal(summary.days, 1);
+  assert.equal(summary.biggestSwing, null);
+  assert.equal(summary.average, 60);
+});
+
+test("weekSummary computes week-over-week only with 8+ days of history", () => {
+  const short = [{ date: "2026-08-14", hypePercent: 60 }];
+  assert.equal(weekSummary(short).weekOverWeek, null);
+
+  const history = [];
+  for (let i = 0; i < 10; i++) {
+    history.push({ date: `2026-08-${String(14 - i).padStart(2, "0")}`, hypePercent: 50 + i });
+  }
+  // Recent 7 days are 50..56 → avg 53; previous window is 57,58,59 → avg 58.
+  const summary = weekSummary(history);
+  assert.equal(summary.weekOverWeek.current, 53);
+  assert.equal(summary.weekOverWeek.previous, 58);
 });

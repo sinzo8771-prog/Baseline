@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { to: "/hype-index", label: "Hype Index" },
   { to: "/sources", label: "Sources" },
   { to: "/saved", label: "Saved" },
+  { to: "/week-in-review", label: "Review" },
   { to: "/about", label: "About" },
 ];
 

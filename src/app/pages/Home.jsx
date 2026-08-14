@@ -24,6 +24,7 @@ const SHORTCUTS = [
   { key: "Escape", what: "close story" },
   { key: "/", what: "search the edition" },
   { key: "?", what: "this help" },
+  { key: "Cmd+K", what: "jump anywhere (command palette)" },
 ];
 
 function ShortcutsHelp({ onClose }) {

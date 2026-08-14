@@ -11,6 +11,7 @@ import SiteFooter from "./components/SiteFooter.jsx";
 import Asciify from "@/components/canvasui/Asciify.jsx";
 import DecryptReveal from "@/components/canvasui/DecryptReveal.jsx";
 import VHS from "@/components/canvasui/VHS.jsx";
+import CommandPalette from "./components/CommandPalette.jsx";
 
 // Secondary pages are code-split so /about, /sources, and /hype-index don't
 // ship their bytes to a visitor who only reads the front page. The landing and
@@ -23,6 +24,7 @@ const StoryPage = lazy(() => import("./pages/StoryPage.jsx"));
 const About = lazy(() => import("./pages/About.jsx"));
 const Methodology = lazy(() => import("./pages/Methodology.jsx"));
 const Saved = lazy(() => import("./pages/Saved.jsx"));
+const WeekInReview = lazy(() => import("./pages/WeekInReview.jsx"));
 const NotFound = lazy(() => import("./pages/NotFound.jsx"));
 
 function RouteFallback() {
@@ -68,6 +70,10 @@ const ROUTE_META = {
   "/saved": {
     title: "Saved — The Baseline",
     description: "Your save-for-later reading list, kept in the browser.",
+  },
+  "/week-in-review": {
+    title: "The Week in Review — The Baseline",
+    description: "What the past seven days did to the Hype Index, computed from your browser's own baseline.",
   },
 };
 
@@ -128,6 +134,7 @@ export default function App() {
   const { stories, allStories, stats, sourceStats, sources, offline, loaded, settled, servedFromCache, savedAt, reload } = useBaselineData();
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
+  const [paletteOpen, setPaletteOpen] = useState(false);
   useSeo();
 
   // Baseline for the "NEW since your last visit" badge: the previous session's
@@ -152,6 +159,22 @@ export default function App() {
 
   // Clean up the toast timer on unmount.
   useEffect(() => () => window.clearTimeout(toastTimer.current), []);
+
+  // Cmd/Ctrl+K opens the command palette anywhere in the app. The guard skips
+  // the shortcut while a dialog is already open so the modal's own trap keeps
+  // ownership of keys; the palette's Escape handler closes it.
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        if (!document.querySelector('[role="dialog"]')) {
+          e.preventDefault();
+          setPaletteOpen((o) => !o);
+        }
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
 
   // Announce the presses rolling once the edition is *settled* (the final
   // tally, not the first partial), so the claimed count matches the cards on
@@ -200,6 +223,7 @@ export default function App() {
               <Route path="/about" element={<About showToast={showToast} />} />
               <Route path="/methodology" element={<Methodology />} />
               <Route path="/saved" element={<Saved stories={stories} />} />
+              <Route path="/week-in-review" element={<WeekInReview />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
@@ -208,6 +232,8 @@ export default function App() {
         <VHS wave={0.25} jitter={0.08} crease={0.02} bloom={0} grain={0.04} scanlines={0.04} switching={0.01} speed={0.25}>
           <SiteFooter />
         </VHS>
+
+        <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} stories={allStories} />
 
         <div id="toast-region" className="toast-region" aria-live="polite" aria-atomic="true">
           {toast ? <Toast message={toast} /> : null}

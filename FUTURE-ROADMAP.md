@@ -126,12 +126,15 @@ Status legend: `open` — not started · `scoped` — shape/effort understood ·
   snapshots in localStorage, `/saved` renders them (still working after a story
   ages out), and a `BookmarkButton` sits on every story surface.
 
-### Tier 3 — speculative (`scoped`)
-- **Weekly recap page** — `/week-in-review` computed purely from the 30-day
-  localStorage history (biggest swing, loudest source, calmest day, trend line);
-  honest empty/partial state under 7 days.
-- **Command palette (Cmd+K)** — fuzzy-searchable modal reusing the StoryModal
-  focus-trap pattern; distinct from Tier 1.4's `/` search shortcut.
+### Tier 3 — low effort (all shipped)
+- **Weekly recap page** — `done`: `/week-in-review` computed purely from the
+  browser's stored hype history (`weekSummary` in `hypeHistory.js`): average,
+  loudest/calmest day, biggest day-over-day swing, week-over-week trend; honest
+  partial (fewer than 7 recorded days) and empty states, never fabricated.
+- **Command palette (Cmd+K)** — `done`: global `Cmd/Ctrl+K` opens a fuzzy
+  search (`fuzzyMatch.js`) over every story and every page; arrow keys
+  navigate, Enter jumps, Escape closes; reuses the StoryModal focus-trap
+  pattern; distinct from Tier 1.4's `/` search shortcut.
 
 ---
 
@@ -145,4 +148,5 @@ Status legend: `open` — not started · `scoped` — shape/effort understood ·
 | 2026-08-13 | Product ideas parked (per-source breakdown, archives, OPML, notes) | open / n/a |
 | 2026-08-14 | Improvement plan Tier 1 shipped (sparklines, print CSS, prev/next, shortcuts) | done |
 | 2026-08-14 | Improvement plan Tier 2 shipped (card slots, last-visit badges, save-for-later) | done |
-| 2026-08-14 | Tier 3 items scoped and parked (weekly recap, command palette) | scoped |
+| 2026-08-14 | Improvement plan Tier 3 shipped (week-in-review page, Cmd+K palette) | done |
+| 2026-08-14 | Improvement plan fully executed (Tiers 0-3); remaining ideas scoped for later | done |
