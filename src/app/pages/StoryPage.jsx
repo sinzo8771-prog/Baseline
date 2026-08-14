@@ -192,6 +192,7 @@ export default function StoryPage({ allStories, stories, loaded, offline, reload
         </span>
       </div>
 
+      <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">The story file</p>
       <h1 className="mt-4 max-w-3xl font-serif text-3xl font-black leading-tight break-words text-foreground sm:text-4xl md:text-5xl">
         {story.title}
       </h1>

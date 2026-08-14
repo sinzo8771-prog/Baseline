@@ -108,6 +108,11 @@ function StatBlock({ stats, history, series }) {
           Small edition — {stats.total} stories isn't enough for this percentage to mean much yet.
         </p>
       )}
+      {series.length > 0 ? (
+        <p className="mt-1.5 text-xs text-muted-foreground">
+          Calibrated against {series.length} recorded {series.length === 1 ? "day" : "days"} in this browser.
+        </p>
+      ) : null}
       <div className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-border bg-border sm:grid-cols-5">
         {cells.map((cell) => (
           <div key={cell.label} className="bg-card p-4">

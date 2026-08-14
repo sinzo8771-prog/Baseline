@@ -22,6 +22,8 @@ export default function Methodology() {
       <h2 className="section-title">Methodology</h2>
       <p className="section-note">Verbatim in. Hype measured out. The score is a measurement of language, not a judgment on the story.</p>
 
+      <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">The ledger is open</p>
+
       <div className="mb-8 rounded-md border-2 border-primary/60 bg-card p-5">
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">Hype measures loudness, not truth.</p>
         <p className="mt-2 font-serif text-lg font-black leading-snug text-foreground">

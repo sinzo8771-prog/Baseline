@@ -81,7 +81,7 @@ export default function Sources({ sources, sourceStats: stats, loaded, offline, 
     <section id="sources" className="section">
       <h2 className="section-title">Who's Shouting?</h2>
       <p className="section-note">
-        Average headline intensity per source — a measurement, not a judgment. Dead sources are skipped automatically.
+        Average headline intensity per source — a measurement, not a judgment. The wire room reports who is talking, and how loud. Dead sources are skipped automatically.
       </p>
       <button type="button" className="btn-outline mt-4" onClick={exportOPML}>Download OPML</button>
       {loaded ? (
@@ -103,7 +103,7 @@ export default function Sources({ sources, sourceStats: stats, loaded, offline, 
             ) : null}
             <Leaderboard stats={stats} history={history} />
             <h3 className="mt-8 text-sm font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-              Feed status
+              Who's on the wire
             </h3>
             <FeedStatus sources={sources} />
           </>
