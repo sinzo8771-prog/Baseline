@@ -27,6 +27,12 @@ const SHORTCUTS = [
   { key: "Cmd+K", what: "jump anywhere (command palette)" },
 ];
 
+// The visible "⌘K / Ctrl K" hint in the edition search box. Matches how the
+// command palette's own hint and the help overlay label it; the plain key
+// letter is enough on Mac ("⌘K"), otherwise "Ctrl K".
+const IS_MAC = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform || "");
+const CMD_LABEL = IS_MAC ? "⌘K" : "Ctrl K";
+
 function ShortcutsHelp({ onClose }) {
   return (
     <div className="mt-3 rounded-md border border-border bg-card p-5" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
@@ -224,7 +230,9 @@ export default function Home({ stories, offline, loaded, reload, servedFromCache
                 >
                   <X className="size-3.5" aria-hidden="true" />
                 </button>
-              ) : null}
+              ) : (
+                <kbd className="search-kbd" aria-hidden="true">{CMD_LABEL}</kbd>
+              )}
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <div className="sort-control" role="group" aria-label="View the edition">

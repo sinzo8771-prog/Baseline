@@ -399,7 +399,7 @@ body {
     background: var(--paper);
     border: 1px solid var(--rule);
     border-radius: 2px;
-    padding: 0 36px;
+    padding: 0 48px;
     font: inherit;
     font-size: 13px;
     letter-spacing: 0.02em;
@@ -407,6 +407,23 @@ body {
   }
   .search-input::placeholder { color: var(--ink-soft); }
   .search-input:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 2px; }
+  .search-kbd {
+    position: absolute;
+    right: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 20px;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    background: var(--paper-dim);
+    color: var(--ink-soft);
+    font: inherit;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    pointer-events: none;
+  }
   .search-clear {
     position: absolute;
     right: 8px;

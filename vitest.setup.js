@@ -1,6 +1,12 @@
 import "@testing-library/jest-dom/vitest";
 import { beforeEach } from "vitest";
 
+// The a11y matcher is wired in test/components/a11y.test.jsx (module scope),
+// not here — `expect.extend` in a vitest 4 setupFile trips an internal symbol
+// (`__vitest_poll_takeover__`) before expect is fully initialized. Doing it at
+// the top of the test file that actually uses axe is both the fix and the
+// smallest blast radius.
+
 // jsdom lacks these browser APIs that the app's components touch; stub them so
 // the real components render instead of crashing on mount.
 if (!window.matchMedia) {
