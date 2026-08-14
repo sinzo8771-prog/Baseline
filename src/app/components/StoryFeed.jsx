@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import SpinBadge from "./SpinBadge.jsx";
 import StoryModal from "./StoryModal.jsx";
 import Glitch from "@/components/canvasui/Glitch.jsx";
+import useKeyboardShortcuts from "../hooks/useKeyboardShortcuts.js";
 
 function fmtDate(iso) {
   const d = new Date(iso);
@@ -100,40 +101,45 @@ export default function StoryFeed({ stories }) {
   const close = () => setSelectedId(null);
 
   // j / k move a visual selection between stories, Enter opens it, Escape
-  // closes. Never hijack keys while the user is typing in an input.
-  useEffect(() => {
-    const onKey = (e) => {
-      const t = e.target;
-      const typing = t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable);
-      if (typing) return;
-      const list = stories;
-      if (list.length === 0) return;
-      if (selectedId) {
-        if (e.key === "Escape") {
-          e.preventDefault();
-          close();
+  // closes. Never hijack keys while the user is typing in an input. While the
+  // modal is open, only Escape (scoped) stays live; the dialog's focus trap
+  // owns everything else.
+  useKeyboardShortcuts(
+    {
+      j: () => move("j"),
+      J: () => move("j"),
+      k: () => move("k"),
+      K: () => move("k"),
+      Enter: () => {
+        const idx = activeId ? stories.findIndex((s) => s.id === activeId) : -1;
+        if (idx >= 0) {
+          open(stories[idx]);
+          return true;
         }
-        return;
-      }
-      const idx = activeId ? list.findIndex((s) => s.id === activeId) : -1;
-      if (e.key === "j" || e.key === "J") {
-        e.preventDefault();
-        const next = Math.min(list.length - 1, Math.max(0, idx + 1));
-        setActiveId(list[next].id);
-        document.getElementById(`story-${list[next].id}`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-      } else if (e.key === "k" || e.key === "K") {
-        e.preventDefault();
-        const next = Math.max(0, Math.max(0, idx - 1));
-        setActiveId(list[next].id);
-        document.getElementById(`story-${list[next].id}`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-      } else if (e.key === "Enter" && idx >= 0) {
-        e.preventDefault();
-        open(list[idx]);
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [stories, activeId, selectedId]);
+        return false;
+      },
+    },
+    {
+      scoped: {
+        Escape: () => {
+          close();
+          return true;
+        },
+      },
+    },
+  );
+
+  function move(dir) {
+    const idx = activeId ? stories.findIndex((s) => s.id === activeId) : -1;
+    const next =
+      dir === "j"
+        ? Math.min(stories.length - 1, Math.max(0, idx + 1))
+        : Math.max(0, idx - 1);
+    if (stories.length === 0 || next === idx) return false;
+    setActiveId(stories[next].id);
+    document.getElementById(`story-${stories[next].id}`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    return true;
+  }
 
   // A single filtered story is just a card — promoting it to the 4xl lead
   // slot when it's the whole result looks absurd. Lead treatment only earns

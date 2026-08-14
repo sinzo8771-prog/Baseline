@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Copy, ExternalLink, Share2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Copy, ExternalLink, Share2 } from "lucide-react";
 import SpinBadge from "../components/SpinBadge.jsx";
 import SignalBreakdown from "../components/SignalBreakdown.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import { copyText, storyUrl } from "../lib/copyLink.js";
+import { sortStories } from "@/lib/ranking";
 import { cn } from "@/lib/utils";
 
 const SITE = "https://the-baseline.baseline-news.workers.dev";
@@ -97,9 +98,21 @@ function useStoryMeta(story) {
   }, [story]);
 }
 
-export default function StoryPage({ allStories, loaded, offline, reload }) {
+export default function StoryPage({ allStories, stories, loaded, offline, reload }) {
   const { id } = useParams();
   const story = useMemo(() => allStories.find((s) => s.id === id) || null, [allStories, id]);
+
+  // Prev/next follow the edition's default "Edited" ranking so paging through
+  // a story reads like turning the pages of today's paper, in the same order
+  // the front page prints them.
+  const ranked = useMemo(() => sortStories(stories, "edited"), [stories]);
+  const index = useMemo(
+    () => (story ? ranked.findIndex((s) => s.id === story.id) : -1),
+    [ranked, story],
+  );
+  const prev = index > 0 ? ranked[index - 1] : null;
+  const next = index >= 0 && index < ranked.length - 1 ? ranked[index + 1] : null;
+
   useStoryMeta(story);
   const [copied, setCopied] = useState(false);
   const href = safeHref(story?.link);
@@ -152,18 +165,18 @@ export default function StoryPage({ allStories, loaded, offline, reload }) {
 
   if (!story) {
     return (
-      <EmptyState
-        kicker="NOT IN THE FILES"
-        text="This story isn't in today's edition. It may have aged out, or the permalink is mistyped. Browse the front page for what's printing now."
-        action={{ label: "Back to the front page", onClick: () => (window.location.href = "/") }}
-      />
+<EmptyState
+          kicker="NOT IN THE FILES"
+          text="This story isn't in today's edition. It may have aged out, or the permalink is mistyped. Browse the front page for what's printing now."
+          action={{ label: "Back to the front page", onClick: () => (window.location.href = "/edition") }}
+        />
     );
   }
 
   return (
     <section className="section">
       <Link
-        to="/"
+        to="/edition"
         className="mb-6 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.08em] text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
       >
         <ArrowLeft className="size-3.5" aria-hidden="true" /> Back to the edition
@@ -235,6 +248,40 @@ export default function StoryPage({ allStories, loaded, offline, reload }) {
           {copied ? "Link copied" : "Copy link"}
         </button>
       </div>
+
+      {prev || next ? (
+        <nav
+          className="mt-10 grid grid-cols-1 gap-4 border-t border-border pt-6 sm:grid-cols-2"
+          aria-label="Story navigation"
+        >
+          {prev ? (
+            <Link
+              to={`/story/${prev.id}`}
+              className="group flex min-w-0 flex-col gap-1 rounded-md border border-border bg-card p-4 transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            >
+              <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
+                <ArrowLeft className="size-3" aria-hidden="true" /> Previous
+              </span>
+              <span className="line-clamp-2 font-serif text-[15px] font-bold leading-snug text-foreground group-hover:underline">
+                {prev.title}
+              </span>
+            </Link>
+          ) : <span />}
+          {next ? (
+            <Link
+              to={`/story/${next.id}`}
+              className="group flex min-w-0 flex-col gap-1 rounded-md border border-border bg-card p-4 text-right transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:col-start-2"
+            >
+              <span className="inline-flex items-center justify-end gap-1 text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
+                Next <ArrowRight className="size-3" aria-hidden="true" />
+              </span>
+              <span className="line-clamp-2 font-serif text-[15px] font-bold leading-snug text-foreground group-hover:underline">
+                {next.title}
+              </span>
+            </Link>
+          ) : <span />}
+        </nav>
+      ) : null}
     </section>
   );
 }

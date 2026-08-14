@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import EmptyState from "../components/EmptyState.jsx";
 import TrendCell from "../components/TrendCell.jsx";
-import { readSourceHistory, sourceTrendReading } from "../lib/hypeHistory.js";
+import { readSourceHistory, sourceTrendReading, sourceSeries } from "../lib/hypeHistory.js";
 import { isMirroredFeed } from "../../lib/feeds.js";
 import exportOPML from "../lib/exportOPML.js";
 
@@ -41,7 +41,7 @@ function Leaderboard({ stats, history }) {
             <td className="py-2.5 pr-4 text-right tabular-nums text-muted-foreground">{s.count}</td>
             <td className="py-2.5 pr-4 text-right tabular-nums text-foreground">{s.avgHype}</td>
             <td className="py-2.5 text-right">
-              <TrendCell reading={sourceTrendReading(history, s.name)} />
+              <TrendCell reading={sourceTrendReading(history, s.name)} series={sourceSeries(history, s.name)} />
             </td>
           </tr>
         ))}

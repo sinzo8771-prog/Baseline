@@ -9,6 +9,7 @@ import {
   readSourceHistory,
   sourceTrend,
   sourceTrendReading,
+  sourceSeries,
 } from "../src/app/lib/hypeHistory.js";
 
 function fakeWindow() {
@@ -163,4 +164,36 @@ test("sourceTrendReading returns null when a source has no prior reading", () =>
   recordSourceStats([{ name: "Only", count: 1, avgHype: 50 }], new Date(2026, 7, 9));
   const history = readSourceHistory();
   assert.equal(sourceTrendReading(history, "Missing"), null);
+});
+
+test("sourceSeries returns up to limit points, oldest first", () => {
+  const history = [
+    { date: "2026-08-09", sources: [{ name: "OpenAI", count: 3, avgHype: 60 }] },
+    { date: "2026-08-08", sources: [{ name: "OpenAI", count: 4, avgHype: 45 }] },
+    { date: "2026-08-07", sources: [{ name: "OpenAI", count: 2, avgHype: 50 }] },
+  ];
+  const series = sourceSeries(history, "OpenAI");
+  assert.deepEqual(series.map((e) => e.avgHype), [50, 45, 60]);
+});
+
+test("sourceSeries skips days a source was absent", () => {
+  const history = [
+    { date: "2026-08-09", sources: [{ name: "OpenAI", count: 3, avgHype: 60 }] },
+    { date: "2026-08-08", sources: [{ name: "Wired", count: 2, avgHype: 12 }] },
+    { date: "2026-08-07", sources: [{ name: "OpenAI", count: 2, avgHype: 50 }] },
+  ];
+  const series = sourceSeries(history, "OpenAI");
+  assert.deepEqual(series.map((e) => e.avgHype), [50, 60]);
+});
+
+test("sourceSeries honors the limit and guards bad input", () => {
+  const history = [
+    { date: "2026-08-09", sources: [{ name: "OpenAI", count: 3, avgHype: 60 }] },
+    { date: "2026-08-08", sources: [{ name: "OpenAI", count: 4, avgHype: 45 }] },
+    { date: "2026-08-07", sources: [{ name: "OpenAI", count: 2, avgHype: 50 }] },
+  ];
+  assert.equal(sourceSeries(history, "OpenAI", 2).length, 2);
+  assert.deepEqual(sourceSeries([], "OpenAI"), []);
+  assert.deepEqual(sourceSeries(null, "OpenAI"), []);
+  assert.deepEqual(sourceSeries(history, "Missing"), []);
 });

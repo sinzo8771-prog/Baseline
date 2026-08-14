@@ -176,7 +176,7 @@ export default function App() {
               <Route path="/hype-index" element={<HypeIndex stats={stats} sourceStats={sourceStats} allStories={allStories} loaded={loaded} offline={offline} reload={reload} />} />
               <Route path="/sources" element={<Sources sources={sources} sourceStats={sourceStats} loaded={loaded} offline={offline} reload={reload} />} />
               <Route path="/sources/:name" element={<SourceProfile allStories={allStories} sources={sources} sourceStats={sourceStats} loaded={loaded} offline={offline} reload={reload} />} />
-              <Route path="/story/:id" element={<StoryPage allStories={allStories} loaded={loaded} offline={offline} reload={reload} />} />
+              <Route path="/story/:id" element={<StoryPage stories={stories} allStories={allStories} loaded={loaded} offline={offline} reload={reload} />} />
               <Route path="/about" element={<About showToast={showToast} />} />
               <Route path="/methodology" element={<Methodology />} />
               <Route path="*" element={<NotFound />} />

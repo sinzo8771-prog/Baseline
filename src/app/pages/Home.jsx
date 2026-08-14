@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Search, X } from "lucide-react";
 import StoryFeed from "../components/StoryFeed.jsx";
@@ -6,6 +6,7 @@ import CardsView from "../components/CardsView.jsx";
 import SelectorChips from "../components/SelectorChips.jsx";
 import SpinBadge from "../components/SpinBadge.jsx";
 import EmptyState from "../components/EmptyState.jsx";
+import useKeyboardShortcuts from "../hooks/useKeyboardShortcuts.js";
 import { cn } from "@/lib/utils";
 import { sortStories } from "@/lib/ranking";
 
@@ -104,25 +105,19 @@ export default function Home({ stories, offline, loaded, reload, servedFromCache
   const [helpOpen, setHelpOpen] = useState(false);
   const searchRef = useRef(null);
 
-  // "/" focuses search, "?" toggles the shortcuts help. Skip while typing in an
-  // input or when a story dialog is open, so we never hijack the page.
-  useEffect(() => {
-    const onKey = (e) => {
-      const t = e.target;
-      const typing = t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable);
-      if (typing) return;
-      if (document.querySelector('[role="dialog"]')) return;
-      if (e.key === "/") {
-        e.preventDefault();
-        searchRef.current?.focus();
-      } else if (e.key === "?") {
-        e.preventDefault();
-        setHelpOpen((o) => !o);
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, []);
+  // "/" focuses search, "?" toggles the shortcuts help. The hook's typing and
+  // dialog guards keep it from hijacking the page; the modal's own trap owns
+  // Escape while a story is open.
+  useKeyboardShortcuts({
+    "/": () => {
+      searchRef.current?.focus();
+      return true;
+    },
+    "?": () => {
+      setHelpOpen((o) => !o);
+      return true;
+    },
+  });
 
   const sourceFilter = searchParams.get("source") || "";
 

@@ -131,3 +131,21 @@ export function sourceTrend(history, name) {
   const reading = sourceTrendReading(history, name);
   return reading ? reading.direction : null;
 }
+
+// Per-source series of the last N recorded days, oldest first, for the
+// sparkline in the Sources trend column. Only days that actually contain this
+// source are included (a day a source was absent has no reading to plot). The
+// returned points are { date, avgHype }; callers render them decoratively.
+export function sourceSeries(history, name, limit = 7) {
+  if (!Array.isArray(history)) return [];
+  const series = [];
+  for (const day of history) {
+    const entry = Array.isArray(day?.sources) ? day.sources.find((s) => s.name === name) : null;
+    if (entry && typeof entry.avgHype === "number") {
+      series.push({ date: day.date, avgHype: entry.avgHype });
+    }
+    if (series.length >= limit) break;
+  }
+  // History is newest-first; the sparkline plots left-to-right, so reverse.
+  return series.reverse();
+}
