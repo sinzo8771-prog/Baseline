@@ -1,3 +1,16 @@
+# Dependabot triage policy:
+#   patch/minor updates  -> merge on green CI (build + unit/component tests +
+#                           Playwright E2E). The preview-deploy step will fail
+#                           on Dependabot PRs because Dependabot doesn't receive
+#                           the CLOUDFLARE_API_TOKEN secret — that is expected
+#                           and not a code failure.
+#   major-version updates -> manual verification before merging: run `npm run
+#                           build` and diff the dist/assets chunk listing against
+#                           master, then run `npm run test:all` and
+#                           `npx playwright test`. Major-version bumps must NOT
+#                           land on green CI alone.
+# Grouped patch/minor npm updates land as one weekly PR; major-version bumps stay
+# individual so they stand out.
 version: 2
 updates:
   - package-ecosystem: "npm"
@@ -5,6 +18,13 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    groups:
+      npm-patch-minor:
+        update-types:
+          - "minor"
+          - "patch"
+        patterns:
+          - "*"
 
   - package-ecosystem: "github-actions"
     directory: "/"
