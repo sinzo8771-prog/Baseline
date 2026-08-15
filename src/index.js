@@ -286,6 +286,7 @@ const CSP = [
   "connect-src 'self'",
   "base-uri 'self'",
   "form-action 'none'",
+  "frame-ancestors 'none'",
 ].join("; ");
 
 // Apply the CSP to document responses served from the ASSETS binding. Assets
@@ -296,6 +297,8 @@ function withSecurityHeaders(response) {
   if (!type.includes("text/html")) return response;
   const headers = new Headers(response.headers);
   headers.set("content-security-policy", CSP);
+  headers.set("x-content-type-options", "nosniff");
+  headers.set("referrer-policy", "strict-origin-when-cross-origin");
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,

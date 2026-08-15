@@ -33,7 +33,7 @@ function Meta({ story, isNew = false }) {
   );
 }
 
-function CardImage({ story }) {
+function CardImage({ story, isLead = false }) {
   const [failed, setFailed] = useState(false);
   const show = Boolean(story.image) && !failed;
   return (
@@ -47,7 +47,8 @@ function CardImage({ story }) {
         <img
           src={story.image}
           alt=""
-          loading="lazy"
+          loading={isLead ? "eager" : "lazy"}
+          fetchPriority={isLead ? "high" : undefined}
           className="transition-opacity duration-200 group-hover:opacity-90"
           onError={() => setFailed(true)}
         />
@@ -71,7 +72,7 @@ function CardShell({ story, isLead = false, onOpen, active = false, isNew = fals
       )}
       style={isLead ? { borderTopColor: "var(--vermillion)" } : undefined}
     >
-            <CardImage story={story} />
+            <CardImage story={story} isLead={isLead} />
       <Meta story={story} isNew={isNew} />
       <h2
         className={cn(

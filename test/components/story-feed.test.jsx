@@ -149,6 +149,21 @@ describe("StoryFeed consistent image slots", () => {
     await waitFor(() => expect(container.querySelector(".card-img-placeholder")).not.toBeNull());
     expect(container.querySelector(".card-img-slot img")).toBeNull();
   });
+
+  it("loads the lead story's image eagerly with high priority while cards stay lazy", () => {
+    const lead = { ...withImage, id: "lead1", title: "Lead story" };
+    const second = { ...withImage, id: "second1", title: "Second story" };
+    const { container } = render(
+      <MemoryRouter>
+        <StoryFeed stories={[lead, second]} />
+      </MemoryRouter>,
+    );
+    const leadImg = container.querySelector("#story-lead1 .card-img-slot img");
+    const gridImg = container.querySelector("#story-second1 .card-img-slot img");
+    expect(leadImg.getAttribute("loading")).toBe("eager");
+    expect(leadImg.getAttribute("fetchpriority")).toBe("high");
+    expect(gridImg.getAttribute("loading")).toBe("lazy");
+  });
 });
 
 describe("StoryFeed NEW badges", () => {
