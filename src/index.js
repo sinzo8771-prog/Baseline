@@ -1,13 +1,23 @@
-// The Baseline Worker: static host + same-origin feed relay.
+// The Baseline Worker: static host + same-origin feed relay + self-published feeds.
 //
 // Cloudflare's free tier enforces a sub-millisecond CPU budget per invocation, so no
-// server-side RSS parsing or aggregation can run here. The Worker instead does two
-// trivially-cheap jobs:
-//   1. serve the static frontend from ./dist (the browser does all parsing/scoring),
-//   2. relay feed XML from an allowlisted set of sources to the browser (pure I/O).
+// server-side RSS parsing or aggregation can run *per request*. The Worker instead:
+//   1. serves the static frontend from ./dist (the browser does all parsing/scoring),
+//   2. relays feed XML from an allowlisted set of sources to the browser (pure I/O),
+//   3. aggregates the edition for the self-published /feed.xml and /feed.json routes —
+//      the one deliberate exception to "no server-side aggregation". It runs the same
+//      shared scoring pipeline as the browser (src/lib/pipeline.js), but the result is
+//      cached at the edge for 15 minutes, so the parsing/scoring CPU cost happens once
+//      per cache window, not per reader poll. No KV, no persistent state.
 //
 // Feed URLs must stay in sync with `SOURCES` in src/lib/feeds.js; a unit test
 // (test/feeds.test.js) guards against drift.
+
+import { composeStories, EDITION_CAP } from "./lib/pipeline.js";
+import { editedRank } from "./lib/ranking.js";
+import { MAX_PER_FEED } from "./lib/feeds.js";
+import { extractStories } from "./lib/xmlStories.js";
+import { buildJsonFeed, buildRssFeed } from "./lib/feedBuilders.js";
 
 // Several publisher RSS feeds block Cloudflare Workers egress IPs as bot traffic.
 // Using a real browser User-Agent bypasses most of those blocks.
@@ -43,6 +53,13 @@ const RATE_LIMIT_PER_WINDOW = 90;
 // A custom bot UA (e.g. "TheBaseline/1.0") causes many feeds to return 403/503.
 const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
 
+// Canonical origin for the feed's self-links (story permalinks, feed_url).
+const FEED_BASE_URL = "https://the-baseline.baseline-news.workers.dev";
+// The self-published feed is rebuilt at most this often. RSS readers poll
+// frequently; the edge cache absorbs that, so upstream feeds are hit once per
+// window and the aggregation CPU cost stays amortized.
+const FEED_CACHE_TTL_MS = 15 * 60 * 1000;
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -63,6 +80,10 @@ export default {
 
     if (url.pathname === "/api/feed") {
       return relayFeed(url.searchParams.get("name"), request);
+    }
+
+    if (url.pathname === "/feed.xml" || url.pathname === "/feed.json") {
+      return serveFeed(url.pathname, request);
     }
 
     if (url.pathname === "/api/news") {
@@ -132,6 +153,62 @@ async function relayFeed(name, request) {
       504,
     );
   }
+}
+
+// The self-published feed route. Edge-cached like the relay, keyed per format
+// path, so a reader poll never re-fetches or re-scores the edition. Failures
+// are never cached; the next poll retries upstream.
+async function serveFeed(path, request) {
+  const cacheKey = new Request(`https://the-baseline-cache.local${path}`, request);
+  const cache = caches.default;
+  const cached = await cache.match(cacheKey);
+  if (cached) return cached;
+
+  try {
+    const edition = await buildEdition();
+    const body = path === "/feed.json" ? buildJsonFeed(edition, feedOpts(path)) : buildRssFeed(edition, feedOpts(path));
+    const res = new Response(body, {
+      headers: {
+        "content-type": path === "/feed.json" ? "application/feed+json; charset=utf-8" : "application/rss+xml; charset=utf-8",
+        "cache-control": `public, max-age=${Math.floor(FEED_CACHE_TTL_MS / 1000)}, stale-while-revalidate=${Math.floor(FEED_CACHE_TTL_MS / 1000)}`,
+      },
+    });
+    await cache.put(cacheKey, res.clone());
+    return res;
+  } catch (err) {
+    return json({ error: "feed_unavailable", message: `The presses could not be read for the feed: ${String(err?.message ?? err)}` }, 502);
+  }
+}
+
+function feedOpts(path) {
+  return {
+    baseUrl: FEED_BASE_URL,
+    feedUrl: `${FEED_BASE_URL}${path}`,
+  };
+}
+
+// Fetch, parse, score, and rank the day's edition on the server — using the
+// exact same shared pipeline as the browser, so the self-published feed is the
+// same edition the front page prints. Per-feed failures degrade gracefully:
+// a quiet source simply drops out of the edition for this window.
+async function buildEdition() {
+  const results = await Promise.all(
+    Object.entries(FEEDS).map(async ([name, feed]) => {
+      try {
+        const res = await fetch(feed, {
+          signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+          headers: { "user-agent": USER_AGENT },
+        });
+        if (!res.ok) return { source: name, stories: [] };
+        const xml = await readBodyBounded(res, MAX_RELAY_BYTES);
+        return { source: name, stories: extractStories(xml, name).slice(0, MAX_PER_FEED) };
+      } catch {
+        return { source: name, stories: [] };
+      }
+    }),
+  );
+  const composed = composeStories(results);
+  return editedRank(composed.slice(0, EDITION_CAP), { now: Date.now() });
 }
 
 // Read a Response body into a string, throwing if it exceeds `maxBytes`.

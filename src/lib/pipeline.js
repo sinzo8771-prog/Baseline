@@ -1,6 +1,11 @@
 import { spinFromStory, signalStats } from "./hype.js";
 import { dedupeStories } from "./dedupe.js";
 
+// The printed edition is capped at 25 stories (1 lead + 24 in the grid).
+// Shared by the browser (useBaselineData) and the Worker feed route so the
+// self-published feed reflects the exact same edition the front page shows.
+export const EDITION_CAP = 25;
+
 function hashId(str) {
   let h = 0;
   for (let i = 0; i < str.length; i++) {

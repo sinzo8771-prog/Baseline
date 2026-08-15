@@ -153,7 +153,8 @@ Status legend: `open` — not started · `scoped` — shape/effort understood ·
 |---|---|---|
 | 2026-08-13 | Add CSP, sanitize image URLs, remove dead cards file | done |
 | 2026-08-13 | Bundle trim candidates recorded; lazy-loading effects rejected (LCP) | done / n/a |
-| 2026-08-13 | Automated a11y sweep + SR pass | open |
+| 2026-08-13 | Automated a11y sweep (axe) — shipped 2026-08-14 with the CommandPalette fix below | done |
+| 2026-08-13 | Screen-reader pass (NVDA/VoiceOver) | open |
 | 2026-08-13 | Product ideas parked (per-source breakdown, archives, OPML, notes) | open / n/a |
 | 2026-08-14 | Improvement plan Tier 1 shipped (sparklines, print CSS, prev/next, shortcuts) | done |
 | 2026-08-14 | Improvement plan Tier 2 shipped (card slots, last-visit badges, save-for-later) | done |

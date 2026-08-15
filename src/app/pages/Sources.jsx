@@ -83,7 +83,11 @@ export default function Sources({ sources, sourceStats: stats, loaded, offline, 
       <p className="section-note">
         Average headline intensity per source — a measurement, not a judgment. The wire room reports who is talking, and how loud. Dead sources are skipped automatically.
       </p>
-      <button type="button" className="btn-outline mt-4" onClick={exportOPML}>Download OPML</button>
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <button type="button" className="btn-outline" onClick={exportOPML}>Download OPML</button>
+        <a className="btn-outline" href="/feed.xml" type="application/rss+xml" rel="alternate">RSS feed</a>
+        <a className="btn-outline" href="/feed.json" type="application/feed+json" rel="alternate">JSON Feed</a>
+      </div>
       {loaded ? (
         offline && !stats?.length ? (
           <EmptyState

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchAllFeeds } from "../../lib/feeds.js";
-import { composeStories, dailyStats, sourceStats } from "../../lib/pipeline.js";
+import { composeStories, dailyStats, sourceStats, EDITION_CAP } from "../../lib/pipeline.js";
 import { signalStats } from "../../lib/hype.js";
 import { recordToday, recordSourceStats } from "../lib/hypeHistory.js";
 
@@ -8,9 +8,8 @@ import { recordToday, recordSourceStats } from "../lib/hypeHistory.js";
 // Applying the cap here means the front page, the Hype Index page, the toast,
 // and the chip counts all measure the same edition. The full deduped list
 // (allStories) is kept alongside so story permalinks can resolve any story
-// that was in today's composed set, not just the front-page 25.
-const EDITION_CAP = 25;
-
+// that was in today's composed set, not just the front-page 25. The cap lives
+// in src/lib/pipeline.js so the Worker feed route uses the same number.
 // Stale-while-revalidate cache of the last good edition so a returning visitor
 // sees content instantly instead of waiting on all 10 feeds again. Keyed by a
 // version so a breaking shape change doesn't replay a poison pill.
