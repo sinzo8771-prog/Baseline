@@ -3,6 +3,13 @@ import assert from "node:assert/strict";
 import { extractStories } from "../src/lib/xmlStories.js";
 import { buildJsonFeed, buildRssFeed } from "../src/lib/feedBuilders.js";
 import { composeStories } from "../src/lib/pipeline.js";
+import worker from "../src/index.js";
+
+// Must match RATE_LIMIT_PER_WINDOW in src/index.js (kept in sync with the
+// worker's fixed-window counter so the 429 assertion stays meaningful).
+const RATE_LIMIT_PER_WINDOW = 90;
+const TEST_IP = "203.0.113.7";
+const ORIGIN = "https://the-baseline.baseline-news.workers.dev";
 
 const RSS_FIXTURE = `<?xml version="1.0"?>
 <rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Example</title>
@@ -175,3 +182,62 @@ test("feed serializers escape XML-injection content", () => {
   assert.ok(!xml.includes("<script>"));
   assert.ok(xml.includes("&amp;"));
 });
+
+// The worker's rate limiter (allowRequest) backs onto Cloudflare's
+// `caches.default` and real upstream `fetch`, neither of which exists under
+// plain `node --test`. Swap in an in-memory cache and a fetch that makes every
+// upstream look unreachable (so buildEdition degrades to an empty edition
+// instead of hitting the network), run, then restore the globals.
+async function withWorkerGlobals(run) {
+  const store = new Map();
+  const realCaches = globalThis.caches;
+  const realFetch = globalThis.fetch;
+  globalThis.caches = {
+    default: {
+      async match(req) {
+        const hit = store.get(req.url);
+        return hit ? hit.clone() : undefined;
+      },
+      async put(req, res) {
+        store.set(req.url, res.clone());
+      },
+    },
+  };
+  globalThis.fetch = async () => new Response("", { status: 503 });
+  try {
+    return await run();
+  } finally {
+    if (realCaches) globalThis.caches = realCaches;
+    else delete globalThis.caches;
+    if (realFetch) globalThis.fetch = realFetch;
+    else delete globalThis.fetch;
+  }
+}
+
+async function hit(path) {
+  const res = await worker.fetch(
+    new Request(`${ORIGIN}${path}`, { headers: { "CF-Connecting-IP": TEST_IP } }),
+    { ASSETS: { fetch: async () => new Response("", { status: 200 }) } },
+  );
+  return res.status;
+}
+
+async function statuses(path, count) {
+  const out = [];
+  for (let i = 0; i < count; i++) out.push(await hit(path));
+  return out;
+}
+
+// The feed routes must answer 429 once a single IP exceeds the window's
+// request budget, exactly like the API routes already do — the fixed-window
+// counter is scoped per path, so the three routes never share a bucket.
+for (const path of ["/feed.xml", "/feed.json", "/api/feed"]) {
+  test(`rate limits ${path} like the API routes (429 past the window)`, async () => {
+    await withWorkerGlobals(async () => {
+      const statusesBelow = await statuses(path, RATE_LIMIT_PER_WINDOW);
+      assert.equal(statusesBelow.length, RATE_LIMIT_PER_WINDOW);
+      assert.ok(statusesBelow.every((s) => s !== 429), "requests under the limit must not be refused");
+      assert.equal(await hit(path), 429, "the request past the window must be refused");
+    });
+  });
+}

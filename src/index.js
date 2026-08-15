@@ -83,6 +83,9 @@ export default {
     }
 
     if (url.pathname === "/feed.xml" || url.pathname === "/feed.json") {
+      if (!(await allowRequest(request, url.pathname))) {
+        return json({ error: "rate_limited", message: "Too many requests from this address. Take a breath, then try again." }, 429);
+      }
       return serveFeed(url.pathname, request);
     }
 
