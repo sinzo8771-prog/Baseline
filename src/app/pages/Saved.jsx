@@ -7,6 +7,7 @@ import StoryModal from "../components/StoryModal.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import { cn } from "@/lib/utils";
 import { reconcileSaved } from "../lib/savedStories.js";
+import exportSaved from "../lib/exportSaved.js";
 
 function fmtDate(iso) {
   const d = new Date(iso);
@@ -50,6 +51,14 @@ export default function Saved({ stories }) {
       <p className="mt-2 max-w-prose text-sm text-muted-foreground">
         Kept in your browser. {savedList.length > 0 ? `${savedList.length} saved.` : "Nothing saved yet."}
       </p>
+
+      {savedList.length > 0 && (
+        <div className="mt-4">
+          <button type="button" className="btn-outline" onClick={() => exportSaved(savedList)}>
+            Download saved stories
+          </button>
+        </div>
+      )}
 
       {savedList.length === 0 ? (
         <EmptyState
