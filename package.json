@@ -2,6 +2,9 @@
   "name": "the-baseline",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "npm run build && wrangler dev",
     "dev:react": "vite",
