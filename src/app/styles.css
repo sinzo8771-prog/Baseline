@@ -380,6 +380,8 @@ body {
   .search-icon {
     position: absolute;
     left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
     width: 14px;
     height: 14px;
     color: var(--ink-soft);
@@ -388,6 +390,8 @@ body {
   .search-clear {
     position: absolute;
     right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
     display: inline-flex;
     align-items: center;
     justify-content: center;
