@@ -2,6 +2,32 @@
 
 All notable changes to **The Baseline** are documented here, grouped by the V2 spec's categories. Format: date · what changed · (spec reference).
 
+## 2026-08-15 — CI hardening, PWA install, self-published feeds, saved export
+
+### Engineering & releases
+- **Full test suite in CI**: both `deploy.yml` and `preview-deploy.yml` now run `npm run test:all` (the `node --test` unit suite + the vitest component suite) and a **Playwright browser E2E suite** (informational job) on every push. E2E covers every route rendering without console errors, the command palette (open, fuzzy match, arrow navigation, Enter, Escape), the `?` shortcuts overlay, the story-modal focus trap + focus restore, and the print stylesheet.
+- **Node 24 pinned**: CI runs on Node 24 — jsdom 30's bundled undici crashes on Node 20 — and the repo declares `engines.node >= 24` with an `.nvmrc`. Workers `compatibility_date` bumped to 2026-08-01.
+- **Dependabot**: weekly update PRs for the `npm` and `github-actions` ecosystems.
+- **MIT license** added (`LICENSE` + `package.json` `license` field).
+
+### PWA
+- **Installable app**: `icon-192.png`, `icon-512.png`, `icon-maskable-512.png`, and an `apple-touch-icon` complete the web app manifest, so browsers offer "Install The Baseline" alongside the existing offline-shell service worker.
+
+### Self-published feeds
+- **Own combined feed**: the Worker now aggregates the same scored, deduped edition the front page shows and publishes it at `/feed.xml` (RSS 2.0) and `/feed.json` (JSON Feed 1.1) — the site is now its own source. Both routes are rate-limited like the relay (90 req / 60 s, fails open) and edge-cached (5 min + stale-while-revalidate). No KV: the edition is composed on each request.
+- **Feed discovery**: the app shell ships `<link rel="alternate">` for both formats, and the Sources page's button row links the RSS/JSON feeds alongside OPML.
+
+### Saved
+- **Export your saved list**: a "Download saved stories" button on `/saved` serializes your reading list as a JSON Feed file through the same `buildJsonFeed` serializer as the self-published feed, guarding stories whose snapshot lacks a valid publish date.
+
+### Performance & security
+- **Security headers** on HTML responses: a strict Content-Security-Policy (incl. `frame-ancestors`), `X-Content-Type-Options: nosniff`, and a `Referrer-Policy` — scoped to `text/html` so static assets stay header-free.
+- **Lead-image LCP priority**: the edition's lead image loads with high priority for a faster largest-contentful-paint.
+
+### UI
+- Search box icon/clear-button alignment fixed (vertically centered; `ps-9` keeps typed text clear of the icon).
+- Screenshots refreshed from the live site.
+
 ## 2026-08-14 — Polish pass (updated plan Phases 2–8)
 
 ### Hierarchy

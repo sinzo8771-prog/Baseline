@@ -8,6 +8,7 @@
 ![Cloudflare Workers](https://img.shields.io/badge/Cloudflare_Workers-Free_Tier-F38020?logo=cloudflare&logoColor=white)
 ![Deploy](https://img.shields.io/badge/status-live-2ea44f)
 [![CI](https://github.com/sinzo8771-prog/Baseline/actions/workflows/deploy.yml/badge.svg)](https://github.com/sinzo8771-prog/Baseline/actions/workflows/deploy.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 
 A free, editorial-print AI news site that aggregates RSS from the AI industry and its chroniclers — verbatim. Headlines as published, spin as detected, hype as measured. No AI-generated content anywhere.
 
@@ -54,6 +55,7 @@ Screenshots are refreshed manually from the live site; the feed-driven pages (st
 - [Hype Index history](#hype-index-history)
 - [Accessibility](#accessibility)
 - [Roadmap](#roadmap)
+- [License](#license)
 
 ## Why "hype removed"?
 
@@ -75,13 +77,15 @@ The site never rewrites a headline and generates no content. It is a meter, not 
 - **Story permalinks** — `/story/:id` pages with verbatim headline, source, published time, "Why this score", native Share + copy-link, and `NewsArticle` JSON-LD. Each page links **Previous / Next** through the day's ranked edition order, hiding the missing direction at the list boundaries.
 - **Keyboard shortcuts** — `j`/`k` move a selection between stories, `Enter` opens the selected story, `Escape` closes the modal, `/` focuses search, and `?` toggles the shortcuts help. Keys are never hijacked while typing in an input or inside the modal's focus trap.
 - **Print-friendly** — `Cmd+P` on the edition renders like a physical paper: nav, search, chips, toggles, canvas effects, and buttons are stripped, content is forced to paper + ink, and external links print with their URLs.
-- **Save-for-later** — a bookmark on every story surface (feed cards, cards view, modal, permalink page) keeps a story in your browser at `/saved`, as a snapshot that still renders even after it ages out of today's edition.
+- **Save-for-later** — a bookmark on every story surface (feed cards, cards view, modal, permalink page) keeps a story in your browser at `/saved`, as a snapshot that still renders even after it ages out of today's edition. A "Download saved stories" button exports your list as a JSON Feed file.
 - **New since your last visit** — stories published after your previous session carry a small NEW badge; a first visit (no stored baseline) badges nothing.
 - **Command palette** — `Cmd/Ctrl+K` anywhere opens a fuzzy search over every story and page; arrow keys navigate, Enter jumps, Escape closes. Distinct from `/`, which narrows the feed in place.
 - **Week in Review** — `/week-in-review` distills the browser's own 7-day baseline into a weekly summary: average, loudest/calmest day, biggest day-over-day swing, and a week-over-week trend — honest about a partial or empty history.
 - **Resilience** — an in-browser saved edition (SWR-style cache) paints instantly when offline; a "SAVED EDITION · LAST UPDATED" banner offers retry, and every error state has a working "Try the presses again" button.
+- **Installable PWA** — a web app manifest with 192/512/maskable icons and an `apple-touch-icon` makes the site installable; the offline-shell service worker keeps a returning or offline reader on their last saved edition.
 - **Editorial print design** — serif masthead (with date, edition number, and story count), paper texture, sticky utility nav, light/dark themes, subtle canvas flourishes (VHS footer, reveal effects) that respect reduced motion.
 - **SEO-ready** — per-route title/description/canonical, Open Graph / Twitter / JSON-LD tags, `robots.txt`, `sitemap.xml`, `site.webmanifest`, and a generated 1200×630 OG image.
+- **Self-published feed** — the Worker aggregates today's scored, deduped edition and publishes it as `/feed.xml` (RSS 2.0) and `/feed.json` (JSON Feed 1.1), with `<link rel="alternate">` discovery in the app shell and a button row on Sources; both routes are rate-limited like the relay.
 - **OPML export** — one click to grab every source for your own reader.
 - **Crash-proofing** — a root `<ErrorBoundary>` catches render errors and prints a "STOP THE PRESSES" recovery screen instead of a blank page.
 
@@ -92,10 +96,10 @@ The site never rewrites a headline and generates no content. It is a meter, not 
 | `/` | **Landing** — the front door: value proposition, today's live snapshot, fresh-story preview, why/how-it-works, Hype Index + source previews, final CTA |
 | `/edition` | **Edition** — the full news experience: lead story, search, hype filter chips, sort control, Edition/Cards view toggle |
 | `/hype-index` | **Hype Index** — today's gauge, spin distribution with percentages, WHY TODAY?, biggest hype shift, 7-day trend |
-| `/sources` | **Sources** — the ten feeds with live status, "Who's Shouting?" leaderboard, OPML export |
+| `/sources` | **Sources** — the ten feeds with live status, "Who's Shouting?" leaderboard, OPML / RSS / JSON Feed export buttons |
 | `/sources/:name` | **Source profile** — status, story count, avg intensity, distribution, trend, latest stories |
 | `/story/:id` | **Story** — verbatim headline, source, published time, Hype score, "Why this score", Share/Copy, original link |
-| `/saved` | **Saved** — your save-for-later reading list (kept in the browser, still renders aged-out stories) |
+| `/saved` | **Saved** — your save-for-later reading list (kept in the browser, still renders aged-out stories) with a one-click JSON Feed export |
 | `/week-in-review` | **Week in Review** — average, peak, low, and week-over-week trend of the Hype Index over the past 7 recorded days |
 | `/methodology` | **Methodology** — the scoring method, what is not counted, and the detector's limits |
 | `/about` | **About** — the editorial stance |
@@ -104,14 +108,14 @@ The site never rewrites a headline and generates no content. It is a meter, not 
 ## Stack
 
 - **Frontend**: React 19 + Vite + Tailwind CSS 4, `react-router-dom` for routing, `framer-motion` for motion, `lucide-react` for icons. Static build output into `dist/`.
-- **Hosting**: a Cloudflare Worker serves the built app (`env.ASSETS` → `dist/`) and relays feed XML at `/api/feed` (with a source list at `/api/feeds`).
+- **Hosting**: a Cloudflare Worker serves the built app (`env.ASSETS` → `dist/`), relays feed XML at `/api/feed` (with a source list at `/api/feeds`), and self-publishes the aggregated edition at `/feed.xml` and `/feed.json`.
 - **RSS parsing** happens entirely in the browser (the Worker is pure I/O, so the free-tier CPU cap is respected).
 
 ## Architecture
 
 This site runs on Cloudflare's free tier, which enforces a sub-millisecond CPU budget per invocation — too small for server-side RSS parsing. So the work is split:
 
-- **Worker** (`src/index.js`): serves the built React app from `dist/`, lists sources, and relays feed XML from an allowlisted set. Pure I/O, trivial CPU. CORS is locked to its own origin so it can't be used as an open proxy, upstream responses are capped at 1 MB, and `/api/feeds` + `/api/feed` are rate-limited per IP (90 req / 60 s, fails open).
+- **Worker** (`src/index.js`): serves the built React app from `dist/`, lists sources, relays feed XML from an allowlisted set, and aggregates the same scored, deduped edition into the self-published `/feed.xml` + `/feed.json`. Pure I/O, trivial CPU. CORS is locked to its own origin so it can't be used as an open proxy, upstream responses are capped at 1 MB, and `/api/feeds`, `/api/feed`, `/feed.xml`, `/feed.json` are rate-limited per IP (90 req / 60 s, fails open). HTML responses carry a strict CSP (incl. `frame-ancestors`), `nosniff`, and a referrer policy.
 - **Browser**: fetches each feed through the Worker, parses it with the native `DOMParser`, scores hype by signal category, dedupes across feeds (prefix-aware), ranks the edition with a source-diversity cap, and renders. Fresh on every load.
 
 ```mermaid
@@ -121,7 +125,7 @@ flowchart LR
         C["DOMParser + hype scoring"]
     end
     subgraph Worker["Cloudflare Worker"]
-        W["/api/feed relay"]
+        W["/api/feed relay + /feed.xml + /feed.json"]
     end
     subgraph Upstream["Upstream RSS (allowlist)"]
         F1["OpenAI"]
@@ -143,7 +147,7 @@ A note on the feeds: several publishers block Cloudflare's egress IPs as bots, s
 
 ## Local development
 
-Requires **Node.js 18+** (the Vite 6 and Wrangler 4 toolchain). No Cloudflare account is needed to run locally.
+Requires **Node.js 24+** (the Vite 6 and Wrangler 4 toolchain; the repo pins `>= 24` via `engines` and `.nvmrc`). No Cloudflare account is needed to run locally.
 
 ```bash
 npm install
@@ -163,11 +167,15 @@ npm run dev:react
 ```bash
 npm test             # unit suite (node --test)
 npm run test:components   # component suite (vitest + @testing-library/react)
-npm run test:all     # both
+npm run test:e2e     # Playwright browser E2E
+npm run test:all     # unit + component
 ```
 
-- **Unit suite** (`node --test`, `test/*.test.js`): hype scoring (signal categories + false positives), cross-feed dedupe (prefix + punctuation variants), RSS parsing, pipeline composition, edition ranking (freshness, diversity, hype), Hype Index history, and a guard that the browser-side source allowlist matches the Worker's.
-- **Component suite** (`vitest`, `test/components/`): renders the real components in jsdom — `SignalBreakdown` (signal list + disclaimer), `SpinBadge` (sr-only reason + the click-to-open popover), `StoryModal` through `StoryFeed` (open, focus trap, Escape to close, focus restore), `TrendCell` (sparkline rendering), `StoryPage` (prev/next nav at list boundaries), the `useKeyboardShortcuts` hook (typing guard, enabled toggle, preventDefault), consistent image slots (placeholder + error fallback), NEW badges, the Saved page (empty state + aged-out story rendering), and the command palette (fuzzy filtering, empty state, Escape/overlay close).
+- **Unit suite** (`node --test`, `test/*.test.js`, 118 tests): hype scoring (signal categories + false positives), cross-feed dedupe (prefix + punctuation variants), RSS parsing, pipeline composition, edition ranking (freshness, diversity, hype), Hype Index history, saved-story snapshots, security headers, and a guard that the browser-side source allowlist matches the Worker's.
+- **Component suite** (`vitest`, `test/components/`, 45 tests): renders the real components in jsdom — `SignalBreakdown` (signal list + disclaimer), `SpinBadge` (sr-only reason + the click-to-open popover), `StoryModal` through `StoryFeed` (open, focus trap, Escape to close, focus restore), `TrendCell` (sparkline rendering), `StoryPage` (prev/next nav at list boundaries), the `useKeyboardShortcuts` hook (typing guard, enabled toggle, preventDefault), consistent image slots (placeholder + error fallback), NEW badges, the Saved page (empty state, aged-out story rendering, and the JSON Feed download), the command palette (fuzzy filtering, empty state, Escape/overlay close), and an `axe-core` sweep (`test/components/a11y.test.jsx`) over the six highest-value interactive surfaces.
+- **E2E suite** (`playwright`, `e2e/`, 16 tests): a headless Chromium browser against the built site — every route renders without console errors, the command palette (open, fuzzy match, arrows, Enter, Escape), the `?` shortcuts overlay, the story-modal focus trap and focus restore, and the print stylesheet.
+
+Both CI workflows run the unit + component suites on Node 24 and add the E2E suite as an informational job; a push to `master` deploys only after a green suite.
 
 ## Build
 
@@ -195,8 +203,10 @@ npm run deploy
 
 Two GitHub Actions workflows ship with the repo:
 
-- **`deploy.yml`** — builds, tests, and deploys to production on every push to `master`.
+- **`deploy.yml`** — runs the unit + component suites, builds, and deploys to production on every push to `master`.
 - **`preview-deploy.yml`** — deploys a `the-baseline-preview` Worker per pull request and comments the preview URL.
+
+Both also run the Playwright E2E suite as an informational job (it never blocks a deploy). Dependabot opens weekly update PRs for `npm` and `github-actions`.
 
 Both need two repository secrets:
 
@@ -208,8 +218,10 @@ Both need two repository secrets:
 ## Project structure
 
 ```
+LICENSE                    # MIT
 src/
-  index.js                 # Worker: static assets, /api/feeds, /api/feed relay (allowlist, rate-limited, body-capped)
+  index.js                 # Worker: static assets, /api/feeds, /api/feed relay, self-published /feed.xml + /feed.json
+                           # (allowlist, rate-limited, body-capped; strict security headers on HTML)
   main.jsx                 # React entry point (wraps the app in <ErrorBoundary>)
     app/
     App.jsx                # Shell: SiteNav, masthead (+edition metadata), routes, VHS footer, toasts, useSeo
@@ -220,7 +232,8 @@ src/
     pages/                 # Home, HypeIndex, Sources, SourceProfile, StoryPage, Saved,
                            # Methodology, About, NotFound
     hooks/                 # useBaselineData, useTheme, useKeyboardShortcuts
-    lib/                   # hypeHistory.js, lastVisit.js, savedStories.js, fuzzyMatch.js, exportOPML.js, copyLink.js
+    lib/                   # hypeHistory.js, lastVisit.js, savedStories.js, fuzzyMatch.js,
+                           # exportOPML.js, exportSaved.js, copyLink.js
   lib/
     feeds.js               # Source allowlist + browser-side fetch/parse helpers
                            # (must match src/index.js)
@@ -228,11 +241,17 @@ src/
     dedupe.js              # Cross-feed dedupe (prefix-aware)
     ranking.js             # Edition ranking (freshness + hype + source diversity)
     pipeline.js            # Compose + score + stats
+    feedBuilders.js        # RSS 2.0 + JSON Feed 1.1 serializers (self-published feed, saved export)
   components/
     canvasui/              # Glitch, DecryptReveal, VHS, Asciify, RetroDither
-public/                    # OG image, robots.txt, sitemap, manifest, favicons, sw.js
+public/                    # OG image, robots.txt, sitemap, manifest, install icons, favicons, sw.js
+e2e/                       # Playwright specs + support (command-palette, focus-trap, keyboard-shortcuts,
+                           # navigation, print)
 test/                      # node --test unit suite (test/*.test.js) + vitest component suite (test/components/)
-.github/workflows/         # deploy.yml, preview-deploy.yml
+playwright.config.js       # E2E config (webServer, baseURL, project)
+.github/
+  workflows/               # deploy.yml, preview-deploy.yml
+  dependabot.yml           # weekly npm + github-actions updates
 ```
 
 ## API endpoints
@@ -243,9 +262,11 @@ The Worker exposes a tiny, same-origin-only API:
 | --- | --- |
 | `GET /api/feeds` | JSON list of `{ name, feed }` for every source (cache-control: 5 min + stale-while-revalidate) |
 | `GET /api/feed?name=OpenAI` | Relays that source's upstream RSS XML (browser UA, 8 s upstream timeout, 1 MB body cap) |
+| `GET /feed.xml` | The self-published RSS 2.0 feed of today's scored, deduped edition |
+| `GET /feed.json` | The self-published JSON Feed 1.1 of today's scored, deduped edition |
 | `GET /api/news` | Retired — returns a `410` explaining the presses moved into the browser |
 
-CORS is restricted to the Worker's own origin so third parties can't use the relay as a free open proxy. `/api/feeds` and `/api/feed` are additionally rate-limited per IP (90 requests per 60 s, backed by the edge cache, failing open) so the public relay can't be scripted into an abuse target.
+CORS is restricted to the Worker's own origin so third parties can't use the relay as a free open proxy. `/api/feeds`, `/api/feed`, `/feed.xml`, and `/feed.json` are additionally rate-limited per IP (90 requests per 60 s, backed by the edge cache, failing open) so the public relay can't be scripted into an abuse target.
 
 Errors are JSON `{ error, message }`:
 
@@ -254,7 +275,7 @@ Errors are JSON `{ error, message }`:
 | 404 | `unknown_feed` | No feed matches the `name` query param |
 | 502 | `upstream HTTP <n>` | Upstream returned a non-2xx status for that feed |
 | 504 | `fetch_failed` | Upstream unreachable, timed out (8 s), or returned an oversized body (refused at 1 MB) |
-| 429 | `rate_limited` | Per-IP limit exceeded (90 requests / 60 s) |
+| 429 | `rate_limited` | Per-IP limit exceeded (90 requests / 60 s) on the relay or self-published feeds |
 | 410 | `moved_to_the_browser` | `/api/news` is retired — the presses now print in the browser |
 
 ## Adding or changing sources
@@ -295,11 +316,13 @@ The index only means something with a baseline, so each day's reading is written
 
 Ideas on the press, in rough priority order:
 
-- **PWA installability** — a full app-shell service worker with offline install, beyond the current saved-edition cache.
-- **Edge-cached feeds** — serve `/api/feed` from the CDN with shorter TTLs to further cut upstream load.
-- **Own combined feed** — a `/feed.xml` of the deduped, scored edition for subscribers (needs a scheduled Worker writing to KV; deliberately not built while the site stays KV-free).
+- **Edge-cached relay** — move `/api/feed` fully onto the CDN with shorter TTLs to further cut upstream load (the self-published `/feed.xml` + `/feed.json` already cache at 5 min with stale-while-revalidate).
 
-Parked ideas from the audits (CSP, feed-image sanitization, dead-code removal, bundle trim — all shipped 2026-08-14 — plus the automated a11y sweep) and the improvement plan's Tier 2/3 scope (consistent card grid, "new since your last visit", save-for-later, weekly recap, command palette) are tracked in [`FUTURE-ROADMAP.md`](./FUTURE-ROADMAP.md). Release gates live in [`QA-CHECKLIST.md`](./QA-CHECKLIST.md), and the security review in [`SECURITY-AUDIT.md`](./SECURITY-AUDIT.md).
+Parked ideas from the audits (CSP, feed-image sanitization, dead-code removal, bundle trim — all shipped 2026-08-14 — plus the automated a11y sweep) and the improvement plan's Tier 2/3 scope (consistent card grid, "new since your last visit", save-for-later, weekly recap, command palette) are tracked in [`FUTURE-ROADMAP.md`](./FUTURE-ROADMAP.md). PWA installability and the self-published combined feed shipped 2026-08-15. Release gates live in [`QA-CHECKLIST.md`](./QA-CHECKLIST.md), and the security review in [`SECURITY-AUDIT.md`](./SECURITY-AUDIT.md).
+
+## License
+
+MIT — see [LICENSE](./LICENSE).
 
 ---
 
