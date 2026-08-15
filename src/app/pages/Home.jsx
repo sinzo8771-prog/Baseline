@@ -220,7 +220,7 @@ export default function Home({ stories, offline, loaded, reload, servedFromCache
                 placeholder="Search the edition…"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="pe-11"
+                className="pe-11 ps-9"
               />
               {query ? (
                 <button
