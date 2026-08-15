@@ -3,6 +3,9 @@ import { test } from "./support.js";
 
 test("Control+k opens the palette and Enter navigates to a page", async ({ page }) => {
   await page.goto("/");
+  // Wait for the app to mount before sending the hotkey: the palette listener
+  // attaches on mount, and pressing too early would silently miss it.
+  await expect(page.getByRole("heading", { level: 1, name: /A quiet interface/i })).toBeVisible();
   await page.keyboard.press("Control+k");
 
   const dialog = page.getByRole("dialog", { name: "Command palette" });
@@ -51,6 +54,7 @@ test("arrows move the palette selection; Enter opens the selected story", async 
 
 test("Escape closes the palette without navigating", async ({ page }) => {
   await page.goto("/");
+  await expect(page.getByRole("heading", { level: 1, name: /A quiet interface/i })).toBeVisible();
   await page.keyboard.press("Control+k");
   const dialog = page.getByRole("dialog", { name: "Command palette" });
   await expect(dialog).toBeVisible();
