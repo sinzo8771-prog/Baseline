@@ -274,7 +274,7 @@ function MiniTrend({ series }) {
   const max = Math.max(...series.map((e) => e.hypePercent), 1);
   return (
     <div
-      className="mt-4 flex h-14 items-end gap-1.5"
+      className="mt-4 flex h-20 items-end gap-1.5"
       role="img"
       aria-label={`Hype Index, last ${series.length} days: ${series.map((e) => `${e.date}: ${e.hypePercent}%`).join(", ")}`}
     >
