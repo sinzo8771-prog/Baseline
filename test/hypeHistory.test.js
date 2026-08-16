@@ -49,6 +49,7 @@ test("hypeTrend computes delta vs the previous day", () => {
   const { delta, series } = hypeTrend(history);
   assert.equal(delta, 8);
   assert.equal(series.length, 2);
+  assert.deepEqual(series.map((e) => e.date), ["2026-08-08", "2026-08-09"]); // oldest first
 });
 
 test("hypeTrend treats same-date entries as one day (no delta)", () => {

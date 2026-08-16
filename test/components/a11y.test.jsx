@@ -149,6 +149,13 @@ describe("axe accessibility", () => {
       </MemoryRouter>,
     );
     await assertNoViolations(container);
+    // Regression guard for the 99b2de1 trend fix: the 7-day chart plots
+    // oldest-first, so the last bar is "today" and the first is not.
+    const chart = container.querySelector('div[role="img"][aria-label^="Hype Index over"]');
+    const bars = chart ? [...chart.querySelectorAll(":scope > div")] : [];
+    expect(bars.length).toBeGreaterThan(1);
+    expect(bars[bars.length - 1].textContent.toLowerCase()).toContain("today");
+    expect(bars[0].textContent.toLowerCase()).not.toContain("today");
   });
 
   it("WeekInReview (empty and partial-week) has no violations", async () => {
