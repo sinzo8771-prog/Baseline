@@ -279,7 +279,7 @@ function MiniTrend({ series }) {
       aria-label={`Hype Index, last ${series.length} days: ${series.map((e) => `${e.date}: ${e.hypePercent}%`).join(", ")}`}
     >
       {series.map((entry, i) => {
-        const isToday = i === 0;
+        const isToday = i === series.length - 1;
         const h = Math.max(6, Math.round((entry.hypePercent / max) * 52));
         return (
           <div key={entry.date} className="flex flex-1 flex-col items-center gap-1">

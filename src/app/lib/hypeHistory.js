@@ -58,7 +58,12 @@ export function hypeTrend(history) {
     yesterday && today.date !== yesterday.date ? today.hypePercent - yesterday.hypePercent : null;
   return {
     delta,
-    series: history.slice(0, 7).map((e) => ({ date: e.date, hypePercent: e.hypePercent })),
+    // History is newest-first; the trend charts plot left-to-right, so reverse
+    // into oldest-first (mirrors sourceSeries).
+    series: history
+      .slice(0, 7)
+      .map((e) => ({ date: e.date, hypePercent: e.hypePercent }))
+      .reverse(),
   };
 }
 
