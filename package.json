@@ -36,7 +36,7 @@
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.4",
-    "@vitejs/plugin-react": "^4.7.0",
+    "@vitejs/plugin-react": "^6.0.5",
     "@xmldom/xmldom": "^0.9.10",
     "jsdom": "^30.0.1",
     "shadcn": "^4.17.0",
