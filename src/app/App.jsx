@@ -10,8 +10,14 @@ import SiteNav from "./components/SiteNav.jsx";
 import SiteFooter from "./components/SiteFooter.jsx";
 import Asciify from "@/components/canvasui/Asciify.jsx";
 import DecryptReveal from "@/components/canvasui/DecryptReveal.jsx";
-import VHS from "@/components/canvasui/VHS.jsx";
 import CommandPalette from "./components/CommandPalette.jsx";
+
+// The footer's VHS overlay is the only continuously-running effect, but it sits
+// below the fold on every page. Its module and WebGL setup (context + shader
+// compile) are deferred until the footer approaches the viewport, so the
+// initial load never pays for a shader it can't see yet. The footer itself
+// renders normally in the meantime.
+const VHS = lazy(() => import("@/components/canvasui/VHS.jsx"));
 
 // Secondary pages are code-split so /about, /sources, and /hype-index don't
 // ship their bytes to a visitor who only reads the front page. The landing and
@@ -148,6 +154,48 @@ function ScrollToTop() {
   return null;
 }
 
+// The footer's VHS overlay mounts only once the footer gets within ~600px of
+// the viewport. Until then (and whenever the browser has no IntersectionObserver)
+// the plain footer renders; the effect's WebGL context and shader compile are
+// skipped entirely until it is actually about to be seen. This is the only
+// continuously-running effect in the app, so deferring its mount keeps the
+// initial load's script evaluation free of a below-the-fold shader.
+function FooterEffect() {
+  const ref = useRef(null);
+  const [near, setNear] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") {
+      setNear(true);
+      return undefined;
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setNear(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "600px 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return (
+    <div ref={ref}>
+      {near ? (
+        <Suspense fallback={<SiteFooter />}>
+          <VHS wave={0.25} jitter={0.08} crease={0.02} bloom={0} grain={0.04} scanlines={0.04} switching={0.01} speed={0.25}>
+            <SiteFooter />
+          </VHS>
+        </Suspense>
+      ) : (
+        <SiteFooter />
+      )}
+    </div>
+  );
+}
+
 function MastheadMeta({ dateLabel, storyCount, updatedLabel }) {
   return (
     <div className="masthead-meta">
@@ -266,9 +314,7 @@ export default function App() {
           </Suspense>
         </main>
 
-        <VHS wave={0.25} jitter={0.08} crease={0.02} bloom={0} grain={0.04} scanlines={0.04} switching={0.01} speed={0.25}>
-          <SiteFooter />
-        </VHS>
+        <FooterEffect />
 
         <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} stories={allStories} />
 

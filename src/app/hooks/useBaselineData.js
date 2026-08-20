@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchAllFeeds } from "../../lib/feeds.js";
-import { composeStories, dailyStats, sourceStats, EDITION_CAP } from "../../lib/pipeline.js";
-import { signalStats } from "../../lib/hype.js";
+import { dailyStats, sourceStats, EDITION_CAP, hashId } from "../../lib/pipeline.js";
+import { signalStats, spinFromStory } from "../../lib/hype.js";
+import { normalizeTitle, stripSourcePrefix, titleSimilarity } from "../../lib/dedupe.js";
 import { recordToday, recordSourceStats } from "../lib/hypeHistory.js";
 
 // The printed edition is capped at 25 stories (1 lead + 24 in the grid).
@@ -42,8 +43,48 @@ function writeCachedEdition(edition, all, stats, sourceStats) {
   }
 }
 
-function composeEdition(results) {
-  const all = composeStories(results);
+const yieldToMainThread = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+// Chunked equivalent of pipeline.composeStories: same scoring (hashId +
+// spinFromStory), same dedupe rules (stripSourcePrefix + normalizeTitle +
+// 0.8 title similarity), same 50-story ceiling — but the work yields to the
+// main thread every 25 stories, so a large feed batch never becomes one long
+// blocking task during initial load. The sync pipeline stays for the Worker.
+async function composeStoriesChunked(feedResults) {
+  const scored = [];
+  for (const r of feedResults) {
+    for (const story of r.stories ?? []) {
+      scored.push({ id: hashId(`${story.title}|${story.link}`), ...story, ...spinFromStory(story) });
+      if (scored.length % 25 === 0) await yieldToMainThread();
+    }
+  }
+  const sourceNames = [...new Set(scored.map((s) => s?.source).filter(Boolean))];
+  const seenKeys = new Set();
+  const kept = [];
+  for (const story of scored) {
+    const key = normalizeTitle(stripSourcePrefix(story.title, sourceNames));
+    if (!key) continue;
+    let isDuplicate = seenKeys.has(key);
+    if (!isDuplicate) {
+      for (const keptKey of seenKeys) {
+        if (titleSimilarity(key, keptKey) >= 0.8) {
+          isDuplicate = true;
+          break;
+        }
+      }
+    }
+    if (isDuplicate) continue;
+    seenKeys.add(key);
+    kept.push(story);
+    if (kept.length % 25 === 0) await yieldToMainThread();
+  }
+  return [...kept]
+    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+    .slice(0, 50);
+}
+
+async function composeEdition(results) {
+  const all = await composeStoriesChunked(results);
   const edition = all.slice(0, EDITION_CAP);
   const stats = dailyStats(edition);
   // Signal-category breakdown powers the Hype Index "WHY TODAY?" panel and
@@ -82,21 +123,27 @@ export default function useBaselineData() {
     setSettled(false);
     try {
       const finalResults = await fetchAllFeeds({
-        onPartial: (partial) => {
+        onPartial: async (partial) => {
           // Each arriving feed re-composes a rolling edition. Setting `loaded`
           // on the first partial swaps the skeletons for real content, so a
-          // slow feed never holds the front page hostage.
+          // slow feed never holds the front page hostage. The compose yields
+          // between slices so it never blocks the first paint.
           setLoaded(true);
           setServedFromCache(false);
-          const { edition, all, stats, sources: srcStats } = composeEdition(partial);
-          setStories(edition);
-          setAllStories(all);
-          setStats(stats);
-          setSourceStatsList(srcStats);
+          try {
+            const { edition, all, stats, sources: srcStats } = await composeEdition(partial);
+            setStories(edition);
+            setAllStories(all);
+            setStats(stats);
+            setSourceStatsList(srcStats);
+          } catch {
+            // A partial that fails to compose still leaves the page standing;
+            // the final block below retries with the complete set.
+          }
           setSources(sourceStatuses(partial));
         },
       });
-      const { edition, all, stats, sources: srcStats } = composeEdition(finalResults);
+      const { edition, all, stats, sources: srcStats } = await composeEdition(finalResults);
       setStories(edition);
       setAllStories(all);
       setStats(stats);

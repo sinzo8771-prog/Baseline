@@ -1,13 +1,19 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { m, AnimatePresence } from "framer-motion";
 import { ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import SpinBadge from "./SpinBadge.jsx";
 import StoryModal from "./StoryModal.jsx";
-import Glitch from "@/components/canvasui/Glitch.jsx";
 import useKeyboardShortcuts from "../hooks/useKeyboardShortcuts.js";
 import BookmarkButton from "./BookmarkButton.jsx";
 import { isNewSinceLastVisit } from "../lib/lastVisit.js";
+
+// The Glitch effect only ever runs on the lead "On Fire" card — a single card
+// that most editions don't even have. Its WebGL setup is deferred until that
+// card is actually about to render, so the edition page's initial load doesn't
+// pay for a shader that may never appear. The card itself renders in the
+// fallback the moment the feed arrives.
+const Glitch = lazy(() => import("@/components/canvasui/Glitch.jsx"));
 
 function fmtDate(iso) {
   const d = new Date(iso);
@@ -182,9 +188,11 @@ export default function StoryFeed({ stories, lastVisit = null }) {
     const card = <CardShell story={story} isLead={isLead} active={story.id === activeId} isNew={isNew} onOpen={() => open(story)} />;
     if (isLead && story.spin === "On Fire") {
       return (
-        <Glitch key={story.id} intensity={0.85} interval={4} duration={0.3} slices={20} rgbShift={5}>
-          {card}
-        </Glitch>
+        <Suspense fallback={<div key={story.id}>{card}</div>}>
+          <Glitch key={story.id} intensity={0.85} interval={4} duration={0.3} slices={20} rgbShift={5}>
+            {card}
+          </Glitch>
+        </Suspense>
       );
     }
     return <div key={story.id}>{card}</div>;

@@ -6,7 +6,7 @@ import { dedupeStories } from "./dedupe.js";
 // self-published feed reflects the exact same edition the front page shows.
 export const EDITION_CAP = 25;
 
-function hashId(str) {
+export function hashId(str) {
   let h = 0;
   for (let i = 0; i < str.length; i++) {
     h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;

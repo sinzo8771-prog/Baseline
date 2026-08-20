@@ -167,173 +167,170 @@ export default function Home({ stories, offline, loaded, reload, servedFromCache
   return (
     <section id="latest" aria-label="Latest stories">
       <h1 className="sr-only">Today's Edition</h1>
-      {!loaded ? (
-        <>
-          <PressingWires />
-          <LeadSkeleton />
-          <div className="mb-6 inline-flex items-center gap-1 rounded-full border border-border bg-card p-1">
-            <div className="h-6 w-16 animate-pulse rounded-full skeleton" />
-            <div className="h-6 w-20 animate-pulse rounded-full skeleton" />
-            <div className="h-6 w-16 animate-pulse rounded-full skeleton" />
-            <div className="h-6 w-20 animate-pulse rounded-full skeleton" />
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {[0, 1, 2, 3, 4, 5].map((i) => <SkeletonCard key={i} />)}
-          </div>
-        </>
-      ) : offline && edition.length === 0 ? (
-        <EmptyState
-          kicker="THE PRESSES ARE JAMMED"
-          text="The latest wires could not be reached, and there is no saved edition on hand. Your browser can do everything except fetch — try the presses again."
-          action={{ label: "TRY AGAIN", onClick: reload }}
-        />
-      ) : (
-        <>
-          {offline ? (
-            <p
-              className="mb-4 border border-border/70 bg-card px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-foreground"
-              role="status"
+
+      {!loaded ? <PressingWires /> : null}
+
+      {loaded && offline ? (
+        <p
+          className="mb-4 border border-border/70 bg-card px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-foreground"
+          role="status"
+        >
+          {servedFromCache ? (
+            <>
+              <span className="font-semibold text-foreground">SAVED EDITION</span>
+              {savedAt ? ` · LAST UPDATED ${new Date(savedAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}` : null}
+              {" — "}the latest wires could not be reached. Showing the last saved edition.{" "}
+            </>
+          ) : (
+            "The latest wires could not be reached. "
+          )}
+          <button type="button" className="underline underline-offset-4 hover:text-foreground" onClick={reload}>
+            TRY AGAIN
+          </button>
+        </p>
+      ) : null}
+
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative">
+          <Search className="search-icon" aria-hidden="true" />
+          <label className="sr-only" htmlFor="story-search">Search the edition</label>
+          <Input
+            id="story-search"
+            ref={searchRef}
+            type="search"
+            placeholder="Search the edition…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="pe-11 ps-9"
+          />
+          {query ? (
+            <button
+              type="button"
+              className="search-clear"
+              aria-label="Clear search"
+              onClick={() => setQuery("")}
             >
-              {servedFromCache ? (
-                <>
-                  <span className="font-semibold text-foreground">SAVED EDITION</span>
-                  {savedAt ? ` · LAST UPDATED ${new Date(savedAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}` : null}
-                  {" — "}the latest wires could not be reached. Showing the last saved edition.{" "}
-                </>
-              ) : (
-                "The latest wires could not be reached. "
-              )}
-              <button type="button" className="underline underline-offset-4 hover:text-foreground" onClick={reload}>
-                TRY AGAIN
-              </button>
-            </p>
-          ) : null}
-
-          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="relative">
-              <Search className="search-icon" aria-hidden="true" />
-              <label className="sr-only" htmlFor="story-search">Search the edition</label>
-              <Input
-                id="story-search"
-                ref={searchRef}
-                type="search"
-                placeholder="Search the edition…"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className="pe-11 ps-9"
-              />
-              {query ? (
-                <button
-                  type="button"
-                  className="search-clear"
-                  aria-label="Clear search"
-                  onClick={() => setQuery("")}
-                >
-                  <X className="size-3.5" aria-hidden="true" />
-                </button>
-              ) : (
-                <span className="pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-2 text-muted-foreground">
-                  <kbd className="inline-flex h-5 max-h-full items-center rounded border border-border bg-accent px-1 font-[inherit] text-[0.625rem] font-medium text-muted-foreground/70">
-                    {CMD_LABEL}
-                  </kbd>
-                </span>
-              )}
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="sort-control" role="group" aria-label="View the edition">
-                <span className="sort-label">View</span>
-                {VIEWS.map(({ key, label }) => (
-                  <button
-                    key={key}
-                    type="button"
-                    aria-pressed={view === key}
-                    className={cn(view === key && "active")}
-                    onClick={() => setView(key)}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-              <div className="sort-control" role="group" aria-label="Sort the edition">
-                <span className="sort-label">Sort</span>
-                {SORTS.map(({ key, label }) => (
-                  <button
-                    key={key}
-                    type="button"
-                    aria-pressed={sort === key}
-                    className={cn(sort === key && "active")}
-                    onClick={() => setSort(key)}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {sourceFilter ? (
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] uppercase tracking-[0.08em]">
-              <span className="font-semibold text-foreground">{sourceFilter}</span>
+              <X className="size-3.5" aria-hidden="true" />
+            </button>
+          ) : (
+            <span className="pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-2 text-muted-foreground">
+              <kbd className="inline-flex h-5 max-h-full items-center rounded border border-border bg-accent px-1 font-[inherit] text-[0.625rem] font-medium text-muted-foreground/70">
+                {CMD_LABEL}
+              </kbd>
+            </span>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="sort-control" role="group" aria-label="View the edition">
+            <span className="sort-label">View</span>
+            {VIEWS.map(({ key, label }) => (
               <button
+                key={key}
                 type="button"
-                className="inline-flex size-4 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                aria-label={`Stop filtering by ${sourceFilter}`}
-                onClick={clearSource}
+                aria-pressed={view === key}
+                className={cn(view === key && "active")}
+                onClick={() => setView(key)}
               >
-                <X className="size-3" aria-hidden="true" />
+                {label}
               </button>
-            </div>
-          ) : null}
-
-          <div
-            className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[10px] uppercase tracking-[0.08em] text-muted-foreground"
-            role="group"
-            aria-label="The spin scale"
-          >
-            <span className="font-semibold text-foreground">The spin scale</span>
-            {FILTERS.filter((f) => f !== "all").map((f) => (
-              <span key={f} className="inline-flex items-center gap-1.5">
-                <SpinBadge spin={f} />
-              </span>
             ))}
           </div>
-          <SelectorChips
-            className="mb-6"
-            options={FILTERS}
-            value={filter}
-            counts={counts}
-            onChange={setFilter}
+          <div className="sort-control" role="group" aria-label="Sort the edition">
+            <span className="sort-label">Sort</span>
+            {SORTS.map(({ key, label }) => (
+              <button
+                key={key}
+                type="button"
+                aria-pressed={sort === key}
+                className={cn(sort === key && "active")}
+                onClick={() => setSort(key)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {sourceFilter ? (
+        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] uppercase tracking-[0.08em]">
+          <span className="font-semibold text-foreground">{sourceFilter}</span>
+          <button
+            type="button"
+            className="inline-flex size-4 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            aria-label={`Stop filtering by ${sourceFilter}`}
+            onClick={clearSource}
+          >
+            <X className="size-3" aria-hidden="true" />
+          </button>
+        </div>
+      ) : null}
+
+      <div
+        className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[10px] uppercase tracking-[0.08em] text-muted-foreground"
+        role="group"
+        aria-label="The spin scale"
+      >
+        <span className="font-semibold text-foreground">The spin scale</span>
+        {FILTERS.filter((f) => f !== "all").map((f) => (
+          <span key={f} className="inline-flex items-center gap-1.5">
+            <SpinBadge spin={f} />
+          </span>
+        ))}
+      </div>
+      <SelectorChips
+        className="mb-6"
+        options={FILTERS}
+        value={filter}
+        counts={counts}
+        onChange={setFilter}
+      />
+
+      {loaded && hasActiveFilters ? (
+        <p className="mb-3 text-[11px] uppercase tracking-[0.08em] text-muted-foreground" role="status">
+          {sorted.length === 1 ? "Searching 1 story" : `Searching ${sorted.length} stories`}
+        </p>
+      ) : null}
+
+      {loaded && helpOpen ? <ShortcutsHelp onClose={() => setHelpOpen(false)} /> : null}
+
+      {/* The toolbar above renders identically before and after the feeds
+          arrive; only this region swaps between skeletons and the real
+          edition, so the page layout holds still while loading. */}
+      <div aria-live="polite">
+        {!loaded ? (
+          <>
+            <LeadSkeleton />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {[0, 1, 2, 3, 4, 5].map((i) => <SkeletonCard key={i} />)}
+            </div>
+          </>
+        ) : offline && edition.length === 0 ? (
+          <EmptyState
+            kicker="THE PRESSES ARE JAMMED"
+            text="The latest wires could not be reached, and there is no saved edition on hand. Your browser can do everything except fetch — try the presses again."
+            action={{ label: "TRY AGAIN", onClick: reload }}
           />
-
-          {hasActiveFilters ? (
-            <p className="mb-3 text-[11px] uppercase tracking-[0.08em] text-muted-foreground" role="status">
-              {sorted.length === 1 ? "Searching 1 story" : `Searching ${sorted.length} stories`}
-            </p>
-          ) : null}
-
-          {helpOpen ? <ShortcutsHelp onClose={() => setHelpOpen(false)} /> : null}
-
-          {edition.length === 0 ? (
-            <EmptyState
-              kicker="EXTRA! EXTRA!"
-              text="The presses are cold. No stories to report. Our sources may be napping, or the feeds are down. In this line of work, silence is usually a feature, not a bug."
-              action={{ label: "Rattle the presses", onClick: reload }}
-            />
-          ) : sorted.length === 0 ? (
-            <EmptyState
-              kicker="NO MATCHES"
-              text={`Nothing filed under the current search${sourceFilter ? ` for ${sourceFilter}` : ""}${filter !== "all" ? ` and "${filter}"` : ""}.`}
-              action={hasActiveFilters ? { label: "Clear the filters", onClick: clearFilters } : undefined}
-            />
+        ) : edition.length === 0 ? (
+          <EmptyState
+            kicker="EXTRA! EXTRA!"
+            text="The presses are cold. No stories to report. Our sources may be napping, or the feeds are down. In this line of work, silence is usually a feature, not a bug."
+            action={{ label: "Rattle the presses", onClick: reload }}
+          />
+        ) : sorted.length === 0 ? (
+          <EmptyState
+            kicker="NO MATCHES"
+            text={`Nothing filed under the current search${sourceFilter ? ` for ${sourceFilter}` : ""}${filter !== "all" ? ` and "${filter}"` : ""}.`}
+            action={hasActiveFilters ? { label: "Clear the filters", onClick: clearFilters } : undefined}
+          />
+        ) : (
+          view === "cards" ? (
+            <CardsView stories={sorted} lastVisit={lastVisit} />
           ) : (
-            view === "cards" ? (
-              <CardsView stories={sorted} lastVisit={lastVisit} />
-            ) : (
-              <StoryFeed stories={sorted} lastVisit={lastVisit} />
-            )
-          )}
-        </>
-      )}
+            <StoryFeed stories={sorted} lastVisit={lastVisit} />
+          )
+        )}
+      </div>
     </section>
   );
 }

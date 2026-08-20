@@ -18,7 +18,10 @@ function fmtDate(iso) {
 // Restrained editorial reveal: a short fade + drift up, fired once when the
 // section scrolls into view. MotionConfig(reducedMotion="user") already strips
 // transform animation for users who prefer reduced motion, so the fade is all
-// that remains there.
+// that remains there. The H1 is deliberately excluded from the fade — it is the
+// LCP element, so it paints at the first frame instead of waiting for the
+// observer + animation; the supporting copy below still gets the restrained
+// reveal.
 const fade = {
   initial: { opacity: 0, y: 10 },
   whileInView: { opacity: 1, y: 0 },
@@ -41,10 +44,10 @@ function Kicker({ children }) {
 function Hero() {
   return (
     <section aria-label="Introduction" className="pb-10 pt-8 sm:pb-12 sm:pt-10">
+      <h1 className="max-w-[15ch] font-serif text-5xl font-black leading-[0.98] tracking-[-0.02em] text-foreground sm:text-7xl">
+        A quiet interface for a very loud industry.
+      </h1>
       <m.div {...fade}>
-        <h1 className="max-w-[15ch] font-serif text-5xl font-black leading-[0.98] tracking-[-0.02em] text-foreground sm:text-7xl">
-          A quiet interface for a very loud industry.
-        </h1>
         <p className="mt-6 max-w-[52ch] text-[15px] leading-relaxed text-muted-foreground sm:text-base">
           The Baseline reads the AI press all day, prints the headlines verbatim, and measures how
           loudly each one is being told. No summary. No spin added. Just the news, and the signal
