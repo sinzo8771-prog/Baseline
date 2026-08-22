@@ -12,7 +12,7 @@
 export const SOURCES = [
   { name: "OpenAI",          feed: "https://openai.com/blog/rss.xml" },
   { name: "Anthropic",       feed: "https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_anthropic_news.xml", mirror: true },
-  { name: "Google DeepMind", feed: "https://deepmind.google/blog/rss.xml" },
+  { name: "Google DeepMind", feed: "https://deepmind.google/blog/feed/basic/" },
   { name: "Hugging Face",    feed: "https://huggingface.co/blog/feed.xml" },
   { name: "The Verge AI",    feed: "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml" },
   { name: "MIT Tech Review AI", feed: "https://www.technologyreview.com/topic/artificial-intelligence/feed" },

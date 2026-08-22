@@ -1,0 +1,39 @@
+name: Feed Health
+
+# Daily probe of every source through the deployed relay. Fails (red run +
+# email) when any feed is down, so an upstream block or stale URL can never
+# silently take sources offline again. Sources come from /api/feeds, so the
+# check cannot drift from the Worker allowlist. Override the target with the
+# FEED_HEALTH_BASE_URL repository variable (e.g. for a staging deployment).
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  health:
+    name: Probe every source via /api/feed
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      # npm ci is only needed for @xmldom/xmldom, which the check uses to prove
+      # each response parses as a real feed rather than a WAF error page.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check all feeds
+        env:
+          FEED_HEALTH_BASE_URL: ${{ vars.FEED_HEALTH_BASE_URL }}
+        run: node scripts/feed-health.mjs

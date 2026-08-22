@@ -25,7 +25,7 @@ import { buildJsonFeed, buildRssFeed } from "./lib/feedBuilders.js";
 export const FEEDS = {
   "OpenAI":          "https://openai.com/blog/rss.xml",
   "Anthropic":       "https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_anthropic_news.xml",
-  "Google DeepMind": "https://deepmind.google/blog/rss.xml",
+  "Google DeepMind": "https://deepmind.google/blog/feed/basic/",
   "Hugging Face":    "https://huggingface.co/blog/feed.xml",
   "The Verge AI":    "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml",
   "MIT Tech Review AI": "https://www.technologyreview.com/topic/artificial-intelligence/feed",
@@ -52,6 +52,19 @@ const RATE_LIMIT_PER_WINDOW = 90;
 // A real browser UA lets most publisher RSS endpoints pass the request through.
 // A custom bot UA (e.g. "TheBaseline/1.0") causes many feeds to return 403/503.
 const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
+// Feeds served by WAFs (Cloudflare-fronted publishers especially) are more
+// likely to pass a request that looks like a feed reader: ask for the XML
+// types explicitly instead of the fetch-default "*/*".
+const ACCEPT_HEADER = "application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8";
+
+// A dead source is indistinguishable from a blocked one without logs: both
+// surface as a non-ok status. Publisher WAFs blocking Workers egress return
+// 403/503 exactly like a stale URL would 404, so every upstream failure logs
+// name + status (single line, `wrangler tail` / dashboard-friendly) to keep
+// the two diagnosable apart.
+function logUpstreamFailure(scope, name, detail) {
+  console.log(`[feed:${scope}] "${name}" ${detail}`);
+}
 
 // Canonical origin for the feed's self-links (story permalinks, feed_url).
 const FEED_BASE_URL = "https://the-baseline.baseline-news.workers.dev";
@@ -119,9 +132,10 @@ async function relayFeed(name, request) {
   try {
     const res = await fetch(upstream, {
       signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
-      headers: { "user-agent": USER_AGENT },
+      headers: { "user-agent": USER_AGENT, accept: ACCEPT_HEADER },
     });
     if (!res.ok) {
+      logUpstreamFailure("relay", name, `upstream HTTP ${res.status}`);
       return json({ error: `upstream HTTP ${res.status}`, message: `"${name}" returned ${res.status}.` }, 502);
     }
     // Read the body with a hard byte cap so an enormous or malformed feed can't
@@ -151,6 +165,7 @@ async function relayFeed(name, request) {
     await cache.put(cacheKey, toCache);
     return relayed;
   } catch (err) {
+    logUpstreamFailure("relay", name, `fetch failed: ${String(err?.message ?? err)}`);
     return json(
       { error: "fetch_failed", message: `Could not reach "${name}": ${String(err?.message ?? err)}` },
       504,
@@ -200,12 +215,16 @@ async function buildEdition() {
       try {
         const res = await fetch(feed, {
           signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
-          headers: { "user-agent": USER_AGENT },
+          headers: { "user-agent": USER_AGENT, accept: ACCEPT_HEADER },
         });
-        if (!res.ok) return { source: name, stories: [] };
+        if (!res.ok) {
+          logUpstreamFailure("edition", name, `upstream HTTP ${res.status}`);
+          return { source: name, stories: [] };
+        }
         const xml = await readBodyBounded(res, MAX_RELAY_BYTES);
         return { source: name, stories: extractStories(xml, name).slice(0, MAX_PER_FEED) };
-      } catch {
+      } catch (err) {
+        logUpstreamFailure("edition", name, `fetch failed: ${String(err?.message ?? err)}`);
         return { source: name, stories: [] };
       }
     }),
