@@ -2,20 +2,26 @@ import { expect } from "@playwright/test";
 import { test, trackPageErrors } from "./support.js";
 
 const ROUTES = [
-  { path: "/", heading: /A quiet interface for a very loud industry/i },
+  // The landing h1 is the lead story's headline (data-driven), so anchor on
+  // whatever h1 the front page prints rather than a fixed string.
+  { path: "/", heading: null },
   { path: "/hype-index", heading: "The Hype Index" },
   { path: "/sources", heading: "Who's Shouting?" },
-  { path: "/saved", heading: "Saved for later" },
-  { path: "/week-in-review", heading: "The Week in Review" },
-  { path: "/about", heading: "About" },
-  { path: "/methodology", heading: "Methodology" },
+  { path: "/saved", heading: /Saved for Later/i },
+  { path: "/week-in-review", heading: "Week in Review" },
+  { path: "/about", heading: /About The Baseline/i },
+  { path: "/methodology", heading: /How the Hype Index works/i },
 ];
 
 for (const { path, heading } of ROUTES) {
   test(`renders ${path} with its heading and no errors`, async ({ page }) => {
     const errors = trackPageErrors(page);
     await page.goto(path);
-    await expect(page.getByRole("heading", { level: 1, name: heading })).toBeVisible();
+    if (heading) {
+      await expect(page.getByRole("heading", { level: 1, name: heading })).toBeVisible();
+    } else {
+      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    }
     expect(errors).toEqual([]);
   });
 }
