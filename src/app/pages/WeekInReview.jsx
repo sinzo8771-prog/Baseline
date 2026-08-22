@@ -22,7 +22,7 @@ function fmtDate(dateKey) {
 
 function Panel({ title, children }) {
   return (
-    <div className="rounded-md border border-border bg-card p-5">
+    <div className="sp-callout p-5">
       <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{title}</h2>
       {children}
     </div>
@@ -66,12 +66,13 @@ export default function WeekInReview() {
         <ArrowLeft className="size-3.5" aria-hidden="true" /> Back to the edition
       </Link>
 
-      <h1 className="font-serif text-3xl font-black tracking-[-0.01em] text-foreground sm:text-4xl">
-        The Week in Review
-      </h1>
-      <p className="section-note">
-        What the past seven recorded days did to the Hype Index — measured from the baseline your browser has been keeping.
-      </p>
+      <header className="ed page-head pt-8 pb-6">
+        <span className="fp-kicker">The week, measured</span>
+        <h1 className="page-title" style={{ fontSize: "clamp(36px, 6vw, 68px)" }}>Week in Review</h1>
+        <p className="page-deck">
+          What the past seven recorded days did to the Hype Index — measured from the baseline your browser keeps.
+        </p>
+      </header>
 
       {!summary ? (
         <div className="mt-6">

@@ -1,6 +1,5 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import HypeMeter from "../components/HypeMeter.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import { readHypeHistory, hypeTrend } from "../lib/hypeHistory.js";
 import { signalShares, biggestSignalShift, TIER_RANGES, CATEGORY_ORDER, CATEGORY_LABEL } from "@/lib/hype";
@@ -22,124 +21,220 @@ function weekdayLabel(dateKey) {
   const date = new Date(y, m - 1, d);
   return Number.isNaN(date.getTime())
     ? ""
-    : date.toLocaleDateString(undefined, { weekday: "short" }).slice(0, 3);
+    : date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 }
 
-function TrendBars({ series }) {
-  const max = Math.max(...series.map((e) => e.hypePercent), 1);
+// ---- Main chart -------------------------------------------------------------
+// The trend line is drawn from this browser's own recorded readings — nothing
+// is invented. With fewer than two recorded days there is no line, only an
+// honest invitation to come back tomorrow.
+const W = 1000;
+const H = 380;
+const PL = 48;
+const PR = 16;
+const PT = 20;
+const PB = 36;
+
+function buildGeometry(series) {
+  const n = series.length;
+  const vals = series.map((e) => e.hypePercent);
+  const rawMin = Math.min(...vals);
+  const rawMax = Math.max(...vals);
+  const span = Math.max(rawMax - rawMin, 4);
+  const vMin = Math.max(0, Math.floor(rawMin - span * 0.15));
+  const vMax = Math.min(100, Math.ceil(rawMax + span * 0.15));
+  const sx = (i) => PL + (W - PL - PR) * (i / Math.max(n - 1, 1));
+  const sy = (v) => PT + (H - PT - PB) - ((v - vMin) / (vMax - vMin)) * (H - PT - PB);
+  return { n, vals, sx, sy };
+}
+
+function TrendChart({ series }) {
+  const [hover, setHover] = useState(null);
+  const geo = useMemo(() => buildGeometry(series), [series]);
+
+  if (!geo || series.length < 2) {
+    return (
+      <p className="method">
+        The baseline starts the day you read your first edition. The trend line draws itself from tomorrow — come back
+        after your next visit.
+      </p>
+    );
+  }
+
+  const { sx, sy, vals } = geo;
+  const line = series.map((e, i) => `${i ? "L" : "M"}${sx(i).toFixed(1)},${sy(e.hypePercent).toFixed(1)}`).join(" ");
+  const area = `${line} L${sx(series.length - 1).toFixed(1)},${H - PB} L${PL},${H - PB} Z`;
+  const ticks = [];
+  for (let t = geo.vMin; t <= geo.vMax; t += Math.max(5, Math.round((geo.vMax - geo.vMin) / 4 / 5) * 5)) ticks.push(t);
+
+  // First, middle, last date labels along the bottom axis.
+  const axisIdx = [0, Math.floor((series.length - 1) / 2), series.length - 1];
+
+  const onMove = (evt) => {
+    const rect = evt.currentTarget.getBoundingClientRect();
+    const vx = ((evt.clientX - rect.left) / rect.width) * W;
+    let best = 0;
+    let bd = Infinity;
+    for (let i = 0; i < series.length; i += 1) {
+      const d = Math.abs(sx(i) - vx);
+      if (d < bd) {
+        bd = d;
+        best = i;
+      }
+    }
+    setHover(best);
+  };
+
+  const tip = hover !== null
+    ? {
+        left: `${(sx(hover) / W) * 100}%`,
+        top: `${(sy(vals[hover]) / H) * 100}%`,
+        date: weekdayLabel(series[hover].date),
+        val: `${series[hover].hypePercent}%`,
+      }
+    : null;
+
   return (
-    <div
-      className="mt-3 flex h-20 items-end gap-1.5"
-      role="img"
-      aria-label={`Hype Index over the last ${series.length} days: ${series.map((e) => `${e.date}: ${e.hypePercent}%`).join(", ")}`}
-      style={{
-        backgroundImage:
-          "repeating-linear-gradient(0deg, transparent 0 calc(25% - 1px), var(--rule) calc(25% - 1px) 25%)",
-      }}
-    >
-      {series.map((entry, i) => {
-        const isToday = i === series.length - 1;
-        const h = Math.max(6, Math.round((entry.hypePercent / max) * 52));
-        return (
-          <div key={entry.date} className="flex flex-1 flex-col items-center gap-1">
-            <div
-              className="w-full rounded-[2px]"
-              style={{
-                height: `${h}px`,
-                background: isToday ? "var(--vermillion)" : "var(--ink-soft)",
-                opacity: isToday ? 1 : 0.55,
-              }}
-              title={`${entry.date}: ${entry.hypePercent}%`}
-            />
-            <span className="text-center text-[9px] uppercase leading-tight tracking-[0.12em] text-muted-foreground">
-              {isToday ? "today" : weekdayLabel(entry.date)}
-              <span className="hidden tabular-nums normal-case tracking-normal text-foreground/70 sm:block">
-                {entry.hypePercent}%
-              </span>
-            </span>
-          </div>
-        );
-      })}
+    <div className="chart-scroll">
+      <div className="chart-wrap">
+        <svg
+          className="chart"
+          viewBox={`0 0 ${W} ${H}`}
+          role="img"
+          aria-label={`Hype Index over your last ${series.length} recorded ${series.length === 1 ? "day" : "days"}: ${series.map((e) => `${e.date}: ${e.hypePercent}%`).join(", ")}`}
+          onPointerMove={onMove}
+          onPointerLeave={() => setHover(null)}
+        >
+          <defs>
+            <linearGradient id="hxAreaGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--vermillion)" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="var(--vermillion)" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <g>
+            {ticks.map((t) => (
+              <g key={t}>
+                <line className="grid" x1={PL} y1={sy(t)} x2={W - PR} y2={sy(t)} />
+                <text className="axis" x={PL - 10} y={sy(t) + 4} textAnchor="end">{t}</text>
+              </g>
+            ))}
+          </g>
+          <g>
+            {axisIdx.map((i) => (
+              <text key={i} className="axis" x={sx(i)} y={H - PB + 22} textAnchor={i === 0 ? "start" : i === series.length - 1 ? "end" : "middle"}>
+                {weekdayLabel(series[i].date)}
+              </text>
+            ))}
+          </g>
+          <path className="area" d={area} />
+          <path className="line" d={line} />
+          {series.map((e, i) => (
+            <circle key={e.date} className="dot" cx={sx(i)} cy={sy(e.hypePercent)} r="2.6" />
+          ))}
+          {hover !== null ? (
+            <g>
+              <line className="crosshair" x1={sx(hover)} y1={PT} x2={sx(hover)} y2={H - PB} style={{ opacity: 1 }} />
+              <circle className="cross-dot" cx={sx(hover)} cy={sy(vals[hover])} r="4" style={{ opacity: 1 }} />
+            </g>
+          ) : null}
+        </svg>
+        <div className={`chart-tooltip${tip ? " on" : ""}`} style={tip ? { left: tip.left, top: tip.top } : undefined} aria-hidden="true">
+          <div className="t-date">{tip?.date}</div>
+          <div className="t-val">{tip?.val}</div>
+        </div>
+      </div>
     </div>
   );
 }
 
-// Stat block: TODAY / YESTERDAY / CHANGE / 7-DAY AVG / STORY COUNT. Every value
-// is measured from the day's edition and the browser-local history — nothing
-// here is fabricated, and missing history renders an em dash, not a guess.
-function StatBlock({ stats, history, series }) {
-  const yesterday = history.length >= 2 ? history[1].hypePercent : null;
-  const change = yesterday === null ? null : stats.hypePercent - yesterday;
-  const avg = series.length ? Math.round(series.reduce((sum, e) => sum + e.hypePercent, 0) / series.length) : null;
-
-  const cells = [
-    { label: "Yesterday", value: yesterday === null ? "—" : `${yesterday}%` },
-    {
-      label: "Change",
-      value: change === null ? "—" : change > 0 ? `+${change}` : `${change}`,
-      highlight: change !== null && change !== 0,
-      up: change !== null && change > 0,
-    },
-    { label: "7-day avg", value: avg === null ? "—" : `${avg}%` },
-    { label: "Stories", value: stats.total },
-  ];
-
+// ---- Calendar strip ----------------------------------------------------------
+function CalendarStrip({ series }) {
+  const days = series.slice(-14);
+  if (days.length === 0) return null;
   return (
-    <div>
-      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-        <span className="font-serif text-6xl font-black leading-none tracking-tight text-foreground sm:text-7xl">
-          {stats.hypePercent}<span className="text-3xl font-bold text-muted-foreground sm:text-4xl">%</span>
-        </span>
-        <span className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
-          of today's stories are enthusiastic
-        </span>
-      </div>
-      <div className="mt-2 text-sm text-muted-foreground">
-        {change === null ? (
-          "No baseline yet — today is your first reading."
-        ) : (
-          <>
-            {change > 0 ? "Up" : change < 0 ? "Down" : "Flat"} {Math.abs(change)} points from yesterday's {yesterday}%.
-          </>
-        )}
-      </div>
-      {isSmallSample(stats.total) && (
-        <p className="mt-2 text-xs text-muted-foreground">
-          Small edition — {stats.total} stories isn't enough for this percentage to mean much yet.
-        </p>
-      )}
-      {series.length > 0 ? (
-        <p className="mt-1.5 text-xs text-muted-foreground">
-          Calibrated against {series.length} recorded {series.length === 1 ? "day" : "days"} in this browser.
-        </p>
-      ) : null}
-      <div className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-border bg-border sm:grid-cols-5">
-        {cells.map((cell) => (
-          <div key={cell.label} className="bg-card p-4">
-            <div className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">{cell.label}</div>
-            <div
-              className={
-                "font-serif font-bold text-foreground " +
-                "text-2xl " +
-                (cell.highlight ? (cell.up ? "text-primary" : "") : "")
-              }
-            >
-              {cell.value}
+    <section className="cal-section" aria-label="Recent readings">
+      <div className="section-kicker">Your recent readings</div>
+      <div className="cal" role="list">
+        {days.map((entry, i) => {
+          const isToday = i === days.length - 1;
+          return (
+            <div key={entry.date} role="listitem" className={`cal-day${isToday ? " today" : ""}`}>
+              <div className="d-num">{isToday ? "Today" : weekdayLabel(entry.date)}</div>
+              <div className="d-val">{entry.hypePercent}%</div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
-      <HypeMeter percent={stats.hypePercent} className="mt-4" />
-    </div>
+    </section>
   );
 }
 
+// ---- Leaderboard ---------------------------------------------------------------
+function Leaderboard({ sourceStats, loaded }) {
+  if (!loaded) {
+    return (
+      <div className="board-scroll" aria-busy="true">
+        <div className="h-48 w-full animate-pulse rounded skeleton" />
+      </div>
+    );
+  }
+  if (!sourceStats || sourceStats.length === 0) {
+    return <p className="mt-3 text-sm text-muted-foreground">No sources measured yet.</p>;
+  }
+  return (
+    <section className="board-section" aria-label="Loudest sources">
+      <div className="section-kicker">Ranked sources · average headline intensity</div>
+      <div className="board-scroll">
+        <table className="board">
+          <thead>
+            <tr>
+              <th className="rank">#</th>
+              <th>Source</th>
+              <th className="num">Stories</th>
+              <th className="num" style={{ width: "38%" }}>Avg intensity</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sourceStats.map((s, i) => (
+              <tr key={s.name}>
+                <td className="rank">{i + 1}</td>
+                <td>
+                  <Link className="name" to={`/sources/${encodeURIComponent(s.name)}`}>{s.name}</Link>
+                </td>
+                <td className="num">{s.count}</td>
+                <td className="num">
+                  <span className="sr-only">{`${s.avgHype} of 100`}</span>
+                  <span
+                    aria-hidden="true"
+                    style={{ display: "inline-flex", alignItems: "center", gap: "10px", width: "100%", maxWidth: 260, marginLeft: "auto" }}
+                  >
+                    <span className="fp-bar" style={{ flex: 1 }}>
+                      <span style={{ width: `${s.avgHype}%` }} />
+                    </span>
+                    <span className="val" style={{ minWidth: 28 }}>{s.avgHype}</span>
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+// ---- Analysis panels (kept from the previous design, print-styled) -------------
 function WeekInHype({ series }) {
   if (series.length < 2) return null;
   const values = series.map((e) => e.hypePercent);
   const avg = Math.round(values.reduce((a, b) => a + b, 0) / values.length);
   const peak = series.reduce((a, b) => (b.hypePercent > a.hypePercent ? b : a), series[0]);
   const low = series.reduce((a, b) => (b.hypePercent < a.hypePercent ? b : a), series[0]);
+  const short = (k) => {
+    const [, mo, d] = k.split("-").map(Number);
+    const date = new Date(2000, mo - 1, d);
+    return Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  };
   return (
     <div className="mt-3 grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-3">
       <div>
@@ -149,13 +244,13 @@ function WeekInHype({ series }) {
       <div>
         <div className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">Peak</div>
         <div className="font-serif text-2xl font-bold text-foreground">
-          {peak.hypePercent}% <span className="text-sm font-medium text-muted-foreground">· {weekdayLabel(peak.date)}</span>
+          {peak.hypePercent}% <span className="text-sm font-medium text-muted-foreground">· {short(peak.date)}</span>
         </div>
       </div>
       <div>
         <div className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">Low</div>
         <div className="font-serif text-2xl font-bold text-foreground">
-          {low.hypePercent}% <span className="text-sm font-medium text-muted-foreground">· {weekdayLabel(low.date)}</span>
+          {low.hypePercent}% <span className="text-sm font-medium text-muted-foreground">· {short(low.date)}</span>
         </div>
       </div>
     </div>
@@ -164,8 +259,6 @@ function WeekInHype({ series }) {
 
 const TIERS = ["Measured", "Warm", "Hot", "On Fire"];
 
-// Distribution of the day's stories across the four tiers, with counts,
-// percentages, and the score range each tier covers.
 function Distribution({ stats }) {
   const total = stats?.total ?? 0;
   const bySpin = stats?.bySpin ?? {};
@@ -183,14 +276,14 @@ function Distribution({ stats }) {
                 <span className="ml-1 block normal-case tracking-normal text-muted-foreground">{TIER_RANGES[tier]}</span>
               </span>
               <div
-                className="h-3 flex-1 overflow-hidden rounded-[2px] bg-accent"
+                className="fp-bar h-3 flex-1"
                 role="meter"
                 aria-label={`${tier}: ${n} stories (${pct}%)`}
                 aria-valuenow={n}
                 aria-valuemin={0}
                 aria-valuemax={Math.max(1, total)}
               >
-                <div className="h-full bg-primary/70" style={{ width: `${width}%` }} />
+                <span style={{ width: `${width}%` }} />
               </div>
               <span className="w-16 shrink-0 text-right tabular-nums text-sm text-foreground">
                 {n}<span className="text-muted-foreground"> · {pct}%</span>
@@ -203,19 +296,12 @@ function Distribution({ stats }) {
   );
 }
 
-// "WHY TODAY?" — answers the question with the day's real data, not a repeat
-// of the score. Two honest readings are derived and only shown when true: which
-// signal family is doing the shouting (from the edition's own breakdown), and
-// the single loudest headline (from the edition's stories). If the saved
-// edition predates the breakdown, the panel says so instead of inventing one.
 function WhyToday({ stats, allStories }) {
   const breakdown = stats?.signalBreakdown;
   const shares = useMemo(() => signalShares(breakdown), [breakdown]);
   const keys = breakdown ? CATEGORY_ORDER.filter((k) => shares[k] !== undefined) : [];
 
-  const dominant = keys.length
-    ? [...keys].sort((a, b) => shares[b] - shares[a])[0]
-    : null;
+  const dominant = keys.length ? [...keys].sort((a, b) => shares[b] - shares[a])[0] : null;
 
   const loudest = useMemo(() => {
     if (!Array.isArray(allStories) || allStories.length === 0) return null;
@@ -266,9 +352,6 @@ function WhyToday({ stats, allStories }) {
   );
 }
 
-// "BIGGEST SHIFT" — the categories whose share moved most vs the previous
-// recorded day. Compares real recorded days only; without two days of signal
-// data it renders "NOT ENOUGH HISTORY" rather than a fabricated number.
 function BiggestShift({ stats, history }) {
   const today = stats?.signalBreakdown;
   const prev = history.length >= 2 ? history[1]?.signals : null;
@@ -296,69 +379,112 @@ function BiggestShift({ stats, history }) {
 
 function Panel({ title, children }) {
   return (
-    <div className="rounded-md border border-border bg-card p-5">
+    <div className="sp-callout rounded-none p-5">
       <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{title}</h2>
       {children}
     </div>
   );
 }
 
-export default function HypeIndex({ stats, allStories, loaded, offline, reload }) {
+// ---- PAGE ---------------------------------------------------------------------
+export default function HypeIndex({ stats, allStories, sourceStats, loaded, offline, reload }) {
   const history = useMemo(() => readHypeHistory(), [loaded, stats]);
   const { series } = useMemo(() => hypeTrend(history), [history]);
 
+  const yesterday = history.length >= 2 ? history[1].hypePercent : null;
+  const change = loaded && stats && yesterday !== null ? stats.hypePercent - yesterday : null;
+
   return (
-    <section id="hype-index" className="section">
-      <h1 className="section-title">The Hype Index</h1>
-      <p className="section-note">Share of today's stories that are, let's say, enthusiastic.</p>
+    <div className="hx">
+      {/* Page header */}
+      <header className="page-head pt-10">
+        <span className="fp-kicker">Data · Daily</span>
+        <h1 className="page-title">The Hype Index</h1>
+        <p className="page-deck">
+          One number for how loudly today's AI press is shouting — measured in your own browser against the editions
+          you have actually read.
+        </p>
+      </header>
 
       {loaded && !offline && stats ? (
-        <div className="space-y-6">
-          {/* Stat block + meter */}
-          <Panel title="Today's reading">
-            <StatBlock stats={stats} history={history} series={series} />
-          </Panel>
+        <>
+          {/* Main chart */}
+          <section className="chart-section" aria-label="Hype Index trend">
+            <div className="chart-head-row">
+              <div>
+                <div className="chart-label">Today's reading</div>
+                <div className="chart-value">
+                  {stats.hypePercent}
+                  <span className="text-2xl font-bold text-[color:var(--ink-soft)] sm:text-3xl">%</span>
+                </div>
+              </div>
+              <div className="delta-badge">
+                {change === null ? (
+                  <span className="unit">First reading — no baseline yet</span>
+                ) : (
+                  <>
+                    <span className="num">{change > 0 ? "+" : ""}{change}</span>
+                    <span className="unit">pts vs. yesterday ({yesterday}%)</span>
+                  </>
+                )}
+              </div>
+            </div>
 
-          {/* Last 7 days */}
-          <Panel title="Last 7 days">
-            {series.length > 1 ? (
-              <>
-                <TrendBars series={series} />
+            <TrendChart series={series} />
+
+            <p className="method">
+              {isSmallSample(stats.total)
+                ? `Small edition — ${stats.total} stories isn't enough for this percentage to mean much yet. `
+                : ""}
+              {series.length > 0
+                ? `Calibrated against ${series.length} recorded ${series.length === 1 ? "day" : "days"} in this browser. `
+                : ""}
+              Hype measures loudness, not truth.
+            </p>
+          </section>
+
+          <CalendarStrip series={series} />
+
+          <Leaderboard sourceStats={sourceStats} loaded={loaded} />
+
+          <section className="board-section" aria-label="Analysis">
+            <div className="grid gap-4 lg:grid-cols-2">
+              <Panel title="Why today?"><WhyToday stats={stats} allStories={allStories} /></Panel>
+              <Panel title="Biggest hype shift"><BiggestShift stats={stats} history={history} /></Panel>
+            </div>
+            <div className="mt-4">
+              <Panel title="Hype distribution"><Distribution stats={stats} /></Panel>
+            </div>
+            {series.length >= 2 ? (
+              <div className="sp-callout mt-4 p-5">
+                <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                  Your week so far
+                </h2>
                 <WeekInHype series={series} />
-              </>
-            ) : (
-              <p className="mt-3 max-w-[62ch] text-sm text-muted-foreground">
-                The baseline starts the day you read your first edition. Come back tomorrow and we'll tell you whether the presses are getting louder.
-              </p>
-            )}
-          </Panel>
+              </div>
+            ) : null}
+          </section>
 
-          {/* WHY TODAY + BIGGEST SHIFT */}
-          <div className="grid gap-4 lg:grid-cols-2">
-            <Panel title="Why today?"> <WhyToday stats={stats} allStories={allStories} /> </Panel>
-            <Panel title="Biggest hype shift"> <BiggestShift stats={stats} history={history} /> </Panel>
-          </div>
-
-          {/* Distribution */}
-          <Panel title="Hype distribution">
-            <Distribution stats={stats} />
-          </Panel>
-
-          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-            <Link to="/methodology" className="underline underline-offset-4 hover:text-foreground">How the score works</Link>
-            <span aria-hidden="true">·</span>
-            <span>Hype measures loudness, not truth. History stays in your browser.</span>
+          <p className="method pb-10">
+            How the score works is described on the{" "}
+            <Link to="/methodology">methodology page</Link>. History stays in your browser — nothing about your
+            reading is sent anywhere.
           </p>
-        </div>
+        </>
       ) : offline ? (
-        <EmptyState
-          kicker="THE PRESSES ARE JAMMED"
-          text="The latest wires could not be reached, and there is no saved edition on hand. Try the presses again."
-          action={{ label: "TRY AGAIN", onClick: reload }}
-        />
+        <div className="pb-10">
+          <EmptyState
+            kicker="THE PRESSES ARE JAMMED"
+            text="The latest wires could not be reached, and there is no saved edition on hand. Try the presses again."
+            action={{ label: "TRY AGAIN", onClick: reload }}
+          />
+        </div>
       ) : (
-        <div className="h-6 w-60 animate-pulse rounded skeleton" />
+        <div className="py-10" aria-busy="true">
+          <div className="mx-auto h-20 w-60 animate-pulse rounded skeleton" />
+          <div className="mx-auto mt-6 h-64 w-full max-w-3xl animate-pulse rounded skeleton" />
+        </div>
       )}
-    </section>
+    </div>
   );
 }

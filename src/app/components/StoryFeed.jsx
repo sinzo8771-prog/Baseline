@@ -22,10 +22,25 @@ function fmtDate(iso) {
     : d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
+// Monochrome pip meter from the OpenDesign edition pass — a quiet visual
+// read of the same score the number states, kept out of the accessibility
+// tree because the score text already carries it.
+function IntensityPips({ score }) {
+  const filled = Math.max(1, Math.min(4, Math.ceil((score ?? 0) / 25)));
+  return (
+    <span className="intensity-pips" aria-hidden="true">
+      {[1, 2, 3, 4].map((i) => (
+        <i key={i} className={cn("pip", i <= filled && "on")} />
+      ))}
+    </span>
+  );
+}
+
 function Meta({ story, isNew = false }) {
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
       <SpinBadge spin={story.spin} flags={story.flags} signals={story.signals} hedged={story.hedged} score={story.spinScore} />
+      <IntensityPips score={story.spinScore} />
       <span className="font-mono text-[11px] tabular-nums text-muted-foreground">{story.spinScore}/100</span>
       {isNew ? (
         <span className="rounded-sm border border-primary/60 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-primary">

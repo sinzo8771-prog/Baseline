@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowLeft, BookmarkCheck, ExternalLink } from "lucide-react";
+import { ArrowLeft, ExternalLink } from "lucide-react";
 import SpinBadge from "./../components/SpinBadge.jsx";
 import StoryModal from "../components/StoryModal.jsx";
 import EmptyState from "../components/EmptyState.jsx";
@@ -42,18 +42,18 @@ export default function Saved({ stories }) {
         <ArrowLeft className="size-3.5" aria-hidden="true" /> Back to the edition
       </Link>
 
-      <div className="flex items-center gap-2">
-        <BookmarkCheck className="size-4 text-primary" aria-hidden="true" />
-        <h1 className="font-serif text-2xl font-black tracking-[-0.01em] text-foreground sm:text-3xl">
-          Saved for later
-        </h1>
-      </div>
-      <p className="mt-2 max-w-prose text-sm text-muted-foreground">
-        Kept in your browser. {savedList.length > 0 ? `${savedList.length} saved.` : "Nothing saved yet."}
-      </p>
+      <header className="ed page-head pt-8 pb-6">
+        <span className="fp-kicker">The clipping file</span>
+        <h1 className="page-title" style={{ fontSize: "clamp(36px, 6vw, 68px)" }}>Saved for Later</h1>
+        <p className="page-deck">
+          {savedList.length > 0
+            ? `Kept in your browser. ${savedList.length} saved. Readable even after they age out of today's edition.`
+            : "Kept in your browser. Nothing saved yet."}
+        </p>
+      </header>
 
       {savedList.length > 0 && (
-        <div className="mt-4">
+        <div className="mb-4 text-center">
           <button type="button" className="btn-outline" onClick={() => exportSaved(savedList)}>
             Download saved stories
           </button>

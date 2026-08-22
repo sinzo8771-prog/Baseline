@@ -1,10 +1,9 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, ExternalLink } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { m } from "framer-motion";
-import HypeMeter from "../components/HypeMeter.jsx";
-import SpinBadge from "../components/SpinBadge.jsx";
 import EmptyState from "../components/EmptyState.jsx";
+import Plate from "../components/EditorialPlates.jsx";
 import { readHypeHistory, hypeTrend } from "../lib/hypeHistory.js";
 import { isSmallSample } from "@/lib/pipeline";
 
@@ -18,422 +17,409 @@ function fmtDate(iso) {
 // Restrained editorial reveal: a short fade + drift up, fired once when the
 // section scrolls into view. MotionConfig(reducedMotion="user") already strips
 // transform animation for users who prefer reduced motion, so the fade is all
-// that remains there. The H1 is deliberately excluded from the fade — it is the
-// LCP element, so it paints at the first frame instead of waiting for the
-// observer + animation; the supporting copy below still gets the restrained
-// reveal.
+// that remains there. The lead headline is deliberately excluded from the
+// fade — it is the LCP element, so it paints at the first frame.
 const fade = {
-  initial: { opacity: 0, y: 10 },
+  initial: { opacity: 0, y: 14 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, margin: "-60px" },
-  transition: { duration: 0.4, ease: "easeOut" },
+  transition: { duration: 0.45, ease: "easeOut" },
 };
 
-function Kicker({ children }) {
+// ---- Decorative editorial artwork ------------------------------------------
+// Plates live in components/EditorialPlates.jsx so the story page can share
+// them. See LeadCover below for the landing's own fixed illustration.
+
+// The lead cover — a fixed editorial illustration about the product itself:
+// one loud wire loosening into measured signals. Kept as artwork so no story
+// ever gets a misleading "photo".
+function LeadCover() {
   return (
-    <p className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
-      <span className="inline-block h-px w-6 bg-primary" aria-hidden="true" />
-      {children}
-    </p>
+    <aside className="fp-lead-cover">
+      <svg viewBox="0 0 400 460" role="img" aria-label="Editorial illustration: a loud wire loosening into many small measured signals">
+        <rect width="400" height="460" fill="var(--paper-dim)" />
+        <text x="40" y="50" fontFamily="Fraunces, Georgia, serif" fontSize="20" fontWeight="700" fill="var(--ink)">No. 04</text>
+        <text x="360" y="50" textAnchor="end" fontFamily="Inter, sans-serif" fontSize="11" letterSpacing="2" fill="var(--ink-soft)">EDITION</text>
+        <circle cx="86" cy="120" r="48" fill="none" stroke="var(--ink)" strokeWidth="1" strokeDasharray="3 5" opacity="0.55" />
+        <g fill="var(--ink)">
+          <circle cx="74" cy="108" r="5" />
+          <circle cx="100" cy="110" r="5" />
+          <circle cx="88" cy="134" r="5" />
+          <circle cx="66" cy="130" r="4" />
+          <circle cx="108" cy="134" r="4" />
+        </g>
+        <g fill="none" stroke="var(--ink)" strokeWidth="1" opacity="0.45">
+          <path d="M120 150 C 180 170, 200 190, 250 210" />
+          <path d="M128 158 C 200 150, 250 140, 300 150" />
+          <path d="M122 165 C 160 230, 175 270, 200 308" />
+          <path d="M250 210 C 290 250, 310 270, 332 300" />
+          <path d="M200 308 C 250 350, 270 365, 300 384" />
+        </g>
+        <g fill="var(--ink)">
+          <circle cx="250" cy="210" r="7" />
+          <circle cx="300" cy="150" r="6" />
+          <circle cx="200" cy="308" r="6" />
+          <circle cx="332" cy="300" r="7" />
+          <circle cx="300" cy="384" r="6" />
+        </g>
+        <line x1="128" y1="158" x2="162" y2="250" stroke="var(--vermillion)" strokeWidth="1.5" opacity="0.7" />
+        <circle cx="162" cy="250" r="9" fill="var(--vermillion)" />
+        <g stroke="var(--ink)" strokeWidth="1">
+          <line x1="40" y1="424" x2="360" y2="424" />
+          <line x1="40" y1="440" x2="284" y2="440" />
+        </g>
+      </svg>
+      <div className="cap">Illustration · Loudness, plotted</div>
+    </aside>
   );
 }
 
-// ---- 01 HERO ----------------------------------------------------------------
-// The masthead already carries the nameplate and the tagline, so the in-page
-// hero is the value proposition, not a second copy of the masthead.
-function Hero() {
-  return (
-    <section aria-label="Introduction" className="pb-10 pt-8 sm:pb-12 sm:pt-10">
-      <h1 className="max-w-[15ch] font-serif text-5xl font-black leading-[0.98] tracking-[-0.02em] text-foreground sm:text-7xl">
-        A quiet interface for a very loud industry.
-      </h1>
-      <m.div {...fade}>
-        <p className="mt-6 max-w-[52ch] text-[15px] leading-relaxed text-muted-foreground sm:text-base">
-          The Baseline reads the AI press all day, prints the headlines verbatim, and measures how
-          loudly each one is being told. No summary. No spin added. Just the news, and the signal
-          underneath it.
-        </p>
-        <div className="mt-8 flex flex-wrap gap-3">
-          <Link to="/edition" className="btn-outline inline-flex items-center gap-2">
-            Enter the edition <ArrowRight className="size-3.5" aria-hidden="true" />
-          </Link>
-          <Link to="/hype-index" className="btn-outline inline-flex items-center gap-2">
-            Explore the Hype Index
-          </Link>
+// ---- 01 LEAD ----------------------------------------------------------------
+function Lead({ story, loaded, offline }) {
+  if (!loaded) {
+    return (
+      <div className="fp-lead-grid" aria-busy="true" aria-label="Loading the lead story">
+        <div>
+          <div className="h-5 w-40 animate-pulse rounded skeleton" />
+          <div className="mt-4 h-16 w-full animate-pulse rounded skeleton" />
+          <div className="mt-4 h-24 w-full animate-pulse rounded skeleton" />
         </div>
-      </m.div>
+        <div className="h-72 w-full animate-pulse rounded skeleton" />
+      </div>
+    );
+  }
+  if (!story) {
+    return (
+      <EmptyState
+        kicker={offline ? "THE PRESSES ARE JAMMED" : "THE EDITION IS SETTLING"}
+        text={
+          offline
+            ? "The latest wires could not be reached. Come back when the presses are turning again."
+            : "The first story of the day is still being set in type. Check back shortly."
+        }
+      />
+    );
+  }
+
+  const deck =
+    story.summary?.trim() ||
+    "As published by the wires this hour. Open the story to read it exactly as its author chose to tell it.";
+
+  return (
+    <section id="lead" aria-label="Lead story">
+      <div className="fp-lead-grid">
+        <div>
+          <span className="fp-kicker">The Lead · {story.source}</span>
+          <h1 className="fp-lead-headline">
+            <Link to={`/story/${story.id}`}>{story.title}</Link>
+          </h1>
+          <m.p {...fade} className="fp-lead-deck">
+            {deck}
+          </m.p>
+          <m.div {...fade}>
+            <div className="fp-byline">
+              By <b>{story.source}</b> · {fmtDate(story.publishedAt)} · spin {story.spinScore}/100
+            </div>
+            <Link to={`/story/${story.id}`} className="btn-outline inline-flex items-center gap-2">
+              Read the full story <ArrowRight className="size-3.5" aria-hidden="true" />
+            </Link>
+          </m.div>
+        </div>
+        <LeadCover />
+      </div>
     </section>
   );
 }
 
-// ---- 02 TODAY'S LIVE SNAPSHOT ----------------------------------------------
-function Snapshot({ stats, stories, loaded, offline, history }) {
-  const { delta } = useMemo(() => hypeTrend(history), [history]);
+// ---- 02 THE DAY'S DISPATCH ---------------------------------------------------
+function Dispatch({ stories, loaded, offline }) {
+  const feature = stories[1];
+  const mid = stories[2];
+  const briefs = stories.slice(3, 7);
+  const stds = stories.slice(7, 10);
 
   if (!loaded) {
     return (
-      <div className="space-y-4" aria-busy="true" aria-label="Loading today's reading">
-        <div className="h-20 w-48 animate-pulse rounded skeleton" />
-        <div className="h-6 w-full animate-pulse rounded skeleton" />
-      </div>
+      <section aria-label="Latest stories" aria-busy="true">
+        <div className="section-head">
+          <h2>The Day's Dispatch</h2>
+        </div>
+        <div className="fp-feed-grid">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-56 w-full animate-pulse rounded skeleton" />
+          ))}
+        </div>
+      </section>
     );
   }
-  if (offline && !stats) {
-    return (
-      <EmptyState
-        kicker="THE PRESSES ARE JAMMED"
-        text="The latest wires could not be reached. Your browser can do everything except fetch — come back when the presses are turning again."
-      />
-    );
-  }
-  if (!stats) {
-    return <p className="text-sm text-muted-foreground">DATA TEMPORARILY UNAVAILABLE — the reading will appear once the wires are reached.</p>;
+  if (stories.length === 0 && offline) {
+    return null;
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-        <span className="font-serif text-7xl font-black leading-none tracking-tight text-foreground">
-          {stats.hypePercent}
-          <span className="text-4xl font-bold text-muted-foreground">%</span>
-        </span>
-        <span className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
-          of today's {stats.total} stories read as hype
-        </span>
+    <section id="feed" aria-label="Latest stories">
+      <div className="section-head">
+        <h2>The Day's Dispatch</h2>
+        <Link className="more" to="/edition">All stories →</Link>
       </div>
-      <p className="text-sm text-muted-foreground">
-        {delta === null ? (
-          "Today is your first reading — come back tomorrow for a baseline."
-        ) : delta > 0 ? (
-          `Up ${delta} points from yesterday. The presses are getting louder.`
-        ) : delta < 0 ? (
-          `Down ${Math.abs(delta)} points from yesterday.`
-        ) : (
-          "Flat from yesterday."
-        )}
-      </p>
-      {isSmallSample(stats.total) && (
-        <p className="text-xs text-muted-foreground">
-          Small edition — {stats.total} stories isn't enough for this percentage to mean much yet.
-        </p>
-      )}
-      <HypeMeter percent={stats.hypePercent} />
-      <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-        <Link to="/hype-index" className="underline underline-offset-4 hover:text-foreground">See the full index</Link>
-        <span aria-hidden="true">·</span>
-        <span>Hype measures loudness, not truth.</span>
-      </p>
-    </div>
-  );
-}
 
-// ---- 03 REAL STORY PREVIEW --------------------------------------------------
-function StoryPreview({ stories, loaded, offline }) {
-  const preview = stories.slice(0, 4);
-  if (!loaded) {
-    return (
-      <div className="space-y-3" aria-busy="true" aria-label="Loading the latest stories">
-        {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="h-16 w-full animate-pulse rounded skeleton" />
-        ))}
-      </div>
-    );
-  }
-  if (offline && stories.length === 0) {
-    return <p className="text-sm text-muted-foreground">No saved stories on hand to preview.</p>;
-  }
-  if (preview.length === 0) {
-    return <p className="text-sm text-muted-foreground">The edition is still settling. Check back shortly.</p>;
-  }
-  return (
-    <div>
-      <ol className="divide-y divide-border/60 border-y border-border/60">
-        {preview.map((story) => (
-          <li key={story.id} className="group py-4">
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <SpinBadge spin={story.spin} flags={story.flags} signals={story.signals} hedged={story.hedged} score={story.spinScore} />
-              <span className="font-mono text-[11px] tabular-nums text-muted-foreground">{story.spinScore}/100</span>
-              <span className="text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
-                {story.source} — {fmtDate(story.publishedAt)}
-              </span>
-            </div>
-            <Link
-              to={`/story/${story.id}`}
-              className="mt-1.5 block font-serif text-lg font-bold leading-snug tracking-[-0.01em] text-foreground hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:text-xl"
-            >
-              {story.title}
+      <div className="fp-feed-grid">
+        {feature ? (
+          <m.article {...fade} className="fp-card fp-card-feature">
+            <Link className="block" to={`/story/${feature.id}`}>
+              <Plate index={0} />
+              <span className="fp-kicker">Longer Read</span>
+              <h3>{feature.title}</h3>
+              <div className="meta">{feature.source} · {fmtDate(feature.publishedAt)}</div>
+              {feature.summary ? <p>{feature.summary}</p> : null}
             </Link>
-          </li>
+          </m.article>
+        ) : null}
+
+        {mid ? (
+          <m.article {...fade} className="fp-card fp-card-mid">
+            <Link className="block" to={`/story/${mid.id}`}>
+              <Plate index={1} />
+              <span className="fp-kicker">From the Wires</span>
+              <h3>{mid.title}</h3>
+              <div className="meta">{mid.source} · {fmtDate(mid.publishedAt)}</div>
+            </Link>
+          </m.article>
+        ) : null}
+
+        {briefs.length > 0 ? (
+          <m.div {...fade} className="fp-list-col">
+            <span className="fp-eyebrow">In Brief</span>
+            {briefs.map((s, i) => (
+              <div key={s.id} className="item">
+                <span className="num" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
+                <Link to={`/story/${s.id}`}>
+                  <h3>{s.title}</h3>
+                </Link>
+              </div>
+            ))}
+          </m.div>
+        ) : null}
+
+        {stds.map((s, i) => (
+          <m.article key={s.id} {...fade} className="fp-card fp-card-std">
+            <Link className="block" to={`/story/${s.id}`}>
+              <Plate index={i + 2} />
+              <span className="fp-kicker">Dispatch</span>
+              <h3>{s.title}</h3>
+              <div className="meta">{s.source} · {fmtDate(s.publishedAt)}</div>
+            </Link>
+          </m.article>
         ))}
-      </ol>
-      <Link
-        to="/edition"
-        className="mt-4 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-primary hover:text-foreground"
-      >
-        Read the full edition <ArrowRight className="size-3.5" aria-hidden="true" />
-      </Link>
-    </div>
+      </div>
+    </section>
   );
 }
 
-// ---- 04 WHY THE BASELINE ----------------------------------------------------
-function Why() {
-  const points = [
-    {
-      title: "Headlines verbatim",
-      body: "The Baseline prints what the AI industry actually said — not a paraphrase. You see the claim exactly as its author chose to make it.",
-    },
-    {
-      title: "Spin as detected",
-      body: "Every headline gets scored for the language of enthusiasm: superlatives, absolutes, urgency, and hedges that quietly walk things back.",
-    },
-    {
-      title: "Hype as measured",
-      body: "The Hype Index is one number for how loudly today's coverage is shouting, plus a breakdown of what is doing the shouting.",
-    },
-  ];
-  return (
-    <ol className="divide-y divide-border/60 border-y border-border/60">
-      {points.map((p, i) => (
-        <li key={p.title} className="grid gap-3 py-6 sm:grid-cols-[5rem_1fr] sm:gap-6 sm:py-7">
-          <span className="font-serif text-3xl font-black leading-none text-muted-foreground/40 sm:pt-0.5" aria-hidden="true">
-            {String(i + 1).padStart(2, "0")}
-          </span>
-          <div>
-            <h2 className="font-serif text-xl font-bold text-foreground">{p.title}</h2>
-            <p className="mt-2 max-w-[58ch] text-sm leading-relaxed text-muted-foreground">{p.body}</p>
-          </div>
-        </li>
-      ))}
-    </ol>
-  );
+// ---- 03 HYPE INDEX BAND ------------------------------------------------------
+const CHART_W = 640;
+const CHART_H = 260;
+const PAD_X = 12;
+const PAD_TOP = 28;
+const PAD_BOT = 30;
+
+function buildChart(series) {
+  const n = series.length;
+  const vals = series.map((e) => e.hypePercent);
+  const min = Math.min(...vals);
+  const max = Math.max(...vals, min + 1);
+  const x = (i) => PAD_X + (i * (CHART_W - 2 * PAD_X)) / Math.max(n - 1, 1);
+  const y = (v) => PAD_TOP + (1 - (v - min) / (max - min)) * (CHART_H - PAD_TOP - PAD_BOT);
+  const line = series.map((e, i) => `${i ? "L" : "M"}${x(i).toFixed(1)} ${y(e.hypePercent).toFixed(1)}`).join(" ");
+  const area = `${line} L${x(n - 1).toFixed(1)} ${CHART_H - PAD_BOT} L${PAD_X} ${CHART_H - PAD_BOT} Z`;
+  return { line, area, lastX: x(n - 1), lastY: y(vals[n - 1]) };
 }
 
-// ---- 05 HOW LOUD IS THE STORY (illustrative) --------------------------------
-// These are illustrative examples of the measurement scale, not today's
-// headlines. They match the detector's own test fixtures so the illustration
-// is honest to the underlying rules.
-const ILLUSTRATIVE = [
-  { spin: "Measured", headline: "Company releases a new model." },
-  { spin: "Warm", headline: "New model delivers major performance gains." },
-  { spin: "On Fire", headline: "Revolutionary AI destroys every benchmark." },
-];
-
-function HowLoud() {
-  return (
-    <div>
-      <p className="mb-4 text-xs uppercase tracking-[0.08em] text-muted-foreground">
-        Illustrative examples — not today's headlines
-      </p>
-      <ul className="space-y-3">
-        {ILLUSTRATIVE.map((row) => (
-          <li
-            key={row.spin}
-            className="flex flex-wrap items-center gap-x-4 gap-y-2 border border-border/60 bg-card px-4 py-3"
-          >
-            <SpinBadge spin={row.spin} />
-            <span className="font-serif text-lg text-foreground">{row.headline}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-// ---- 06 THE SIGNAL LOOP -----------------------------------------------------
-const LOOP = [
-  { step: "NEWS", body: "The headline, as published." },
-  { step: "HYPE", body: "How loudly it's told." },
-  { step: "WHY?", body: "Which signals did the work." },
-  { step: "SOURCE", body: "Who's doing the telling." },
-  { step: "TREND", body: "Louder or quieter over time." },
-];
-
-function SignalLoop() {
-  return (
-    <ol className="grid gap-px overflow-hidden rounded-md border border-border bg-border sm:grid-cols-5">
-      {LOOP.map((item, i) => (
-        <li key={item.step} className="relative bg-card p-5">
-          <span className="absolute right-3 top-3 font-serif text-2xl font-black leading-none text-muted-foreground/30" aria-hidden="true">
-            {i + 1}
-          </span>
-          <h2 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary">{item.step}</h2>
-          <p className="mt-2 text-sm leading-snug text-muted-foreground">{item.body}</p>
-        </li>
-      ))}
-    </ol>
-  );
-}
-
-// ---- 07 HYPE INDEX PREVIEW --------------------------------------------------
 function weekdayLabel(dateKey) {
-  const [y, m, d] = dateKey.split("-").map(Number);
-  const date = new Date(y, m - 1, d);
+  const [y, mo, d] = dateKey.split("-").map(Number);
+  const date = new Date(y, mo - 1, d);
   return Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString(undefined, { weekday: "short" }).slice(0, 3);
 }
 
-function MiniTrend({ series }) {
-  if (series.length < 2) return null;
-  const max = Math.max(...series.map((e) => e.hypePercent), 1);
-  return (
-    <div
-      className="mt-4 flex h-20 items-end gap-1.5"
-      role="img"
-      aria-label={`Hype Index, last ${series.length} days: ${series.map((e) => `${e.date}: ${e.hypePercent}%`).join(", ")}`}
-    >
-      {series.map((entry, i) => {
-        const isToday = i === series.length - 1;
-        const h = Math.max(6, Math.round((entry.hypePercent / max) * 52));
-        return (
-          <div key={entry.date} className="flex flex-1 flex-col items-center gap-1">
-            <div
-              className="w-full rounded-[2px]"
-              style={{
-                height: `${h}px`,
-                background: isToday ? "var(--vermillion)" : "var(--ink-soft)",
-                opacity: isToday ? 1 : 0.55,
-              }}
-              title={`${entry.date}: ${entry.hypePercent}%`}
-            />
-            <span className="text-[9px] uppercase tracking-[0.12em] text-muted-foreground">
-              {isToday ? "today" : weekdayLabel(entry.date)}
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
+function HypeBand({ stats, sourceStats, history, loaded }) {
+  const { delta, series } = useMemo(() => hypeTrend(history), [history]);
+  const top = (sourceStats || []).slice(0, 5);
 
-function HypePreview({ stats, history }) {
-  const { series } = useMemo(() => hypeTrend(history), [history]);
-  return (
-    <div>
-      <div className="flex items-baseline gap-3">
-        <span className="font-serif text-5xl font-black leading-none text-foreground">
-          {stats ? stats.hypePercent : "—"}
-          <span className="text-2xl font-bold text-muted-foreground">%</span>
-        </span>
-        <span className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">today</span>
-      </div>
-      <MiniTrend series={series} />
-      <Link
-        to="/hype-index"
-        className="mt-5 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-primary hover:text-foreground"
-      >
-        Open the Hype Index <ArrowRight className="size-3.5" aria-hidden="true" />
-      </Link>
-    </div>
-  );
-}
-
-// ---- 08 SOURCE PREVIEW ------------------------------------------------------
-function SourcePreview({ sourceStats }) {
-  const top = (sourceStats || []).slice(0, 4);
-  if (top.length === 0) {
-    return <p className="text-sm text-muted-foreground">No sources measured yet.</p>;
+  if (!loaded || !stats) {
+    return (
+      <section className="fp-hype" aria-label="Hype Index preview" aria-busy="true">
+        <div className="fp-cols">
+          <div className="h-64 w-full animate-pulse rounded skeleton" />
+          <div className="h-64 w-full animate-pulse rounded skeleton" />
+        </div>
+      </section>
+    );
   }
+
+  const chart = series.length >= 2 ? buildChart(series) : null;
+
   return (
-    <div>
-      <ol className="space-y-3">
-        {top.map((s, i) => (
-          <li key={s.name} className="flex items-baseline gap-4">
-            <span className="w-6 shrink-0 font-serif text-2xl font-black leading-none text-muted-foreground/40" aria-hidden="true">
-              {i + 1}
-            </span>
-            <div className="min-w-0 flex-1">
-              <Link to={`/sources/${encodeURIComponent(s.name)}`} className="font-semibold text-foreground hover:text-primary">
-                {s.name}
-              </Link>
-              <div
-                className="mt-1 h-1.5 w-full overflow-hidden rounded-[2px] bg-accent"
-                role="meter"
-                aria-label={`${s.name}: average headline intensity ${s.avgHype} of 100`}
-                aria-valuenow={s.avgHype}
-                aria-valuemin={0}
-                aria-valuemax={100}
-              >
-                <div className="h-full bg-primary/70" style={{ width: `${s.avgHype}%` }} />
+    <section className="fp-hype" aria-label="Hype Index preview">
+      <div className="fp-cols">
+        <m.div {...fade}>
+          <div className="fp-chart-card">
+            <div className="fp-chart-head">
+              <div>
+                <div className="fp-eyebrow">Baseline Hype Index</div>
+                <div className="val">
+                  {stats.hypePercent}
+                  <span className="text-xl font-semibold text-[color:var(--ink-soft)]">%</span>
+                </div>
               </div>
+              {delta === null || delta === 0 ? (
+                <span className="delta" style={{ color: "var(--ink-soft)" }}>
+                  {delta === 0 ? "Flat / 24h" : "First reading"}
+                </span>
+              ) : (
+                <span className="delta">{delta > 0 ? "▲" : "▼"} {Math.abs(delta)} pts / 24h</span>
+              )}
             </div>
-            <span className="shrink-0 tabular-nums text-sm text-foreground">{s.avgHype}</span>
-          </li>
-        ))}
-      </ol>
-      <Link
-        to="/sources"
-        className="mt-5 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-primary hover:text-foreground"
-      >
-        Who's shouting? <ExternalLink className="size-3.5" aria-hidden="true" />
-      </Link>
-    </div>
+            {chart ? (
+              <svg
+                viewBox={`0 0 ${CHART_W} ${CHART_H}`}
+                role="img"
+                aria-label={`Hype Index over the last ${series.length} days: ${series.map((e) => `${e.date}: ${e.hypePercent}%`).join(", ")}`}
+              >
+                <defs>
+                  <linearGradient id="fpFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--vermillion)" stopOpacity="0.28" />
+                    <stop offset="100%" stopColor="var(--vermillion)" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <g stroke="var(--rule)" strokeWidth="0.6" opacity="0.35">
+                  <line x1={PAD_X} y1={PAD_TOP} x2={CHART_W - PAD_X} y2={PAD_TOP} />
+                  <line x1={PAD_X} y1={(CHART_H - PAD_BOT + PAD_TOP) / 2} x2={CHART_W - PAD_X} y2={(CHART_H - PAD_BOT + PAD_TOP) / 2} />
+                  <line x1={PAD_X} y1={CHART_H - PAD_BOT} x2={CHART_W - PAD_X} y2={CHART_H - PAD_BOT} />
+                </g>
+                <g fontFamily="Inter, sans-serif" fontSize="11" fill="var(--ink-soft)">
+                  <text x={PAD_X} y={CHART_H - 8}>{weekdayLabel(series[0].date)}</text>
+                  <text x={CHART_W - PAD_X} y={CHART_H - 8} textAnchor="end">today</text>
+                </g>
+                <path d={chart.area} fill="url(#fpFill)" />
+                <path d={chart.line} fill="none" stroke="var(--vermillion)" strokeWidth="3" />
+                <circle cx={chart.lastX} cy={chart.lastY} r="5" fill="var(--vermillion)" />
+              </svg>
+            ) : (
+              <p className="fp-chart-foot">Today is your first reading — the trend line draws itself from tomorrow.</p>
+            )}
+            <p className="fp-chart-foot">
+              Your own baseline, stored in this browser{isSmallSample(stats.total) ? ` · small edition (${stats.total} stories)` : ""}
+            </p>
+          </div>
+        </m.div>
+
+        <m.div {...fade}>
+          <span className="fp-eyebrow">Loudest Sources Today</span>
+          {top.length === 0 ? (
+            <p className="mt-3 text-sm text-muted-foreground">No sources measured yet.</p>
+          ) : (
+            <ul className="fp-rank mt-2">
+              {top.map((s) => (
+                <li key={s.name}>
+                  <div className="top">
+                    <Link className="name" to={`/sources/${encodeURIComponent(s.name)}`}>{s.name}</Link>
+                    <span className="score">{s.avgHype}</span>
+                  </div>
+                  <div
+                    className="fp-bar"
+                    role="meter"
+                    aria-label={`${s.name}: average headline intensity ${s.avgHype} of 100`}
+                    aria-valuenow={s.avgHype}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                  >
+                    <span style={{ width: `${s.avgHype}%` }} />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+          <Link
+            to="/hype-index"
+            className="mt-5 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-primary hover:text-foreground"
+          >
+            Open the full Hype Index <ArrowRight className="size-3.5" aria-hidden="true" />
+          </Link>
+        </m.div>
+      </div>
+    </section>
   );
 }
 
-// ---- 09 FINAL CTA -----------------------------------------------------------
-function FinalCta() {
+// ---- 04 SUBSCRIBE BAND -------------------------------------------------------
+// There is no email backend — the honest subscription here is the RSS feed,
+// so the signup control copies the feed URL instead of pretending to enroll.
+function SubscribeBand({ showToast }) {
+  const [status, setStatus] = useState({ text: "", err: false });
+
+  const copyFeed = async (e) => {
+    e.preventDefault();
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/feed.xml`);
+      setStatus({ text: "Feed link copied — paste it into your RSS reader.", err: false });
+      showToast?.("RSS feed link copied");
+    } catch {
+      setStatus({
+        text: (
+          <>
+            Couldn't reach the clipboard — open{" "}
+            <a href="/feed.xml" type="application/rss+xml">/feed.xml</a> directly.
+          </>
+        ),
+        err: true,
+      });
+    }
+  };
+
   return (
-    <div className="rounded-md border border-border bg-card p-8 text-center sm:p-12">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">The news is loud enough</p>
-      <p className="mx-auto mt-4 max-w-[22ch] font-serif text-4xl font-black leading-tight tracking-[-0.02em] text-foreground sm:text-5xl">
-        Read it differently.
-      </p>
-      <Link
-        to="/edition"
-        className="btn-outline mt-8 inline-flex items-center gap-2"
-      >
-        Enter today's edition <ArrowRight className="size-3.5" aria-hidden="true" />
-      </Link>
-    </div>
+    <section className="fp-news" aria-label="Subscribe">
+      <div className="fp-cols">
+        <m.div {...fade}>
+          <span className="fp-kicker">The Morning Edition</span>
+          <h2>One feed. Every story. Nothing else.</h2>
+          <p className="lede">
+            Take the whole edition with you — headlines as published, spin as detected, hype as measured — straight
+            into any reader you already trust.
+          </p>
+        </m.div>
+        <m.div {...fade}>
+          <form className="fp-signup" onSubmit={copyFeed}>
+            <input
+              type="text"
+              readOnly
+              value="/feed.xml"
+              aria-label="RSS feed address"
+              onFocus={(e) => e.target.select()}
+            />
+            <button className="fp-btn-primary" type="submit">Copy feed link</button>
+          </form>
+          <p className={`fp-news-status${status.err ? " err" : ""}`} role="status" aria-live="polite">
+            {status.text}
+          </p>
+        </m.div>
+      </div>
+    </section>
   );
 }
 
 // ---- LANDING ----------------------------------------------------------------
-export default function Landing({ stories, stats, sourceStats, offline, loaded }) {
+export default function Landing({ stories, stats, sourceStats, offline, loaded, showToast }) {
   const history = useMemo(() => readHypeHistory(), [loaded, stats]);
 
   return (
-    <div>
-      <Hero />
+    <div className="fp">
+      <Lead story={stories[0]} loaded={loaded} offline={offline} />
 
-      <section className="section" aria-label="Today's live snapshot">
-        <Kicker>Today's live snapshot</Kicker>
-        <Snapshot stats={stats} stories={stories} loaded={loaded} offline={offline} history={history} />
-      </section>
+      <Dispatch stories={stories} loaded={loaded} offline={offline} />
 
-      <section className="section" aria-label="Latest stories">
-        <Kicker>Fresh off the wires</Kicker>
-        <StoryPreview stories={stories} loaded={loaded} offline={offline} />
-      </section>
+      <HypeBand stats={stats} sourceStats={sourceStats} history={history} loaded={loaded} />
 
-      <section className="section" aria-label="Why The Baseline">
-        <Kicker>Why The Baseline</Kicker>
-        <Why />
-      </section>
-
-      <section className="section" aria-label="How loud is the story">
-        <Kicker>How loud is the story</Kicker>
-        <HowLoud />
-      </section>
-
-      <section className="section" aria-label="How the signal moves">
-        <Kicker>From headline to trend</Kicker>
-        <SignalLoop />
-      </section>
-
-      <section className="section" aria-label="Hype Index preview">
-        <Kicker>The Hype Index</Kicker>
-        <HypePreview stats={stats} history={history} />
-      </section>
-
-      <section className="section" aria-label="Sources preview">
-        <Kicker>Who's shouting</Kicker>
-        <SourcePreview sourceStats={sourceStats} />
-      </section>
-
-      <section className="section" aria-label="Get started">
-        <FinalCta />
-      </section>
+      <SubscribeBand showToast={showToast} />
     </div>
   );
 }

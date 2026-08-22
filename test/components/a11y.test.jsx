@@ -149,13 +149,17 @@ describe("axe accessibility", () => {
       </MemoryRouter>,
     );
     await assertNoViolations(container);
-    // Regression guard for the 99b2de1 trend fix: the 7-day chart plots
-    // oldest-first, so the last bar is "today" and the first is not.
-    const chart = container.querySelector('div[role="img"][aria-label^="Hype Index over"]');
-    const bars = chart ? [...chart.querySelectorAll(":scope > div")] : [];
-    expect(bars.length).toBeGreaterThan(1);
-    expect(bars[bars.length - 1].textContent.toLowerCase()).toContain("today");
-    expect(bars[0].textContent.toLowerCase()).not.toContain("today");
+    // Regression guard for the 99b2de1 trend fix: the trend plots
+    // oldest-first, so the newest reading sits at the end of both the SVG
+    // series listing and the calendar strip, never at the front.
+    const chart = container.querySelector('svg[role="img"][aria-label^="Hype Index over"]');
+    expect(chart).not.toBeNull();
+    const cal = container.querySelector('div[role="list"]');
+    expect(cal).not.toBeNull();
+    const days = [...cal.querySelectorAll('[role="listitem"]')];
+    expect(days.length).toBeGreaterThan(1);
+    expect(days[days.length - 1].textContent.toLowerCase()).toContain("today");
+    expect(days[0].textContent.toLowerCase()).not.toContain("today");
   });
 
   it("WeekInReview (empty and partial-week) has no violations", async () => {

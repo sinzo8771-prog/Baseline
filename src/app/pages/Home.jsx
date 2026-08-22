@@ -166,7 +166,13 @@ export default function Home({ stories, offline, loaded, reload, servedFromCache
 
   return (
     <section id="latest" aria-label="Latest stories">
-      <h1 className="sr-only">Today's Edition</h1>
+      <header className="ed page-head pt-8 pb-6">
+        <span className="fp-kicker">Today's Edition</span>
+        <h1 className="page-title" style={{ fontSize: "clamp(36px, 6vw, 68px)" }}>The Day In</h1>
+        <p className="page-deck">
+          Every story the wires filed — headlines verbatim, ranked fresh-first, hype measured.
+        </p>
+      </header>
 
       {!loaded ? <PressingWires /> : null}
 

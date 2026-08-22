@@ -12,41 +12,45 @@ function Leaderboard({ stats, history }) {
   }
   const rows = [...stats].sort((a, b) => b.avgHype - a.avgHype || b.count - a.count);
   return (
-    <table className="mt-4 w-full border-collapse text-left" role="table" aria-label="Who's shouting — average headline intensity by source">
-      <caption className="sr-only">Average headline intensity by source</caption>
-      <thead>
-        <tr className="border-b border-border text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
-          <th className="py-2 pr-4 font-medium">Source</th>
-          <th className="py-2 pr-4 text-right font-medium">Stories</th>
-          <th className="py-2 pr-4 text-right font-medium">Avg. hype</th>
-          <th className="py-2 text-right font-medium">Trend</th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((s) => (
-          <tr key={s.name} className="border-b border-border/60">
-            <td className="py-2.5 pr-4">
-              <Link
-                to={`/sources/${encodeURIComponent(s.name)}`}
-                className="font-medium text-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-              >
-                {s.name}
-              </Link>
-              {isMirroredFeed(s.name) ? (
-                <span className="ml-2 inline-block rounded-sm border border-border/70 px-1.5 py-px text-[9px] uppercase tracking-[0.1em] text-muted-foreground">
-                  mirrored feed
-                </span>
-              ) : null}
-            </td>
-            <td className="py-2.5 pr-4 text-right tabular-nums text-muted-foreground">{s.count}</td>
-            <td className="py-2.5 pr-4 text-right tabular-nums text-foreground">{s.avgHype}</td>
-            <td className="py-2.5 text-right">
-              <TrendCell reading={sourceTrendReading(history, s.name)} series={sourceSeries(history, s.name)} />
-            </td>
+    <div className="board-scroll">
+      <table className="board" role="table" aria-label="Who's shouting — average headline intensity by source">
+        <caption className="sr-only">Average headline intensity by source</caption>
+        <thead>
+          <tr>
+            <th className="rank">#</th>
+            <th>Source</th>
+            <th className="num">Stories</th>
+            <th className="num">Avg. hype</th>
+            <th className="num">Trend</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {rows.map((s, i) => (
+            <tr key={s.name}>
+              <td className="rank">{i + 1}</td>
+              <td>
+                <Link
+                  to={`/sources/${encodeURIComponent(s.name)}`}
+                  className="name"
+                >
+                  {s.name}
+                </Link>
+                {isMirroredFeed(s.name) ? (
+                  <span className="ml-2 inline-block rounded-sm border border-border/70 px-1.5 py-px align-middle font-sans text-[9px] uppercase tracking-[0.1em] text-muted-foreground">
+                    mirrored feed
+                  </span>
+                ) : null}
+              </td>
+              <td className="num">{s.count}</td>
+              <td className="num val">{s.avgHype}</td>
+              <td className="num">
+                <TrendCell reading={sourceTrendReading(history, s.name)} series={sourceSeries(history, s.name)} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -78,12 +82,16 @@ function FeedStatus({ sources }) {
 export default function Sources({ sources, sourceStats: stats, loaded, offline, reload }) {
   const history = readSourceHistory();
   return (
-    <section id="sources" className="section">
-      <h1 className="section-title">Who's Shouting?</h1>
-      <p className="section-note">
-        Average headline intensity per source — a measurement, not a judgment. The wire room reports who is talking, and how loud. Dead sources are skipped automatically.
-      </p>
-      <div className="mt-4 flex flex-wrap items-center gap-3">
+    <div className="ed">
+      <header className="page-head pt-10">
+        <span className="fp-kicker">The wire room</span>
+        <h1 className="page-title">Who's Shouting?</h1>
+        <p className="page-deck">
+          Average headline intensity per source — a measurement, not a judgment. The wire room reports who is talking,
+          and how loud. Dead sources are skipped automatically.
+        </p>
+      </header>
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
         <button type="button" className="btn-outline" onClick={exportOPML}>Download OPML</button>
         <a className="btn-outline" href="/feed.xml" type="application/rss+xml" rel="alternate">RSS feed</a>
         <a className="btn-outline" href="/feed.json" type="application/feed+json" rel="alternate">JSON Feed</a>
@@ -105,16 +113,19 @@ export default function Sources({ sources, sourceStats: stats, loaded, offline, 
                 </button>
               </p>
             ) : null}
-            <Leaderboard stats={stats} history={history} />
-            <h2 className="mt-8 text-sm font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-              Who's on the wire
-            </h2>
+            <div className="hx">
+              <section className="board-section" aria-label="Loudest sources">
+                <div className="section-kicker">Ranked sources · average headline intensity</div>
+                <Leaderboard stats={stats} history={history} />
+              </section>
+            </div>
+            <h2 className="ed section-kicker mt-8">Who's on the wire</h2>
             <FeedStatus sources={sources} />
           </>
         )
       ) : (
         <div className="h-6 w-60 animate-pulse rounded skeleton" />
       )}
-    </section>
+    </div>
   );
 }
