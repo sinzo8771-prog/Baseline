@@ -36,7 +36,7 @@ const CMD_LABEL = IS_MAC ? "⌘K" : "Ctrl K";
 
 function ShortcutsHelp({ onClose }) {
   return (
-    <div className="mt-3 rounded-md border border-border bg-card p-5" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
+    <div className="mt-3 rounded-[2px] border border-border bg-card p-5" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
       <div className="mb-2 flex items-center justify-between">
         <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Keyboard</h3>
         <button
@@ -74,7 +74,7 @@ const SORTS = [
 
 function SkeletonCard() {
   return (
-    <div className="rounded-md border border-border/70 bg-card p-5">
+    <div className="rounded-[2px] border border-border/70 bg-card p-5">
       <div className="h-4 w-24 animate-pulse rounded-full skeleton" />
       <div className="mt-3 h-5 w-11/12 animate-pulse rounded skeleton" />
       <div className="mt-2 h-5 w-8/12 animate-pulse rounded skeleton" />
@@ -84,7 +84,7 @@ function SkeletonCard() {
 
 function LeadSkeleton() {
   return (
-    <div className="mb-8 rounded-md border border-border/80 bg-card p-6 sm:p-8">
+    <div className="mb-8 rounded-[2px] border border-border/80 bg-card p-6 sm:p-8">
       <div className="h-4 w-20 animate-pulse rounded-full skeleton" />
       <div className="mt-4 h-8 w-9/12 animate-pulse rounded skeleton" />
       <div className="mt-3 h-8 w-6/12 animate-pulse rounded skeleton" />
@@ -104,13 +104,17 @@ function PressingWires() {
   );
 }
 
-export default function Home({ stories, offline, loaded, reload, servedFromCache, savedAt, lastVisit = null }) {
+export default function Home({ stories, offline, loaded, reload, servedFromCache, savedAt, lastVisit = null, sources = [], settled = false }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [filter, setFilter] = useState("all");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState("edited");
   const [view, setView] = useState("edition");
   const [helpOpen, setHelpOpen] = useState(false);
+  // Advanced filters (spin level + the spin-scale legend) live behind the
+  // Filter disclosure so the primary row — search, view, sort — is the only
+  // control surface between the page head and the first story.
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const searchRef = useRef(null);
 
   // "/" focuses search, "?" toggles the shortcuts help. The hook's typing and
@@ -163,6 +167,14 @@ export default function Home({ stories, offline, loaded, reload, servedFromCache
   const clearSource = () => setSearchParams({}, { replace: true });
 
   const hasActiveFilters = Boolean(query.trim()) || sourceFilter || filter !== "all";
+  // Filters that narrow the edition itself (spin level, source); plain search
+  // text doesn't count — the Filter badge tracks the disclosure's scope.
+  const activeFilterCount = (filter !== "all" ? 1 : 0) + (sourceFilter ? 1 : 0);
+
+  // Partial ingestion, surfaced calmly once the final tally is in: a reader
+  // should know when today's edition is thinner because some wires did not
+  // answer — without alarm styling that implies the page is broken.
+  const failedSources = loaded && settled ? sources.filter((s) => !s.ok) : [];
 
   return (
     <section id="latest" aria-label="Latest stories">
@@ -190,6 +202,19 @@ export default function Home({ stories, offline, loaded, reload, servedFromCache
           ) : (
             "The latest wires could not be reached. "
           )}
+          <button type="button" className="underline underline-offset-4 hover:text-foreground" onClick={reload}>
+            TRY AGAIN
+          </button>
+        </p>
+      ) : null}
+
+      {loaded && !offline && failedSources.length > 0 ? (
+        <p
+          className="mb-4 border border-border/70 bg-card px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-foreground"
+          role="status"
+        >
+          {failedSources.length} of {sources.length} sources did not respond today — the edition may be thinner than
+          usual.{" "}
           <button type="button" className="underline underline-offset-4 hover:text-foreground" onClick={reload}>
             TRY AGAIN
           </button>
@@ -255,11 +280,21 @@ export default function Home({ stories, offline, loaded, reload, servedFromCache
               </button>
             ))}
           </div>
+          <button
+            type="button"
+            className={cn("filter-toggle", activeFilterCount > 0 && "active")}
+            aria-expanded={filtersOpen}
+            aria-controls="edition-filters"
+            onClick={() => setFiltersOpen((o) => !o)}
+          >
+            Filter
+            {activeFilterCount > 0 ? <span className="filter-count" aria-hidden="true">{activeFilterCount}</span> : null}
+          </button>
         </div>
       </div>
 
       {sourceFilter ? (
-        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] uppercase tracking-[0.08em]">
+        <div className="mb-3 inline-flex items-center gap-2 rounded-[2px] border border-border bg-card px-3 py-1.5 text-[11px] uppercase tracking-[0.08em]">
           <span className="font-semibold text-foreground">{sourceFilter}</span>
           <button
             type="button"
@@ -272,25 +307,23 @@ export default function Home({ stories, offline, loaded, reload, servedFromCache
         </div>
       ) : null}
 
-      <div
-        className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[10px] uppercase tracking-[0.08em] text-muted-foreground"
-        role="group"
-        aria-label="The spin scale"
-      >
-        <span className="font-semibold text-foreground">The spin scale</span>
-        {FILTERS.filter((f) => f !== "all").map((f) => (
-          <span key={f} className="inline-flex items-center gap-1.5">
-            <SpinBadge spin={f} />
-          </span>
-        ))}
-      </div>
-      <SelectorChips
-        className="mb-6"
-        options={FILTERS}
-        value={filter}
-        counts={counts}
-        onChange={setFilter}
-      />
+      {filtersOpen ? (
+        <div id="edition-filters" className="mb-4 rounded-[2px] border border-border bg-card p-4">
+          <div
+            className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[10px] uppercase tracking-[0.08em] text-muted-foreground"
+            role="group"
+            aria-label="The spin scale"
+          >
+            <span className="font-semibold text-foreground">The spin scale</span>
+            {FILTERS.filter((f) => f !== "all").map((f) => (
+              <span key={f} className="inline-flex items-center gap-1.5">
+                <SpinBadge spin={f} />
+              </span>
+            ))}
+          </div>
+          <SelectorChips className="mt-3" options={FILTERS} value={filter} counts={counts} onChange={setFilter} />
+        </div>
+      ) : null}
 
       {loaded && hasActiveFilters ? (
         <p className="mb-3 text-[11px] uppercase tracking-[0.08em] text-muted-foreground" role="status">

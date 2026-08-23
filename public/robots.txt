@@ -1,4 +1,6 @@
+# Canonical origin lives in src/lib/site.js - update together when the domain changes.
 User-agent: *
 Allow: /
 
 Sitemap: https://the-baseline.baseline-news.workers.dev/sitemap.xml
+

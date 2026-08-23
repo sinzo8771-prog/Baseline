@@ -443,6 +443,48 @@ body {
   }
   .sort-control button:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 2px; }
 
+  /* Filter disclosure toggle — styled as a sibling of the sort-control
+     groups so the primary row reads as one control surface. */
+  .filter-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 42px;
+    padding: 0 12px;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    background: var(--paper);
+    font-family: inherit;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .filter-toggle:hover { color: var(--ink); }
+  .filter-toggle.active { border-color: var(--ink); color: var(--ink); }
+  .filter-toggle[aria-expanded="true"] {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
+  }
+  .filter-toggle:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 2px; }
+  .filter-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 9999px;
+    background: var(--vermillion);
+    color: var(--paper);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+
   .toast-region {
     position: fixed;
     bottom: 24px;
@@ -570,6 +612,71 @@ body {
   white-space: nowrap;
 }
 .fp .section-head .more:hover { color: var(--vermillion); }
+
+/* Hero — the Hype Index leads the front page */
+.fp .fp-hero { padding: clamp(20px, 3vw, 36px) 0 clamp(44px, 6vw, 72px); }
+.fp-hero-grid {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: clamp(28px, 4vw, 56px);
+  align-items: center;
+}
+.fp-hero-lede {
+  font-family: Fraunces, Georgia, serif;
+  font-size: clamp(18px, 2.2vw, 24px);
+  line-height: 1.45;
+  color: var(--ink);
+  max-width: 48ch;
+  margin: 16px 0 26px;
+}
+.fp-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+}
+.fp-btn-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 26px;
+  text-decoration: none;
+}
+.fp-hero-score {
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--paper-dim);
+  padding: 26px 28px;
+}
+.fp-hero-score .val {
+  font-family: Fraunces, Georgia, serif;
+  font-weight: 700;
+  font-size: clamp(64px, 9vw, 104px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  margin: 10px 0 6px;
+}
+.fp-hero-score .unit {
+  font-size: 0.38em;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-left: 2px;
+}
+.fp-hero-score .descriptor {
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+  border-top: 1px solid var(--rule);
+  padding-top: 12px;
+  margin: 14px 0 0;
+}
+.fp-hero-score .meta {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 10px 0 0;
+}
 
 /* Lead story */
 .fp-lead-grid {
@@ -842,6 +949,7 @@ body {
 .fp-news-status a:hover { color: var(--vermillion); }
 
 @media (max-width: 900px) {
+  .fp-hero-grid,
   .fp-lead-grid,
   .fp-hype .fp-cols,
   .fp-news .fp-cols { grid-template-columns: 1fr; }

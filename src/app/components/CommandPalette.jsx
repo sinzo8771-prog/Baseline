@@ -118,7 +118,7 @@ export default function CommandPalette({ open, onClose, stories }) {
         role="dialog"
         aria-modal="true"
         aria-label="Command palette"
-        className="fixed inset-x-4 top-24 z-50 mx-auto max-h-[70vh] w-full max-w-xl overflow-hidden rounded-lg border border-border bg-card shadow-lg sm:inset-x-8"
+        className="fixed inset-x-4 top-24 z-50 mx-auto max-h-[70vh] w-full max-w-xl overflow-hidden rounded-[2px] border border-border bg-card shadow-lg sm:inset-x-8"
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -8 }}

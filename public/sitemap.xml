@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Canonical origin lives in src/lib/site.js - update together when the domain changes. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://the-baseline.baseline-news.workers.dev/</loc>
@@ -33,3 +34,4 @@
     <priority>0.5</priority>
   </url>
 </urlset>
+

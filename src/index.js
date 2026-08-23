@@ -18,6 +18,7 @@ import { editedRank } from "./lib/ranking.js";
 import { MAX_PER_FEED } from "./lib/feeds.js";
 import { extractStories } from "./lib/xmlStories.js";
 import { buildJsonFeed, buildRssFeed } from "./lib/feedBuilders.js";
+import { SITE_URL } from "./lib/site.js";
 
 // Several publisher RSS feeds block Cloudflare Workers egress IPs as bot traffic.
 // Using a real browser User-Agent bypasses most of those blocks.
@@ -66,8 +67,9 @@ function logUpstreamFailure(scope, name, detail) {
   console.log(`[feed:${scope}] "${name}" ${detail}`);
 }
 
-// Canonical origin for the feed's self-links (story permalinks, feed_url).
-const FEED_BASE_URL = "https://the-baseline.baseline-news.workers.dev";
+// Canonical origin for the feed's self-links (story permalinks, feed_url)
+// lives in lib/site.js, shared with the client's SEO code.
+const FEED_BASE_URL = SITE_URL;
 // The self-published feed is rebuilt at most this often. RSS readers poll
 // frequently; the edge cache absorbs that, so upstream feeds are hit once per
 // window and the aggregation CPU cost stays amortized.

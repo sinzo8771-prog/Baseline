@@ -36,20 +36,32 @@ function IntensityPips({ score }) {
   );
 }
 
-function Meta({ story, isNew = false }) {
+// Identity line — who published it, and when. The source carries weight
+// (semibold ink); the timestamp stays quiet, so the eye reads headline,
+// then source, then time — not one flat strip of equal-weight metadata.
+function SourceLine({ story, isNew = false }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-      <SpinBadge spin={story.spin} flags={story.flags} signals={story.signals} hedged={story.hedged} score={story.spinScore} />
-      <IntensityPips score={story.spinScore} />
-      <span className="font-mono text-[11px] tabular-nums text-muted-foreground">{story.spinScore}/100</span>
+    <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] uppercase tracking-[0.08em]">
+      <span className="font-semibold text-foreground">{story.source}</span>
+      <span className="text-muted-foreground">{fmtDate(story.publishedAt)}</span>
       {isNew ? (
-        <span className="rounded-sm border border-primary/60 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-primary">
+        <span className="rounded-[2px] border border-primary/60 px-1.5 py-0.5 text-[9px] font-bold tracking-[0.12em] text-primary">
           New
         </span>
       ) : null}
-      <span className="text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
-        {story.source} — {fmtDate(story.publishedAt)}
-      </span>
+    </div>
+  );
+}
+
+// The hype signal lives in its own row below the identity line, so the
+// measurement reads as one quiet instrument panel — badge, pips, number —
+// rather than competing with the headline for first glance.
+function SignalLine({ story }) {
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+      <SpinBadge spin={story.spin} flags={story.flags} signals={story.signals} hedged={story.hedged} score={story.spinScore} />
+      <IntensityPips score={story.spinScore} />
+      <span className="font-mono text-[11px] tabular-nums text-muted-foreground">{story.spinScore}/100</span>
     </div>
   );
 }
@@ -60,7 +72,7 @@ function CardImage({ story, isLead = false }) {
   return (
     <div
       className={cn(
-        "card-img-slot mb-4 -mx-5 -mt-5 rounded-t-md sm:-mx-6 sm:-mt-6 sm:rounded-t-md",
+        "card-img-slot mb-4 -mx-5 -mt-5 rounded-t-[2px] sm:-mx-6 sm:-mt-6 sm:rounded-t-[2px]",
         !show && "card-img-placeholder",
       )}
     >
@@ -83,10 +95,8 @@ function CardShell({ story, isLead = false, onOpen, active = false, isNew = fals
     <m.article
       id={`story-${story.id}`}
       layoutId={`story-${story.id}`}
-      whileHover={{ y: -2 }}
-      transition={{ type: "spring", stiffness: 400, damping: 30 }}
       className={cn(
-        "group relative block rounded-md border border-border/70 bg-card p-5 text-left transition-colors duration-150 sm:p-6",
+        "group relative block rounded-[2px] border border-border/70 bg-card p-5 text-left transition-colors duration-150 sm:p-6",
         "hover:border-primary/50 hover:bg-accent/40 hover:shadow-sm",
         isLead && "mb-10 border-t-2 border-border/80 p-6 sm:p-8",
         active && "border-primary ring-2 ring-primary/30",
@@ -94,15 +104,18 @@ function CardShell({ story, isLead = false, onOpen, active = false, isNew = fals
       style={isLead ? { borderTopColor: "var(--vermillion)" } : undefined}
     >
             <CardImage story={story} isLead={isLead} />
-      <Meta story={story} isNew={isNew} />
       <h2
         className={cn(
-          "mt-3 break-words font-serif font-bold leading-snug tracking-[-0.01em] text-foreground",
+          "break-words font-serif font-bold leading-snug tracking-[-0.01em] text-foreground",
           isLead ? "text-3xl sm:text-4xl" : "line-clamp-3 text-lg sm:text-xl",
         )}
       >
         {story.title}
       </h2>
+      <div className="mt-2.5">
+        <SourceLine story={story} isNew={isNew} />
+      </div>
+      <SignalLine story={story} />
       {isLead && story.summary ? (
         <p className="mt-3 max-w-[60ch] text-[15px] leading-relaxed text-muted-foreground">{story.summary}</p>
       ) : null}
@@ -118,7 +131,7 @@ function CardShell({ story, isLead = false, onOpen, active = false, isNew = fals
         aria-label={`Open story: ${story.title}`}
         aria-haspopup="dialog"
         onClick={onOpen}
-        className="absolute inset-0 z-0 cursor-pointer rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        className="absolute inset-0 z-0 cursor-pointer rounded-[2px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
       />
     </m.article>
   );

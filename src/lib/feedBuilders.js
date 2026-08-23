@@ -8,6 +8,7 @@
 // ignore it.
 
 import { editionNumber } from "./pipeline.js";
+import { SITE_URL } from "./site.js";
 
 export const FEED_DESCRIPTION = "A daily RSS edition from the AI industry and its chroniclers. Headlines as published, spin as detected, hype as measured.";
 
@@ -85,7 +86,7 @@ export function buildRssFeed(stories, { baseUrl, feedUrl, title = "The Baseline 
 
   return [
     `<?xml version="1.0" encoding="UTF-8"?>`,
-    `<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:ns="https://the-baseline.baseline-news.workers.dev/ns">`,
+    `<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:ns="${SITE_URL}/ns">`,
     "  <channel>",
     `    <title>${escapeXml(title)}</title>`,
     `    <link>${escapeXml(`${baseUrl}/`)}</link>`,

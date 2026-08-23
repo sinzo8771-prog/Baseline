@@ -36,7 +36,7 @@ function Leaderboard({ stats, history }) {
                   {s.name}
                 </Link>
                 {isMirroredFeed(s.name) ? (
-                  <span className="ml-2 inline-block rounded-sm border border-border/70 px-1.5 py-px align-middle font-sans text-[9px] uppercase tracking-[0.1em] text-muted-foreground">
+                  <span className="ml-2 inline-block rounded-[2px] border border-border/70 px-1.5 py-px align-middle font-sans text-[9px] uppercase tracking-[0.08em] text-muted-foreground">
                     mirrored feed
                   </span>
                 ) : null}

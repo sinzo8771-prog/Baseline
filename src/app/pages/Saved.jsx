@@ -67,14 +67,14 @@ export default function Saved({ stories }) {
           action={{ label: "Go to the edition", onClick: () => (window.location.href = "/edition") }}
         />
       ) : (
-        <ul className="mt-6 grid grid-cols-1 gap-px overflow-hidden rounded-md border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-6 grid grid-cols-1 gap-px overflow-hidden rounded-[2px] border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
           {savedList.map((story) => (
             <li key={story.id} className="group relative flex min-h-0 flex-col bg-card p-5">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                   {story.source || "Unknown source"}
                 </span>
-                <span className="text-[10px] uppercase tracking-[0.06em] text-muted-foreground">
+                <span className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
                   {fmtDate(story.publishedAt)}
                 </span>
               </div>
@@ -104,7 +104,7 @@ export default function Saved({ stories }) {
                 aria-haspopup="dialog"
                 onClick={() => setSelectedId(story.id)}
                 className={cn(
-                  "absolute inset-0 z-0 cursor-pointer rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                  "absolute inset-0 z-0 cursor-pointer rounded-[2px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                 )}
               />
             </li>

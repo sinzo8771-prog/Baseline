@@ -4,6 +4,10 @@ import { test as base } from "@playwright/test";
 // carry no images: a missing image would hit the network in the test browser
 // and spam the console with net::ERR resource errors, which would drown out
 // the "no console errors" assertion in the navigation smoke test.
+// Timestamps hang off a fixed epoch (not Date.now()) so visual snapshots and
+// displayed clock times are identical on every run.
+const FIXTURE_EPOCH = Date.parse("2026-08-23T10:00:00Z");
+
 export const FIXTURES = {
   OpenAI: [
     ["OpenAI ships a faster model", 12],
@@ -23,7 +27,7 @@ function slug(name) {
 function rssFeed(name, items) {
   const entries = items
     .map(([title, minutesAgo]) => {
-      const date = new Date(Date.now() - minutesAgo * 60_000).toUTCString();
+      const date = new Date(FIXTURE_EPOCH - minutesAgo * 60_000).toUTCString();
       return [
         "<item>",
         `<title><![CDATA[${title}]]></title>`,

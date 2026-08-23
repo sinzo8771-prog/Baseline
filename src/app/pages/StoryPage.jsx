@@ -7,9 +7,8 @@ import BookmarkButton from "../components/BookmarkButton.jsx";
 import Plate, { PLATES } from "../components/EditorialPlates.jsx";
 import { copyText, storyUrl } from "../lib/copyLink.js";
 import { sortStories } from "@/lib/ranking";
+import { SITE_URL as SITE } from "@/lib/site";
 import { cn } from "@/lib/utils";
-
-const SITE = "https://the-baseline.baseline-news.workers.dev";
 
 function fmtFull(iso) {
   const d = new Date(iso);

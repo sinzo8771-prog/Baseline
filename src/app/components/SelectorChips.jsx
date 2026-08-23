@@ -8,7 +8,7 @@ export default function SelectorChips({ options, value, onChange, counts, classN
   return (
     <div
       className={cn(
-        "inline-flex max-w-full flex-wrap items-center gap-1.5 rounded-full border border-border bg-card p-1.5",
+        "inline-flex max-w-full flex-wrap items-center gap-1.5 rounded-[2px] border border-border bg-card p-1.5",
         className,
       )}
       role="group"
@@ -26,7 +26,7 @@ export default function SelectorChips({ options, value, onChange, counts, classN
             aria-pressed={active}
             onClick={() => onChange(opt)}
             className={cn(
-              "relative rounded-full px-4 py-2 text-xs font-medium uppercase tracking-[0.08em] transition-colors duration-150",
+              "relative rounded-[2px] px-4 py-2 text-xs font-medium uppercase tracking-[0.08em] transition-colors duration-150",
               "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
               active
                 ? "text-background"
@@ -36,7 +36,7 @@ export default function SelectorChips({ options, value, onChange, counts, classN
             {active && (
               <m.span
                 layoutId="filter-pill"
-                className="absolute inset-0 rounded-full bg-foreground"
+                className="absolute inset-0 rounded-[2px] bg-foreground"
                 transition={{ type: "spring", stiffness: 400, damping: 32 }}
               />
             )}

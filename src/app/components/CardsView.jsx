@@ -41,18 +41,18 @@ export default function CardsView({ stories, lastVisit = null }) {
 
   return (
     <div>
-      <ul className="grid grid-cols-1 gap-px overflow-hidden rounded-md border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
+      <ul className="grid grid-cols-1 gap-px overflow-hidden rounded-[2px] border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
         {stories.map((story) => (
           <li key={story.id} className="group relative flex min-h-0 flex-col bg-card p-5">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                 {story.source}
               </span>
-              <span className="text-[10px] uppercase tracking-[0.06em] text-muted-foreground">
+              <span className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
                 {fmtDate(story.publishedAt)}
               </span>
               {isNewSinceLastVisit(story.publishedAt, lastVisit) ? (
-                <span className="rounded-sm border border-primary/60 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-primary">
+                <span className="rounded-[2px] border border-primary/60 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-primary">
                   New
                 </span>
               ) : null}
@@ -76,7 +76,7 @@ export default function CardsView({ stories, lastVisit = null }) {
                   hedged={story.hedged}
                   score={story.spinScore}
                 />
-                <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.08em] text-primary opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.08em] text-primary opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
                   Read <ExternalLink className="size-3" aria-hidden="true" />
                 </span>
               </div>
@@ -88,7 +88,7 @@ export default function CardsView({ stories, lastVisit = null }) {
               aria-haspopup="dialog"
               onClick={() => open(story)}
               className={cn(
-                "absolute inset-0 z-0 cursor-pointer rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                "absolute inset-0 z-0 cursor-pointer rounded-[2px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
               )}
             />
           </li>

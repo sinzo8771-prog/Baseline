@@ -6,6 +6,7 @@ import EmptyState from "../components/EmptyState.jsx";
 import Plate from "../components/EditorialPlates.jsx";
 import { readHypeHistory, hypeTrend } from "../lib/hypeHistory.js";
 import { isSmallSample } from "@/lib/pipeline";
+import { SOURCES } from "@/lib/feeds";
 
 function fmtDate(iso) {
   const d = new Date(iso);
@@ -25,6 +26,51 @@ const fade = {
   viewport: { once: true, margin: "-60px" },
   transition: { duration: 0.45, ease: "easeOut" },
 };
+
+// ---- 00 TODAY AT A GLANCE -----------------------------------------------------
+// The hero puts the Hype Index — the product's signature number — in the first
+// viewport, next to an explicit definition so it can't be mistaken for a truth
+// or quality score. Deliberately static: no reveal animation on the score,
+// CTAs, or copy (the masthead above already animates the brand).
+function Hero({ stats, loaded, offline }) {
+  const hasScore = loaded && !!stats;
+  const meta = hasScore
+    ? `${stats.total} stories · ${SOURCES.length} sources tracked`
+    : !loaded
+      ? "Setting today's type…"
+      : "No reading available right now.";
+
+  return (
+    <section className="fp-hero" aria-label="Today's Hype Index">
+      <div className="fp-hero-grid">
+        <div className="fp-hero-copy">
+          <p className="fp-kicker">A quiet interface for a very loud industry</p>
+          <p className="fp-hero-lede">
+            Baseline reprints today's AI headlines exactly as published and measures how loudly
+            their language runs. The score tracks wording — not truth, quality, or importance.
+          </p>
+          <div className="fp-hero-actions">
+            <Link to="/edition" className="fp-btn-primary fp-btn-link">
+              Read today's edition <ArrowRight className="size-3.5" aria-hidden="true" />
+            </Link>
+            <Link to="/methodology" className="btn-outline inline-flex items-center gap-2">
+              Why this score?
+            </Link>
+          </div>
+        </div>
+        <div className="fp-hero-score">
+          <span className="fp-eyebrow">Today's Hype Index</span>
+          <p className="val">
+            {hasScore ? stats.hypePercent : "—"}
+            {hasScore ? <span className="unit" aria-hidden="true">%</span> : null}
+          </p>
+          <p className="descriptor">Headline intensity across today's tracked AI news.</p>
+          <p className="meta">{meta}</p>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 // ---- Decorative editorial artwork ------------------------------------------
 // Plates live in components/EditorialPlates.jsx so the story page can share
@@ -413,6 +459,8 @@ export default function Landing({ stories, stats, sourceStats, offline, loaded, 
 
   return (
     <div className="fp">
+      <Hero stats={stats} loaded={loaded} offline={offline} />
+
       <Lead story={stories[0]} loaded={loaded} offline={offline} />
 
       <Dispatch stories={stories} loaded={loaded} offline={offline} />

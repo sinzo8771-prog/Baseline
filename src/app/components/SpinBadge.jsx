@@ -23,7 +23,7 @@ export default function SpinBadge({ spin, flags, signals, hedged, score, classNa
     <span className={cn("inline-flex items-center gap-1.5", className)}>
       <span
         className={cn(
-          "spin-badge inline-flex h-5 shrink-0 items-center gap-1.5 rounded-full border px-2.5 text-[10px] font-medium uppercase tracking-[0.08em]",
+          "spin-badge inline-flex h-5 shrink-0 items-center gap-1.5 rounded-[2px] border px-2.5 text-[10px] font-medium uppercase tracking-[0.08em]",
           variant.cls,
         )}
         aria-hidden="true"
@@ -43,7 +43,7 @@ export default function SpinBadge({ spin, flags, signals, hedged, score, classNa
             ?
             <span className="sr-only">Why was this flagged {spin}?</span>
           </summary>
-          <span className="absolute left-0 top-7 z-20 w-64 max-w-[calc(100vw-2rem)] rounded-md border border-border bg-popover px-3 py-2 text-[11px] normal-case leading-snug tracking-normal text-popover-foreground shadow-md">
+          <span className="absolute left-0 top-7 z-20 w-64 max-w-[calc(100vw-2rem)] rounded-[2px] border border-border bg-popover px-3 py-2 text-[11px] normal-case leading-snug tracking-normal text-popover-foreground shadow-md">
             <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
               Why {spin}
               {typeof score === "number" ? <span className="ml-1 font-normal normal-case tracking-normal">{score}/100</span> : null}

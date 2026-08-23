@@ -5,7 +5,9 @@ import { axe } from "vitest-axe";
 
 import { saveStory } from "../../src/app/lib/savedStories.js";
 import CommandPalette from "../../src/app/components/CommandPalette.jsx";
+import Home from "../../src/app/pages/Home.jsx";
 import HypeIndex from "../../src/app/pages/HypeIndex.jsx";
+import Landing from "../../src/app/pages/Landing.jsx";
 import Saved from "../../src/app/pages/Saved.jsx";
 import Sources from "../../src/app/pages/Sources.jsx";
 import StoryModal from "../../src/app/components/StoryModal.jsx";
@@ -86,6 +88,46 @@ function seedHypeHistory(days = 5) {
 }
 
 describe("axe accessibility", () => {
+  it("Landing (hero + lead + hype band) has no violations", async () => {
+    const { container } = render(
+      <MemoryRouter>
+        <Landing
+          stories={[{ ...fullStory, spin: "Warm" }]}
+          stats={{
+            hypePercent: 56,
+            total: 20,
+            bySpin: { Measured: 6, Warm: 5, Hot: 5, "On Fire": 4 },
+            signalBreakdown: { language: 8, superlatives: 5, benchmark: 3 },
+          }}
+          sourceStats={[{ name: "Reuters", count: 3, avgHype: 62 }]}
+          offline={false}
+          loaded={true}
+          showToast={() => {}}
+        />
+      </MemoryRouter>,
+    );
+    await assertNoViolations(container);
+  });
+
+  it("Edition (collapsed filters + story cards) has no violations", async () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={["/edition"]}>
+        <Home
+          stories={[{ ...fullStory }, { ...fullStory, id: "m0ck2", spin: "Hot", spinScore: 74, flags: ["high-intensity language"] }]}
+          offline={false}
+          loaded={true}
+          reload={() => {}}
+          servedFromCache={false}
+          savedAt={null}
+          lastVisit={null}
+          sources={[{ name: "Reuters", ok: true }, { name: "Quiet Blog", ok: false, error: "HTTP 503" }]}
+          settled={true}
+        />
+      </MemoryRouter>,
+    );
+    await assertNoViolations(container);
+  });
+
   it("StoryModal has no violations", async () => {
     const { container } = render(<StoryModal story={fullStory} onClose={() => {}} />);
     await assertNoViolations(container);

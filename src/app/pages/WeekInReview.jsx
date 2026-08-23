@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import EmptyState from "../components/EmptyState.jsx";
 import { readHypeHistory, weekSummary } from "../lib/hypeHistory.js";
+import { biggestSignalShift } from "@/lib/hype";
 
 function weekdayLabel(dateKey) {
   const [y, m, d] = dateKey.split("-").map(Number);
@@ -55,7 +56,40 @@ function WoWDirection({ weekOverWeek }) {
 }
 
 export default function WeekInReview() {
-  const summary = useMemo(() => weekSummary(readHypeHistory()), []);
+  const history = useMemo(() => readHypeHistory(), []);
+  const summary = useMemo(() => weekSummary(history), [history]);
+
+  // "Which themes became louder this week?" — answered from the recorded
+  // signal breakdowns only: the newest day's mix vs the oldest day inside
+  // the 7-day window. No history, no claim.
+  const themeShift = useMemo(() => {
+    if (!history.length) return null;
+    const window = history.slice(0, 7);
+    const newest = window[0]?.signals ?? null;
+    const oldest = window[window.length - 1]?.signals ?? null;
+    return biggestSignalShift(newest, oldest);
+  }, [history]);
+
+  // Rendered in both the full-week and partial-week layouts; the panel only
+  // exists when two recorded days with signal breakdowns back it.
+  const themePanel = themeShift ? (
+    <Panel title="Theme mix, week's end vs week's start">
+      <ul className="mt-3 space-y-1.5">
+        {themeShift.map((s) => (
+          <li key={s.category} className="flex items-baseline justify-between gap-3 border-b border-border/50 py-1.5 last:border-0">
+            <span className="text-sm text-foreground">{s.label}</span>
+            <span className={"tabular-nums text-sm " + (s.delta > 0 ? "text-primary" : "text-foreground")}>
+              {s.delta > 0 ? "↑" : "↓"} {Math.abs(s.delta)} pts
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-2 max-w-[62ch] text-xs text-muted-foreground">
+        Each category's share of that day's recorded hype signals — latest recorded day against the oldest inside the
+        week.
+      </p>
+    </Panel>
+  ) : null;
 
   return (
     <section className="section" aria-label="Week in review">
@@ -90,6 +124,7 @@ export default function WeekInReview() {
             </p>
           </Panel>
           <PartialFacts summary={summary} />
+          {themePanel}
           <p className="text-xs text-muted-foreground">
             <Link to="/hype-index" className="underline underline-offset-4 hover:text-foreground">Track the daily Hype Index</Link>
           </p>
@@ -143,6 +178,8 @@ export default function WeekInReview() {
               </p>
             </Panel>
           ) : null}
+
+          {themePanel}
 
           <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
             <Link to="/methodology" className="underline underline-offset-4 hover:text-foreground">How the score works</Link>

@@ -1,6 +1,6 @@
 # QA Checklist — The Baseline
 
-Last verified: 2026-08-13 · Build: `f0859a8` (deployed live) · Tests: 68 unit + 8 component passing, production build clean.
+Last verified: 2026-08-24 · Tests: 123 unit + 62 component + Playwright E2E (incl. visual regression) passing, production build clean.
 
 This is the pre-release gate for the site. It captures everything that must hold before calling a build "shipped", plus the evidence from the most recent full pass.
 
@@ -10,14 +10,14 @@ This is the pre-release gate for the site. It captures everything that must hold
 
 | Check | Command | Expected | Status |
 |---|---|---|---|
-| Unit suite | `npm test` | 68 passing | ✅ PASS |
-| Component suite | `npm run test:components` | 8 passing | ✅ PASS |
+| Unit suite | `npm test` | 123 passing | ✅ PASS |
+| Component suite | `npm run test:components` | 62 passing (incl. axe a11y on 9 surfaces) | ✅ PASS |
 | Full gate | `npm run test:all` | both suites green | ✅ PASS |
+| E2E + visual regression | `npm run test:e2e` | all specs green, snapshots stable across runs | ✅ PASS |
 | Production build | `npm run build` | no errors, assets emitted | ✅ PASS |
-| CI parity | `npm ci && npm test` on Node 20 | same as local | ✅ PASS (verified via deploy run) |
+| CI parity | `npm ci && npm test` on Node 24 | same as local | ✅ PASS (verified via deploy run) |
 
-> CI (`deploy.yml`) runs only `npm test` on Node 20. The vitest suite is run manually
-> (or `test:all`). Node 20 `node --test` accepts no globs — keep test scripts glob-free.
+> CI (`deploy.yml`) runs `npm run test:all` on Node 24 before deploying.
 
 ---
 
@@ -26,7 +26,7 @@ This is the pre-release gate for the site. It captures everything that must hold
 | Area | Check | Status |
 |---|---|---|
 | Home | Edition streams in (partial → settled), toast announces count | ✅ PASS |
-| Home | View toggle (Edition/Cards), Sort toggle, filter chips, search | ✅ PASS |
+| Home | View toggle (Edition/Cards), Sort toggle, Filter disclosure (spin chips + legend), search | ✅ PASS |
 | Home | `?view`, `?sort`, `?source=` URL params restore state; `?` help dialog | ✅ PASS |
 | Stories | Modal opens (focus on close button), Escape closes, focus restores | ✅ PASS |
 | Stories | Focus trap keeps Tab inside modal | ✅ PASS (by inspection) |
@@ -76,26 +76,26 @@ This is the pre-release gate for the site. It captures everything that must hold
 
 | Check | Result |
 |---|---|
-| Main JS bundle | 462.8 kB (148.8 kB gzip) |
-| Code-split routes | `/about`, `/sources`, `/hype-index`, `/story/:id`, `/methodology`, `/sources/:name`, 404 all lazy |
-| Framer-motion | `LazyMotion` + `domAnimation` only (~5 kB, tree-shaken) |
+| Main JS bundle | 294.6 kB (92.0 kB gzip) — under the 120 kB gzip budget |
+| Code-split routes | `/about`, `/sources`, `/hype-index`, `/story/:id`, `/methodology`, `/sources/:name`, `/week-in-review`, 404 all lazy |
+| Decorative canvas | `Asciify` + `DecryptReveal` lazy chunks, idle-mounted after first paint; `VHS`/`Glitch` viewport/lazy; masthead renders as plain text first |
+| Framer-motion | `LazyMotion` + `domAnimation` only (~5 kB, tree-shaken); card hover-lift removed (polish pass) |
 | Canvas effects | `prefers-reduced-motion` settle + `IntersectionObserver` pause + `cancelAnimationFrame` cleanup |
 | Fonts | preconnect + `media="print"` swap (non-render-blocking) |
 | Images | feed images `loading="lazy"`; OG/favicons local |
 | Theme | inline sync script (no FOUC), localStorage persisted |
 
-> Bundle note: the main chunk is dominated by the app + the always-visible masthead/footer
-> WebGL effects, which cannot be lazy-loaded without hurting LCP. Acceptable; see FUTURE-ROADMAP.md.
+> Bundle note: the masthead WebGL effects are now lazy chunks loaded on idle;
+> the main chunk no longer carries them (was 148.8 kB gzip, now 92.0 kB).
 
-## Production smoke (live, 2026-08-13)
+## Production smoke (local Worker, 2026-08-24)
 
 | Check | Result |
 |---|---|
-| `https://the-baseline.baseline-news.workers.dev/` | 200, correct asset hash (`index-BAwtj85w.js`) |
-| SPA routes (`/about`, `/hype-index`, `/sources`, `/methodology`, `/story/:id`, 404) | all 200 (shell) |
-| `/robots.txt`, `/sitemap.xml`, `/site.webmanifest`, `/sw.js`, `/og-image.png` | all 200 |
-| `/api/feeds`, `/api/feed?name=…` (known), unknown feed, `/api/news` | 200 / 200 / 404 / 410 |
-| Deploy parity | live asset hash matches local `dist/` exactly |
+| All SPA routes (`/`, `/edition`, `/hype-index`, `/sources`, `/sources/:name`, `/saved`, `/week-in-review`, `/methodology`, `/about`, 404) | render, zero console errors |
+| `/feed.xml`, `/feed.json`, `/api/feeds`, `/robots.txt`, `/sitemap.xml` | all 200 |
+| Canonical / `og:url` / `og:image` | consistent, served from `src/lib/site.js` origin |
+| Partial ingestion | "N of M sources did not respond" notice verified with mocked dead wires |
 
 ## Known limitations (accepted)
 

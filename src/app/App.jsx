@@ -8,9 +8,31 @@ import Landing from "./pages/Landing.jsx";
 import Home from "./pages/Home.jsx";
 import SiteNav from "./components/SiteNav.jsx";
 import SiteFooter from "./components/SiteFooter.jsx";
-import Asciify from "@/components/canvasui/Asciify.jsx";
-import DecryptReveal from "@/components/canvasui/DecryptReveal.jsx";
 import CommandPalette from "./components/CommandPalette.jsx";
+import { relUpdated } from "./lib/freshness.js";
+import { SITE_URL as BASE_URL } from "@/lib/site";
+
+// The masthead's Asciify wordmark and DecryptReveal tagline are decorative
+// canvas layers. They ship as lazy chunks and mount only once the main
+// thread is idle, so first paint renders the plain-text masthead and never
+// waits on a WebGL context or shader compile (spec §7.2/7.3).
+const Asciify = lazy(() => import("@/components/canvasui/Asciify.jsx"));
+const DecryptReveal = lazy(() => import("@/components/canvasui/DecryptReveal.jsx"));
+
+// True once the browser has a free moment after mount. The idle timeout
+// keeps the swap from never arriving on a busy page.
+function useIdleReady(timeoutMs = 2500) {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(() => setReady(true), { timeout: timeoutMs });
+      return () => window.cancelIdleCallback(id);
+    }
+    const t = window.setTimeout(() => setReady(true), 1200);
+    return () => window.clearTimeout(t);
+  }, [timeoutMs]);
+  return ready;
+}
 
 // The footer's VHS overlay is the only continuously-running effect, but it sits
 // below the fold on every page. Its module and WebGL setup (context + shader
@@ -45,8 +67,6 @@ function RouteFallback() {
 function Toast({ message }) {
   return <div className="toast">{message}</div>;
 }
-
-const BASE_URL = "https://the-baseline.baseline-news.workers.dev";
 
 // The canvas effects need a concrete color string (canvas fillStyle cannot
 // resolve CSS var()), but the tagline's decrypt reveal must stay on the site's
@@ -214,6 +234,8 @@ function MastheadMeta({ dateLabel, storyCount, updatedLabel }) {
   );
 }
 
+// Relative age lives in lib/freshness.js (shared, unit-tested); the masthead
+// label just formats it.
 export default function App() {
   const { stories, allStories, stats, sourceStats, sources, offline, loaded, settled, servedFromCache, savedAt, reload } = useBaselineData();
   const [toast, setToast] = useState(null);
@@ -244,6 +266,14 @@ export default function App() {
   // Clean up the toast timer on unmount.
   useEffect(() => () => window.clearTimeout(toastTimer.current), []);
 
+  // The "sourced N min ago" label must stay honest over a long session, so
+  // the relative time re-computes once a minute.
+  const [, setClockTick] = useState(0);
+  useEffect(() => {
+    const t = window.setInterval(() => setClockTick((n) => n + 1), 60000);
+    return () => window.clearInterval(t);
+  }, []);
+
   // Cmd/Ctrl+K opens the command palette anywhere in the app. The guard skips
   // the shortcut while a dialog is already open so the modal's own trap keeps
   // ownership of keys; the palette's Escape handler closes it.
@@ -273,9 +303,19 @@ export default function App() {
   const now = new Date();
   const dateLabel = now.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
   const updatedLabel = stats?.generatedAt
-    ? (servedFromCache && !settled ? "Showing saved edition, refreshing… · " : "")
-      + "Sourced " + new Date(stats.generatedAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }) + " · refresh for the latest"
+    ? (servedFromCache && !settled ? "Saved edition · " : "")
+      + `Sourced ${relUpdated(stats.generatedAt)} · refresh for the latest`
     : "";
+
+  // The plain-text masthead is both the pre-hydration fallback and the
+  // canvas-free fallback — one markup source, so the swap is seamless.
+  const wordmark = (
+    <span className="masthead-title">
+      <Link to="/" className="masthead-link">THE BASELINE</Link>
+    </span>
+  );
+  const tagline = <p className="masthead-tagline">AI news, hype removed.</p>;
+  const decorReady = useIdleReady();
 
   return (
     <LazyMotion features={domAnimation} strict>
@@ -284,14 +324,24 @@ export default function App() {
         <a href="#main" className="skip-link">Skip to content</a>
         <header className="masthead">
           <MastheadMeta dateLabel={dateLabel} storyCount={stories.length} updatedLabel={updatedLabel} />
-          <Asciify baseStrength={0.2} radius={0.45} charset="ascii" background="auto" glow={0.5} aberration={0.5}>
-            <span className="masthead-title">
-              <Link to="/" className="masthead-link">THE BASELINE</Link>
-            </span>
-          </Asciify>
-          <DecryptReveal color={accentColor()} background="auto" scramble={0.12} cell={8} radius={320} colored={0.6}>
-            <p className="masthead-tagline">AI news, hype removed.</p>
-          </DecryptReveal>
+          {decorReady ? (
+            <Suspense fallback={wordmark}>
+              <Asciify baseStrength={0.2} radius={0.45} charset="ascii" background="auto" glow={0.5} aberration={0.5}>
+                {wordmark}
+              </Asciify>
+            </Suspense>
+          ) : (
+            wordmark
+          )}
+          {decorReady ? (
+            <Suspense fallback={tagline}>
+              <DecryptReveal color={accentColor()} background="auto" scramble={0.12} cell={8} radius={320} colored={0.6}>
+                {tagline}
+              </DecryptReveal>
+            </Suspense>
+          ) : (
+            tagline
+          )}
         </header>
 
         <SiteNav />
@@ -300,7 +350,7 @@ export default function App() {
           <Suspense fallback={<RouteFallback />}>
             <Routes>
               <Route path="/" element={<Landing stories={stories} stats={stats} sourceStats={sourceStats} offline={offline} loaded={loaded} showToast={showToast} />} />
-              <Route path="/edition" element={<Home stories={stories} offline={offline} loaded={loaded} reload={reload} servedFromCache={servedFromCache} savedAt={savedAt} lastVisit={lastVisitRef.current} />} />
+              <Route path="/edition" element={<Home stories={stories} offline={offline} loaded={loaded} reload={reload} servedFromCache={servedFromCache} savedAt={savedAt} lastVisit={lastVisitRef.current} sources={sources} settled={settled} />} />
               <Route path="/hype-index" element={<HypeIndex stats={stats} sourceStats={sourceStats} allStories={allStories} loaded={loaded} offline={offline} reload={reload} />} />
               <Route path="/sources" element={<Sources sources={sources} sourceStats={sourceStats} loaded={loaded} offline={offline} reload={reload} />} />
               <Route path="/sources/:name" element={<SourceProfile allStories={allStories} sources={sources} sourceStats={sourceStats} loaded={loaded} offline={offline} reload={reload} />} />
