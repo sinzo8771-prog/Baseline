@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import StoryPage from "../../src/app/pages/StoryPage.jsx";
@@ -104,5 +104,39 @@ describe("StoryPage prev/next navigation", () => {
     const back = screen.getByText("Back to the edition").closest("a");
     expect(back).not.toBeNull();
     expect(back.getAttribute("href")).toBe("/edition");
+  });
+});
+
+describe("StoryPage share/copy buttons", () => {
+  afterEach(() => {
+    Reflect.deleteProperty(window.navigator, "share");
+  });
+
+  it("renders a single Copy link button and no Share button when navigator.share is unavailable", () => {
+    // Desktop browsers mostly lack the Web Share API; the Share button must be
+    // hidden entirely instead of relabeled to duplicate the copy action.
+    Reflect.deleteProperty(window.navigator, "share");
+    renderStory("a");
+
+    const copyButtons = screen.getAllByRole("button", { name: /^copy link$/i });
+    expect(copyButtons).toHaveLength(1);
+    expect(screen.queryByRole("button", { name: /^share$/i })).not.toBeInTheDocument();
+  });
+
+  it("renders distinct Share and Copy link buttons when navigator.share is available", async () => {
+    // Mobile/PWA contexts expose navigator.share; both actions stay visible
+    // and differently labeled, and Share opens the native sheet.
+    const share = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(window.navigator, "share", { configurable: true, value: share, writable: true });
+    renderStory("a");
+
+    const shareButton = screen.getByRole("button", { name: /^share$/i });
+    expect(screen.getAllByRole("button", { name: /^copy link$/i })).toHaveLength(1);
+
+    await shareButton.click();
+    expect(share).toHaveBeenCalledTimes(1);
+    expect(share).toHaveBeenCalledWith(
+      expect.objectContaining({ title: "Alpha story in the edition", url: expect.stringContaining("/story/a") }),
+    );
   });
 });

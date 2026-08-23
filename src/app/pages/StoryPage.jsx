@@ -286,14 +286,16 @@ export default function StoryPage({ allStories, stories, loaded, offline, reload
               Read original <ExternalLink className="size-3.5" aria-hidden="true" />
             </a>
           ) : null}
-          <button
-            type="button"
-            onClick={onShare}
-            className="btn-outline inline-flex items-center gap-2"
-          >
-            <Share2 className="size-3.5" aria-hidden="true" />
-            {canShare ? "Share" : "Copy link"}
-          </button>
+          {canShare ? (
+            <button
+              type="button"
+              onClick={onShare}
+              className="btn-outline inline-flex items-center gap-2"
+            >
+              <Share2 className="size-3.5" aria-hidden="true" />
+              Share
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={onCopy}
