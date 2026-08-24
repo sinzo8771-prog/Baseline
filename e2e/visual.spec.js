@@ -6,6 +6,12 @@ import { test, trackPageErrors } from "./support.js";
 // masked: glyph rasterization varies across machines, which is exactly the
 // noise these snapshots should not be about. Everything else — layout,
 // typography, hierarchy, the hero — is the contract.
+//
+// Snapshot tests are LOCAL-ONLY: baselines embed platform font rasterization
+// (the files carry a -win32/-linux suffix), so a Linux CI runner can never
+// match baselines captured on Windows. The CI e2e job still runs the
+// reduced-motion behavioral test below.
+const IN_CI = Boolean(process.env.CI);
 const SHOTS = [
   { name: "landing-desktop", path: "/", viewport: { width: 1440, height: 900 } },
   { name: "edition-desktop", path: "/edition", viewport: { width: 1440, height: 900 } },
@@ -15,6 +21,7 @@ const SHOTS = [
 
 for (const shot of SHOTS) {
   test(`visual regression: ${shot.name}`, async ({ page }) => {
+    test.skip(IN_CI, "visual snapshots are platform-specific; run locally with npx playwright test visual");
     // Capture under reduced motion: MotionConfig(reducedMotion="user")
     // renders the whileInView reveals at full opacity immediately, so
     // below-the-fold sections can't be caught mid-reveal (or unrevealed)
