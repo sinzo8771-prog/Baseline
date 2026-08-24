@@ -8,6 +8,9 @@ dist/
 .claude/autoharness/
 .playwright-mcp/
 
+# Profiling harness (see CANVAS-PERF-AUDIT.md) - untracked by design
+_perf/
+
 # Playwright
 test-results/
 playwright-report/
