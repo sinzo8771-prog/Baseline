@@ -10,7 +10,7 @@ Status legend: `open` — not started · `scoped` — shape/effort understood ·
 
 ---
 
-## Hardening (security, from SECURITY-AUDIT.md)
+## Hardening (security, from archive/plans/SECURITY-AUDIT.md)
 
 ### Add a Content-Security-Policy (CSP) — `done`
 - **Why:** defense-in-depth. The site currently ships no CSP; a future injection

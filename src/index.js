@@ -293,16 +293,16 @@ function json(obj, status = 200, headers = {}) {
 }
 
 // Strict Content-Security-Policy for the app shell. The frontend is fully
-// self-hosted except the Fraunces/Inter webfonts (styles from fonts.googleapis,
-// font files from fonts.gstatic). Inline styles are required by the canvas
+// self-hosted, including the Fraunces/Inter webfonts (public/fonts/, no
+// third-party font origins). Inline styles are required by the canvas
 // effects (they set per-frame style attributes) and the theme toggle; inline
 // scripts are not allowed — the theme-init script was extracted to a static
 // file so no hash needs to be maintained. Feed images are remote https URLs.
 const CSP = [
   "default-src 'self'",
   "script-src 'self'",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src https://fonts.gstatic.com",
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self'",
   "img-src 'self' data: https:",
   "connect-src 'self'",
   "base-uri 'self'",

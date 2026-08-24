@@ -18,13 +18,17 @@ export default defineConfig({
     assetsDir: "assets",
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Stable third-party vendor chunks: the router and icon set are used
-          // across every page, so hoisting them out of the app bundle lets the
-          // edition/landing JS shrink and cache independently.
-          react: ["react", "react-dom", "react-router-dom"],
-          "lucide-icons": ["lucide-react"],
-          motion: ["framer-motion"],
+        // Function-form manualChunks: the object form silently failed to
+        // capture react-dom (its client runtime resolves through
+        // react-dom/client), leaving a 540 KB module inside the app chunk.
+        // Path-matched assignment puts the whole React stack + router in one
+        // stable vendor chunk that caches independently of app code.
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return undefined;
+          if (/[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) return "react";
+          if (/[\\/]node_modules[\\/]react-router[^\\/]*[\\/]/.test(id)) return "react";
+          if (/[\\/]node_modules[\\/](framer-motion|motion-dom|motion-utils)[\\/]/.test(id)) return "motion";
+          return undefined;
         },
       },
     },

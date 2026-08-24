@@ -40,7 +40,7 @@ This is the pre-release gate for the site. It captures everything that must hold
 | Theme | Toggle persists; no FOUC (inline sync script); OS preference on first visit | ✅ PASS |
 | Reduced motion | rAF loops settle to a static frame; framer-motion `reducedMotion="user"` | ✅ PASS |
 
-## Security checklist (see SECURITY-AUDIT.md for detail)
+## Security checklist (see archive/plans/SECURITY-AUDIT.md for detail)
 
 | Check | Status |
 |---|---|

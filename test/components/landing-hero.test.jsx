@@ -37,8 +37,43 @@ describe("Landing hero", () => {
 
   it("routes the primary CTA to the edition and the secondary to methodology", () => {
     renderLanding();
-    expect(screen.getByRole("link", { name: /read today's edition/i })).toHaveAttribute("href", "/edition");
+    // "Read today's edition" is both the hero CTA and the closing band's CTA;
+    // every instance must route to the edition.
+    const ctas = screen.getAllByRole("link", { name: /read today's edition/i });
+    expect(ctas.length).toBeGreaterThanOrEqual(2);
+    for (const cta of ctas) {
+      expect(cta).toHaveAttribute("href", "/edition");
+    }
     expect(screen.getByRole("link", { name: /why this score\?/i })).toHaveAttribute("href", "/methodology");
+  });
+
+  it("explains the score with the tier scale and an itemized live example when a flagged story exists", () => {
+    const scored = [
+      {
+        id: "s1",
+        title: "Startup unveils revolutionary breakthrough",
+        source: "Wired AI",
+        publishedAt: new Date().toISOString(),
+        spin: "Hot",
+        spinScore: 30,
+        flags: ["boastful phrasing"],
+        signals: [{ id: "boast", category: "language", label: "boastful phrasing", points: 12 }],
+        hedged: false,
+      },
+    ];
+    renderLanding({ stories: scored });
+    expect(screen.getByText("How a score is built")).toBeInTheDocument();
+    expect(screen.getByText("Today's loudest headline, itemized")).toBeInTheDocument();
+    // The story is both the Lead and the example, so its headline links twice.
+    const headlineLinks = screen.getAllByRole("link", { name: /revolutionary breakthrough/i });
+    expect(headlineLinks.length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText("boastful phrasing").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("+12")).toBeInTheDocument();
+  });
+
+  it("admits the edition is quiet instead of inventing an example", () => {
+    renderLanding({ stories: [] });
+    expect(screen.getByText(/running measured/i)).toBeInTheDocument();
   });
 
   it("shows an honest placeholder while the wires are still arriving", () => {

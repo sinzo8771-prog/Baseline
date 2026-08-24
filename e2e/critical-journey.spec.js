@@ -13,8 +13,9 @@ test("critical journey: landing → edition → search → filter → story → 
   await expect(page.locator(".fp-hero-score .val")).toContainText("%");
   await expect(page.getByText(/headline intensity across today's tracked ai news/i)).toBeVisible();
 
-  // Into the edition via the primary CTA.
-  await page.getByRole("link", { name: /read today's edition/i }).click();
+  // Into the edition via the primary CTA. The hero and the closing band both
+  // carry a "Read today's edition" link; the hero's is the first in the DOM.
+  await page.getByRole("link", { name: /read today's edition/i }).first().click();
   await expect(page).toHaveURL(/\/edition$/);
   await expect(page.locator("main article").first()).toBeVisible();
   const totalCards = await page.locator("main article").count();

@@ -4,9 +4,11 @@ import { ArrowRight } from "lucide-react";
 import { m } from "framer-motion";
 import EmptyState from "../components/EmptyState.jsx";
 import Plate from "../components/EditorialPlates.jsx";
+import SpinBadge from "../components/SpinBadge.jsx";
 import { readHypeHistory, hypeTrend } from "../lib/hypeHistory.js";
 import { isSmallSample } from "@/lib/pipeline";
 import { SOURCES } from "@/lib/feeds";
+import { TIER_RANGES } from "@/lib/hype";
 
 function fmtDate(iso) {
   const d = new Date(iso);
@@ -164,7 +166,11 @@ function Lead({ story, loaded, offline }) {
           </m.p>
           <m.div {...fade}>
             <div className="fp-byline">
-              By <b>{story.source}</b> · {fmtDate(story.publishedAt)} · spin {story.spinScore}/100
+              By <b>{story.source}</b> · {fmtDate(story.publishedAt)}
+            </div>
+            <div className="fp-byline-spin">
+              <SpinBadge spin={story.spin} score={story.spinScore} flags={story.flags} signals={story.signals} hedged={story.hedged} />
+              <span className="fp-byline-score">{story.spinScore}/100</span>
             </div>
             <Link to={`/story/${story.id}`} className="btn-outline inline-flex items-center gap-2">
               Read the full story <ArrowRight className="size-3.5" aria-hidden="true" />
@@ -218,6 +224,9 @@ function Dispatch({ stories, loaded, offline }) {
               <h3>{feature.title}</h3>
               <div className="meta">{feature.source} · {fmtDate(feature.publishedAt)}</div>
               {feature.summary ? <p>{feature.summary}</p> : null}
+              <div className="fp-card-spin">
+                <SpinBadge spin={feature.spin} score={feature.spinScore} flags={feature.flags} signals={feature.signals} hedged={feature.hedged} />
+              </div>
             </Link>
           </m.article>
         ) : null}
@@ -229,6 +238,9 @@ function Dispatch({ stories, loaded, offline }) {
               <span className="fp-kicker">From the Wires</span>
               <h3>{mid.title}</h3>
               <div className="meta">{mid.source} · {fmtDate(mid.publishedAt)}</div>
+              <div className="fp-card-spin">
+                <SpinBadge spin={mid.spin} score={mid.spinScore} flags={mid.flags} signals={mid.signals} hedged={mid.hedged} />
+              </div>
             </Link>
           </m.article>
         ) : null}
@@ -254,6 +266,9 @@ function Dispatch({ stories, loaded, offline }) {
               <span className="fp-kicker">Dispatch</span>
               <h3>{s.title}</h3>
               <div className="meta">{s.source} · {fmtDate(s.publishedAt)}</div>
+              <div className="fp-card-spin">
+                <SpinBadge spin={s.spin} score={s.spinScore} flags={s.flags} signals={s.signals} hedged={s.hedged} />
+              </div>
             </Link>
           </m.article>
         ))}
@@ -262,7 +277,181 @@ function Dispatch({ stories, loaded, offline }) {
   );
 }
 
-// ---- 03 HYPE INDEX BAND ------------------------------------------------------
+// ---- 03 WHY THIS EXISTS ------------------------------------------------------
+// The problem, in editorial language. No feature tiles, no icons — the argument
+// is the design.
+function WhySection() {
+  return (
+    <section className="fp-why" aria-label="Why The Baseline exists">
+      <div className="fp-why-grid">
+        <p className="fp-why-statement">
+          Every launch is "revolutionary". Every benchmark is "shattered". Every demo changes everything.
+        </p>
+        <div className="fp-why-body">
+          <p>
+            AI coverage competes for the same finite attention, so the language ratchets up: the loudest headline
+            wins the click, and the loudest day wins the narrative.
+          </p>
+          <p>
+            Loud is not the same as important. Intensity is a property of <em>wording</em> — and wording can be
+            measured, the way a paper measures column inches or a market measures volume.
+          </p>
+          <p>
+            The Baseline reprints every headline exactly as published, scores only its language, and shows the
+            receipts. You see the noise. You read past it.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---- 04 HOW HYPE WORKS -------------------------------------------------------
+// The scoring concept, demonstrated on the day's loudest real headline — never
+// a fabricated one. If no story crossed the Warm threshold today, the example
+// column says so instead of inventing one.
+const TIERS = ["Measured", "Warm", "Hot", "On Fire"];
+
+function HowHype({ stories, loaded }) {
+  const example = useMemo(() => {
+    let best = null;
+    for (const s of stories) {
+      if (!s.flags?.length) continue;
+      if (!best || s.spinScore > best.spinScore) best = s;
+    }
+    return best;
+  }, [stories]);
+
+  return (
+    <section className="fp-how" aria-label="How the Hype score works">
+      <div className="section-head">
+        <h2>How a score is built</h2>
+        <Link className="more" to="/methodology">Full methodology →</Link>
+      </div>
+      <div className="fp-how-grid">
+        <div className="fp-how-scale">
+          <span className="fp-eyebrow">The scale</span>
+          <p className="fp-how-lede">
+            Six families of language are detected — intensity words, superlatives, benchmark claims, promotional
+            numbers, shouting punctuation, emotional verbs. Each detected signal adds points; the total, 0–100,
+            sets the story's tier.
+          </p>
+          <ul className="fp-tiers">
+            {TIERS.map((t) => (
+              <li key={t}>
+                <span className="tier-name">{t}</span>
+                <span className="tier-range">{TIER_RANGES[t]}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="fp-example">
+          <span className="fp-eyebrow">{example ? "Today's loudest headline, itemized" : "Today's edition, itemized"}</span>
+          {!loaded ? (
+            <div className="mt-4 h-40 w-full animate-pulse rounded skeleton" />
+          ) : example ? (
+            <>
+              <Link to={`/story/${example.id}`} className="fp-example-headline">{example.title}</Link>
+              <p className="fp-example-source">{example.source} · scored {example.spinScore}/100</p>
+              <ul className="fp-example-signals">
+                {example.signals.map((sig, i) => (
+                  <li key={`${sig.id}-${i}`}>
+                    <span className="sig-label">{sig.label}</span>
+                    <span className="sig-dots" aria-hidden="true" />
+                    <span className="sig-points">+{sig.points}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="fp-example-total">
+                <SpinBadge spin={example.spin} score={example.spinScore} flags={example.flags} signals={example.signals} hedged={example.hedged} />
+                <Link to={`/story/${example.id}`} className="fp-example-link">
+                  See the full breakdown <ArrowRight className="size-3" aria-hidden="true" />
+                </Link>
+              </div>
+            </>
+          ) : (
+            <p className="fp-example-quiet">
+              Today's edition is running measured — no headline crossed the Warm threshold. The scale on the left is
+              how every story is graded, and any flagged story will show its itemized signals right here.
+            </p>
+          )}
+          <p className="fp-example-foot">
+            A high score measures wording, not truth. Honest stories can run hot.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---- 05 THE SIGNAL LOOP ------------------------------------------------------
+// What happens between a feed and your screen, printed as a colophon rather
+// than drawn as a process graphic.
+const LOOP = [
+  ["Headline", "Reprinted verbatim from the source feed. Never rewritten, never summarized."],
+  ["Language", "The detector reads the wording only — the words, not the facts in them."],
+  ["Intensity", "Detected signals add points. The total becomes the story's Hype score."],
+  ["Context", "Scores sit against the day's edition and against your own running baseline."],
+  ["Original story", "Every card links out to the source. The measurement never replaces the reading."],
+];
+
+function SignalLoop() {
+  return (
+    <section className="fp-loop" aria-label="From headline to original story">
+      <div className="fp-loop-grid">
+        <div>
+          <span className="fp-kicker">The signal loop</span>
+          <p className="fp-loop-lede">
+            One pass, in the open. The same five steps run on every story, every load — and each step is inspectable
+            on the page it produces.
+          </p>
+          <Link to="/methodology" className="fp-loop-link">
+            Read the methodology <ArrowRight className="size-3.5" aria-hidden="true" />
+          </Link>
+        </div>
+        <ol className="fp-loop-steps">
+          {LOOP.map(([title, text], i) => (
+            <li key={title}>
+              <span className="step-num" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
+              <div>
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+  );
+}
+
+// ---- 06 THE WIRES ------------------------------------------------------------
+// The range of tracked sources. A listing is coverage, not an endorsement.
+function WiresStrip() {
+  return (
+    <section className="fp-wires" aria-label="Tracked sources">
+      <div className="fp-wires-head">
+        <span className="fp-eyebrow">The wires we read</span>
+        <Link className="more" to="/sources">Compare the sources →</Link>
+      </div>
+      <ul className="fp-wires-list">
+        {SOURCES.map((s) => (
+          <li key={s.name}>
+            <Link to={`/sources/${encodeURIComponent(s.name)}`}>{s.name}</Link>
+          </li>
+        ))}
+      </ul>
+      <p className="fp-wires-note">
+        {SOURCES.length} feeds, fetched fresh on every load. Listing is coverage, not endorsement — intensity is
+        measured, credibility is not.
+      </p>
+    </section>
+  );
+}
+
+
+// ---- 07 HYPE INDEX BAND ------------------------------------------------------
 const CHART_W = 640;
 const CHART_H = 260;
 const PAD_X = 12;
@@ -397,10 +586,11 @@ function HypeBand({ stats, sourceStats, history, loaded }) {
   );
 }
 
-// ---- 04 SUBSCRIBE BAND -------------------------------------------------------
-// There is no email backend — the honest subscription here is the RSS feed,
-// so the signup control copies the feed URL instead of pretending to enroll.
-function SubscribeBand({ showToast }) {
+// ---- 08 CLOSING BAND ---------------------------------------------------------
+// The final CTA is the product itself — read today's edition. There is no email
+// backend, so the honest subscription (the RSS feed, copied to the clipboard)
+// sits beside it instead of a pretend signup form.
+function ClosingBand({ showToast }) {
   const [status, setStatus] = useState({ text: "", err: false });
 
   const copyFeed = async (e) => {
@@ -423,17 +613,25 @@ function SubscribeBand({ showToast }) {
   };
 
   return (
-    <section className="fp-news" aria-label="Subscribe">
-      <div className="fp-cols">
-        <m.div {...fade}>
+    <section className="fp-final" aria-label="Read today's edition">
+      <div className="fp-final-grid">
+        <m.div {...fade} className="fp-final-cta">
           <span className="fp-kicker">The Morning Edition</span>
-          <h2>One feed. Every story. Nothing else.</h2>
+          <h2>Read today's edition.</h2>
           <p className="lede">
-            Take the whole edition with you — headlines as published, spin as detected, hype as measured — straight
-            into any reader you already trust.
+            Every story the wires filed — headlines verbatim, hype measured, sources linked.
           </p>
+          <div className="fp-hero-actions">
+            <Link to="/edition" className="fp-btn-primary fp-btn-link">
+              Read today's edition <ArrowRight className="size-3.5" aria-hidden="true" />
+            </Link>
+            <Link to="/hype-index" className="btn-outline inline-flex items-center gap-2">
+              See the Hype Index
+            </Link>
+          </div>
         </m.div>
-        <m.div {...fade}>
+        <m.div {...fade} className="fp-final-rss">
+          <span className="fp-eyebrow">Or take the whole paper with you</span>
           <form className="fp-signup" onSubmit={copyFeed}>
             <input
               type="text"
@@ -465,9 +663,17 @@ export default function Landing({ stories, stats, sourceStats, offline, loaded, 
 
       <Dispatch stories={stories} loaded={loaded} offline={offline} />
 
+      <WhySection />
+
+      <HowHype stories={stories} loaded={loaded} />
+
+      <SignalLoop />
+
       <HypeBand stats={stats} sourceStats={sourceStats} history={history} loaded={loaded} />
 
-      <SubscribeBand showToast={showToast} />
+      <WiresStrip />
+
+      <ClosingBand showToast={showToast} />
     </div>
   );
 }

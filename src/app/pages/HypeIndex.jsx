@@ -386,6 +386,87 @@ function Panel({ title, children }) {
   );
 }
 
+// ---- The index mast -----------------------------------------------------------
+// The signature treatment: the day's number set like a market indicator, with
+// the LOW──HIGH intensity scale and the signal doing most of the shouting.
+// Everything on it is derived from the real edition — the marker sits at the
+// share of stories scored above Measured.
+function dayWord(hypePercent) {
+  if (hypePercent <= 0) return "A measured day";
+  if (hypePercent < 25) return "A warm day";
+  if (hypePercent < 50) return "A loud day";
+  return "A very loud day";
+}
+
+function IndexMast({ stats, change, yesterday }) {
+  const top = useMemo(() => {
+    const breakdown = stats?.signalBreakdown;
+    if (!breakdown) return null;
+    const key = CATEGORY_ORDER.filter((k) => breakdown[k] > 0).sort((a, b) => breakdown[b] - breakdown[a])[0];
+    return key ? { label: CATEGORY_LABEL[key], count: breakdown[key] } : null;
+  }, [stats]);
+
+  const hyped = (stats.bySpin?.Warm ?? 0) + (stats.bySpin?.Hot ?? 0) + (stats.bySpin?.["On Fire"] ?? 0);
+
+  return (
+    <section className="hx-mast" aria-label="Today's Hype Index">
+      <div className="hx-mast-num">
+        <span className="fp-eyebrow">Today's headline intensity</span>
+        <p className="hx-big">
+          {stats.hypePercent}
+          <span className="hx-big-unit" aria-hidden="true">%</span>
+        </p>
+        <p className="hx-mast-word">
+          {dayWord(stats.hypePercent)} — {hyped} of {stats.total} stories scored above Measured
+        </p>
+      </div>
+
+      <div className="hx-mast-scale">
+        <div
+          className="hx-scale"
+          role="meter"
+          aria-label={`Headline intensity ${stats.hypePercent} of 100 — share of today's stories scored above Measured`}
+          aria-valuenow={stats.hypePercent}
+          aria-valuemin={0}
+          aria-valuemax={100}
+        >
+          <span className="hx-scale-track" aria-hidden="true">
+            {[0, 25, 50, 75, 100].map((t) => (
+              <i key={t} className="hx-tick" style={{ left: `${t}%` }} />
+            ))}
+            <i className="hx-marker" style={{ left: `${stats.hypePercent}%` }} />
+          </span>
+          <span className="hx-scale-ends" aria-hidden="true">
+            <span>LOW</span>
+            <span>HIGH</span>
+          </span>
+        </div>
+        <div className="hx-mast-delta">
+          {change === null ? (
+            <span className="hx-delta-flat">First reading — no baseline yet</span>
+          ) : (
+            <span className={change === 0 ? "hx-delta-flat" : change > 0 ? "hx-delta-up" : "hx-delta-down"}>
+              {change > 0 ? "▲" : change < 0 ? "▼" : "—"} {change === 0 ? "Flat" : `${Math.abs(change)} pts`} vs. yesterday ({yesterday}%)
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="hx-mast-signal">
+        <span className="fp-eyebrow">Top signal</span>
+        {top ? (
+          <p className="hx-top-signal">
+            {top.label} <span className="hx-top-count">· {top.count} {top.count === 1 ? "story" : "stories"}</span>
+          </p>
+        ) : (
+          <p className="hx-top-signal hx-top-quiet">No hype signals fired today.</p>
+        )}
+        <p className="hx-mast-note">Hype measures headline intensity, not truth.</p>
+      </div>
+    </section>
+  );
+}
+
 // ---- PAGE ---------------------------------------------------------------------
 export default function HypeIndex({ stats, allStories, sourceStats, loaded, offline, reload }) {
   const history = useMemo(() => readHypeHistory(), [loaded, stats]);
@@ -408,28 +489,11 @@ export default function HypeIndex({ stats, allStories, sourceStats, loaded, offl
 
       {loaded && !offline && stats ? (
         <>
+          {/* The signature index mast */}
+          <IndexMast stats={stats} change={change} yesterday={yesterday} />
+
           {/* Main chart */}
           <section className="chart-section" aria-label="Hype Index trend">
-            <div className="chart-head-row">
-              <div>
-                <div className="chart-label">Today's reading</div>
-                <div className="chart-value">
-                  {stats.hypePercent}
-                  <span className="text-2xl font-bold text-[color:var(--ink-soft)] sm:text-3xl">%</span>
-                </div>
-              </div>
-              <div className="delta-badge">
-                {change === null ? (
-                  <span className="unit">First reading — no baseline yet</span>
-                ) : (
-                  <>
-                    <span className="num">{change > 0 ? "+" : ""}{change}</span>
-                    <span className="unit">pts vs. yesterday ({yesterday}%)</span>
-                  </>
-                )}
-              </div>
-            </div>
-
             <TrendChart series={series} />
 
             <p className="method">

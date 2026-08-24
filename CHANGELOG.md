@@ -2,6 +2,31 @@
 
 All notable changes to **The Baseline** are documented here, grouped by the V2 spec's categories. Format: date · what changed · (spec reference).
 
+## 2026-08-24 — Landing narrative, Hype Index mast, bundle diet, font self-hosting
+
+### Performance
+- **Main JS chunk cut 295.7 KB → 100.3 KB** (92.3 → 29.9 KB gzip). Two causes fixed: (1) the object-form `manualChunks` silently failed to capture react-dom, leaving its 540 KB client runtime inside the app chunk — replaced with a path-matched function form so the whole React stack + router now ships as one stable, independently-cacheable vendor chunk; (2) `tailwind-merge` (~100 KB of class-conflict tables) was pulled eagerly by the shared `cn()` helper despite no call site relying on merge semantics — dropped, `cn()` is now plain `clsx`.
+- **Layout shift killed at the source**: Google Fonts loaded async (`media="print"` swap) caused a ~0.25 CLS reflow when the webfonts arrived. Fraunces (variable + italic) and Inter (variable) are now **self-hosted** in `public/fonts/` with `font-display: optional` and `<link rel="preload">` — CLS measured 0.25 → 0.089, and the third-party font origins are gone entirely.
+- **CSP tightened** to match: `style-src` and `font-src` no longer list `fonts.googleapis.com` / `fonts.gstatic.com`; everything is `'self'`.
+
+### Landing (`/`)
+- The front page now demonstrates the full product narrative (master plan §5): **Why this exists** (editorial argument section), **How a score is built** (tier scale beside the day's loudest *real* headline with its signals itemized point-by-point — or an honest "running measured" note when nothing fired), **The signal loop** (headline → language → intensity → context → original story, set as a colophon), **The wires we read** (all ten sources as a typographic strip with a coverage-not-endorsement note), and a **closing CTA band** ("Read today's edition." beside the honest RSS copy control).
+- Story previews now carry their hype signal: the lead shows a SpinBadge with score, and every Dispatch card (feature, mid, standards) carries its badge — the product is visible in every preview, not just explained.
+
+### Hype Index (`/hype-index`)
+- New **index mast**: the day's percentage set like a market indicator — large serif numeral, "a measured/warm/loud day" gloss with the above-Measured story count, a LOW──HIGH intensity scale with today's marker (role="meter", not color-only), delta vs. yesterday, the **top signal** family with its story count, and the standing "Hype measures headline intensity, not truth" line. Replaces the old chart header row.
+
+### Edition (`/edition`)
+- Imageless cards no longer reserve a 176 px "NO PHOTO" block — the placeholder is now a slim 30 px editorial strip, so text-first cards read tighter and real photographs stand out.
+
+### Repository
+- **Docs consolidated** per the cleanup plan: 30 stale plan/audit documents moved to `archive/plans/`; the top level is now `README.md`, `CHANGELOG.md`, `QA.md` (was QA-CHECKLIST), `ROADMAP.md` (was FUTURE-ROADMAP), and `SECURITY.md`. Live cross-references updated.
+- Dead code removed: `src/components/canvasui/RetroDither.jsx` (740 lines, zero imports).
+- README screenshots regenerated from the current build.
+
+### Tests
+- Component suite +2 (landing example/quiet-state behavior), landing CTA assertions updated for the dual hero/closing CTA; e2e critical journey updated for the same. Visual baselines regenerated. Matrix: 123 unit + 64 component + 22 e2e, all green; Lighthouse a11y/BP/SEO 100.
+
 ## 2026-08-15 — CI hardening, PWA install, self-published feeds, saved export
 
 ### Engineering & releases
