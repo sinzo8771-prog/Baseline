@@ -32,6 +32,9 @@ jobs:
         run: npm run build
 
       - name: Deploy to Cloudflare Workers (preview)
+        # Dependabot PRs run with `Secret source: Dependabot` and don't get
+        # Actions secrets — skip deploy there (tests + build still gate the PR).
+        if: github.actor != 'dependabot[bot]'
         id: deploy
         uses: cloudflare/wrangler-action@v4
         with:
