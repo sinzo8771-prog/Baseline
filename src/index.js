@@ -57,6 +57,18 @@ const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
 // likely to pass a request that looks like a feed reader: ask for the XML
 // types explicitly instead of the fetch-default "*/*".
 const ACCEPT_HEADER = "application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8";
+// A browser UA from a server IP reads as a bot to some publishers: VentureBeat
+// (Vercel-fronted since 2026-09-04) answers every browser-UA request with its
+// JS security checkpoint (429) while letting recognised feed readers through.
+// Per-source overrides keep the browser UA everywhere else, where a bot UA
+// gets 403/503. Keys must name a feed in FEEDS (test/feeds.test.js checks).
+export const FEED_USER_AGENTS = {
+  "VentureBeat AI": "Feedly/1.0 (+http://www.feedly.com/fetcher.html; 25 subscribers; contact@example.com)",
+};
+
+function feedHeaders(name) {
+  return { "user-agent": FEED_USER_AGENTS[name] ?? USER_AGENT, accept: ACCEPT_HEADER };
+}
 
 // A dead source is indistinguishable from a blocked one without logs: both
 // surface as a non-ok status. Publisher WAFs blocking Workers egress return
@@ -134,7 +146,7 @@ async function relayFeed(name, request) {
   try {
     const res = await fetch(upstream, {
       signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
-      headers: { "user-agent": USER_AGENT, accept: ACCEPT_HEADER },
+      headers: feedHeaders(name),
     });
     if (!res.ok) {
       logUpstreamFailure("relay", name, `upstream HTTP ${res.status}`);
@@ -217,7 +229,7 @@ async function buildEdition() {
       try {
         const res = await fetch(feed, {
           signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
-          headers: { "user-agent": USER_AGENT, accept: ACCEPT_HEADER },
+          headers: feedHeaders(name),
         });
         if (!res.ok) {
           logUpstreamFailure("edition", name, `upstream HTTP ${res.status}`);

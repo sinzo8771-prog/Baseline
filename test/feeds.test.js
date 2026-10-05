@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DOMParser } from "@xmldom/xmldom";
 import { parseFeed, stripTags, decodeEntities, SOURCES, MAX_PER_FEED, SUMMARY_MAX, sanitizeImageUrl } from "../src/lib/feeds.js";
-import { FEEDS } from "../src/index.js";
+import { FEEDS, FEED_USER_AGENTS } from "../src/index.js";
 
 // DOMParser (class) passed to parseFeed so the same tests run in Node and would run in a browser.
 
@@ -40,6 +40,13 @@ test("worker feed allowlist matches the browser SOURCES list", () => {
   assert.equal(Object.keys(FEEDS).length, SOURCES.length);
   for (const s of SOURCES) {
     assert.equal(FEEDS[s.name], s.feed, `FEEDS["${s.name}"] must match SOURCES`);
+  }
+});
+
+test("per-source user agents only name feeds that exist", () => {
+  for (const name of Object.keys(FEED_USER_AGENTS)) {
+    assert.ok(FEEDS[name], `FEED_USER_AGENTS["${name}"] has no matching feed`);
+    assert.ok(FEED_USER_AGENTS[name].length > 0);
   }
 });
 
