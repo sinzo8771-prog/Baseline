@@ -36,14 +36,14 @@ const CMD_LABEL = IS_MAC ? "⌘K" : "Ctrl K";
 
 function ShortcutsHelp({ onClose }) {
   return (
-    <div className="mt-3 rounded-[2px] border border-border bg-card p-5" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
+    <div className="mt-3 border border-border bg-card p-5" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Keyboard</h3>
+        <h3 className="kicker">Keyboard</h3>
         <button
           type="button"
           onClick={onClose}
           aria-label="Close shortcuts"
-          className="inline-flex size-6 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          className="inline-flex size-6 items-center justify-center border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         >
           <X className="size-3.5" aria-hidden="true" />
         </button>
@@ -51,7 +51,7 @@ function ShortcutsHelp({ onClose }) {
       <ul className="grid gap-1.5 text-sm text-muted-foreground sm:grid-cols-2">
         {SHORTCUTS.map((s) => (
           <li key={s.key} className="flex items-center justify-between gap-4">
-            <span className="rounded border border-border bg-accent px-1.5 py-0.5 font-mono text-xs text-foreground">{s.key}</span>
+            <span className="border border-border bg-accent px-1.5 py-0.5 font-mono text-xs text-foreground">{s.key}</span>
             <span>{s.what}</span>
           </li>
         ))}
@@ -72,24 +72,41 @@ const SORTS = [
   { key: "source", label: "By Source" },
 ];
 
-function SkeletonCard() {
+// Loading placeholders mirror the real edition's shape — a lead block then a
+// ruled index — so the page doesn't reflow when the feeds arrive.
+function LeadSkeleton() {
   return (
-    <div className="rounded-[2px] border border-border/70 bg-card p-5">
-      <div className="h-4 w-24 animate-pulse rounded-full skeleton" />
-      <div className="mt-3 h-5 w-11/12 animate-pulse rounded skeleton" />
-      <div className="mt-2 h-5 w-8/12 animate-pulse rounded skeleton" />
+    <div className="lead">
+      <div className="lead-body">
+        <div className="mb-5 h-[108px] w-full animate-pulse skeleton" />
+        <div className="h-3 w-16 animate-pulse skeleton" />
+        <div className="mt-3 h-9 w-11/12 animate-pulse skeleton" />
+        <div className="mt-2.5 h-9 w-7/12 animate-pulse skeleton" />
+        <div className="mt-4 h-4 w-full animate-pulse skeleton" />
+        <div className="mt-2 h-4 w-6/12 animate-pulse skeleton" />
+      </div>
+      <div className="lead-rail">
+        <div className="h-[104px] w-full animate-pulse skeleton" />
+      </div>
     </div>
   );
 }
 
-function LeadSkeleton() {
+function RowSkeleton() {
   return (
-    <div className="mb-8 rounded-[2px] border border-border/80 bg-card p-6 sm:p-8">
-      <div className="h-4 w-20 animate-pulse rounded-full skeleton" />
-      <div className="mt-4 h-8 w-9/12 animate-pulse rounded skeleton" />
-      <div className="mt-3 h-8 w-6/12 animate-pulse rounded skeleton" />
-      <div className="mt-4 h-4 w-full animate-pulse rounded skeleton" />
-      <div className="mt-2 h-4 w-7/12 animate-pulse rounded skeleton" />
+    <div className="index-row">
+      <span className="rank">
+        <span className="block h-3 w-5 animate-pulse skeleton" />
+      </span>
+      <div className="body">
+        <div className="h-2.5 w-24 animate-pulse skeleton" />
+        <div className="mt-2.5 h-5 w-10/12 animate-pulse skeleton" />
+        <div className="mt-2 h-3 w-full animate-pulse skeleton" />
+        <div className="mt-2 h-3 w-2/3 animate-pulse skeleton" />
+      </div>
+      <div className="rail">
+        <div className="h-3 w-16 animate-pulse skeleton" />
+      </div>
     </div>
   );
 }
@@ -98,7 +115,7 @@ function LeadSkeleton() {
 // still backed by a real timeout and error path (never a substitute for them).
 function PressingWires() {
   return (
-    <p className="mb-4 text-[11px] uppercase tracking-[0.16em] text-muted-foreground" role="status" aria-live="polite">
+    <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground" role="status" aria-live="polite">
       Pressing the wires…
     </p>
   );
@@ -176,52 +193,77 @@ export default function Home({ stories, offline, loaded, reload, servedFromCache
   // answer — without alarm styling that implies the page is broken.
   const failedSources = loaded && settled ? sources.filter((s) => !s.ok) : [];
 
+  // The facts panel: the day's own figures, computed from what actually
+  // arrived. Every number here is a real count from the feed — nothing is
+  // invented to fill the panel.
+  const facts = [
+    { k: "Stories filed", v: String(edition.length) },
+    { k: "Wires tracked", v: String(sources.length) },
+    { k: "Sourced today", v: new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" }) },
+    { k: "Silent wires", v: String(failedSources.length), accent: failedSources.length > 0 },
+  ];
+
   return (
     <section id="latest" aria-label="Latest stories">
-      <header className="ed page-head pt-8 pb-6">
-        <span className="fp-kicker">Today's Edition</span>
-        <h1 className="page-title" style={{ fontSize: "clamp(36px, 6vw, 68px)" }}>The Day In</h1>
-        <p className="page-deck">
-          Every story the wires filed — headlines verbatim, ranked fresh-first, hype measured.
-        </p>
+      <header className="edition-head">
+        <div className="edition-titles">
+          <p className="edition-kicker">Today's Edition</p>
+          <h1>The Day In</h1>
+          <p className="edition-deck">
+            Every story the wires filed — headlines verbatim, ranked fresh-first, hype measured.
+          </p>
+        </div>
+        <dl className="facts">
+          {facts.map((f) => (
+            <div key={f.k} className={cn("fact", f.accent && "fact--accent")}>
+              <dt className="k">{f.k}</dt>
+              <dd className="v">{f.v}</dd>
+            </div>
+          ))}
+        </dl>
       </header>
 
       {!loaded ? <PressingWires /> : null}
 
       {loaded && offline ? (
         <p
-          className="mb-4 border border-border/70 bg-card px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-foreground"
+          className="edition-notice"
           role="status"
         >
           {servedFromCache ? (
             <>
-              <span className="font-semibold text-foreground">SAVED EDITION</span>
-              {savedAt ? ` · LAST UPDATED ${new Date(savedAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}` : null}
+              <span className="kicker !text-foreground">Saved edition</span>
+              {savedAt ? ` · last updated ${new Date(savedAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}` : null}
               {" — "}the latest wires could not be reached. Showing the last saved edition.{" "}
             </>
           ) : (
-            "The latest wires could not be reached. "
+            <>
+              <span className="kicker !text-foreground">Offline</span>
+              {" — "}the latest wires could not be reached.{" "}
+            </>
           )}
-          <button type="button" className="underline underline-offset-4 hover:text-foreground" onClick={reload}>
-            TRY AGAIN
+          <button type="button" className="notice-action" onClick={reload}>
+            Try again
           </button>
         </p>
       ) : null}
 
       {loaded && !offline && failedSources.length > 0 ? (
         <p
-          className="mb-4 border border-border/70 bg-card px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-foreground"
+          className="edition-notice"
           role="status"
         >
+          <span className="kicker">Partial edition</span>
+          {" — "}
           {failedSources.length} of {sources.length} sources did not respond today — the edition may be thinner than
           usual.{" "}
-          <button type="button" className="underline underline-offset-4 hover:text-foreground" onClick={reload}>
-            TRY AGAIN
+          <button type="button" className="notice-action" onClick={reload}>
+            Try again
           </button>
         </p>
       ) : null}
 
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="edition-toolbar">
         <div className="relative">
           <Search className="search-icon" aria-hidden="true" />
           <label className="sr-only" htmlFor="story-search">Search the edition</label>
@@ -245,7 +287,7 @@ export default function Home({ stories, offline, loaded, reload, servedFromCache
             </button>
           ) : (
             <span className="pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-2 text-muted-foreground">
-              <kbd className="inline-flex h-5 max-h-full items-center rounded border border-border bg-accent px-1 font-[inherit] text-[0.625rem] font-medium text-muted-foreground/70">
+              <kbd className="inline-flex h-5 max-h-full items-center border border-border bg-accent px-1 font-[inherit] text-[0.625rem] font-medium text-muted-foreground">
                 {CMD_LABEL}
               </kbd>
             </span>
@@ -294,27 +336,28 @@ export default function Home({ stories, offline, loaded, reload, servedFromCache
       </div>
 
       {sourceFilter ? (
-        <div className="mb-3 inline-flex items-center gap-2 rounded-[2px] border border-border bg-card px-3 py-1.5 text-[11px] uppercase tracking-[0.08em]">
+        <p className="source-filter">
+          <span className="kicker">Filtered to</span>
           <span className="font-semibold text-foreground">{sourceFilter}</span>
           <button
             type="button"
-            className="inline-flex size-4 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            className="source-filter__clear"
             aria-label={`Stop filtering by ${sourceFilter}`}
             onClick={clearSource}
           >
             <X className="size-3" aria-hidden="true" />
           </button>
-        </div>
+        </p>
       ) : null}
 
       {filtersOpen ? (
-        <div id="edition-filters" className="mb-4 rounded-[2px] border border-border bg-card p-4">
+        <div id="edition-filters" className="edition-filters">
           <div
-            className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[10px] uppercase tracking-[0.08em] text-muted-foreground"
+            className="flex flex-wrap items-center gap-x-4 gap-y-1.5"
             role="group"
             aria-label="The spin scale"
           >
-            <span className="font-semibold text-foreground">The spin scale</span>
+            <span className="kicker font-semibold !text-foreground">The spin scale</span>
             {FILTERS.filter((f) => f !== "all").map((f) => (
               <span key={f} className="inline-flex items-center gap-1.5">
                 <SpinBadge spin={f} />
@@ -326,7 +369,7 @@ export default function Home({ stories, offline, loaded, reload, servedFromCache
       ) : null}
 
       {loaded && hasActiveFilters ? (
-        <p className="mb-3 text-[11px] uppercase tracking-[0.08em] text-muted-foreground" role="status">
+        <p className="kicker mb-4" role="status">
           {sorted.length === 1 ? "Searching 1 story" : `Searching ${sorted.length} stories`}
         </p>
       ) : null}
@@ -340,8 +383,8 @@ export default function Home({ stories, offline, loaded, reload, servedFromCache
         {!loaded ? (
           <>
             <LeadSkeleton />
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {[0, 1, 2, 3, 4, 5].map((i) => <SkeletonCard key={i} />)}
+            <div className="index">
+              {[0, 1, 2, 3, 4, 5].map((i) => <RowSkeleton key={i} />)}
             </div>
           </>
         ) : offline && edition.length === 0 ? (

@@ -25,7 +25,7 @@ function Distribution({ bySpin }) {
         return (
           <div key={tier} className="flex items-center gap-3">
             <span className="w-20 shrink-0 text-[11px] uppercase tracking-[0.08em] text-muted-foreground">{tier}</span>
-            <div className="h-3 flex-1 overflow-hidden rounded-[2px] bg-accent" role="meter" aria-label={`${tier}: ${n} stories`} aria-valuenow={n} aria-valuemin={0} aria-valuemax={max}>
+            <div className="h-3 flex-1 overflow-hidden bg-accent" role="meter" aria-label={`${tier}: ${n} stories`} aria-valuenow={n} aria-valuemin={0} aria-valuemax={max}>
               <div className="h-full bg-primary/70" style={{ width: `${width}%` }} />
             </div>
             <span className="w-6 shrink-0 text-right tabular-nums text-sm text-foreground">{n}</span>
@@ -96,11 +96,11 @@ export default function SourceProfile({ allStories, sources, sourceStats: stats,
 
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="font-serif text-3xl font-black text-foreground">{decoded}</h1>
-        <span className={`rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.08em] ${statusOk ? "border-border text-muted-foreground" : "border-primary/50 text-primary"}`}>
+        <span className={` border px-3 py-1 text-[11px] uppercase tracking-[0.08em] ${statusOk ? "border-border text-muted-foreground" : "border-primary/50 text-primary"}`}>
           {statusText}
         </span>
         {isMirroredFeed(decoded) ? (
-          <span className="rounded-[2px] border border-border/70 px-1.5 py-1 text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
+          <span className=" border border-border/70 px-1.5 py-1 text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
             mirrored feed
           </span>
         ) : null}
@@ -131,7 +131,7 @@ export default function SourceProfile({ allStories, sources, sourceStats: stats,
         </p>
       ) : null}
 
-      <dl className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-[2px] border border-border bg-border sm:grid-cols-4">
+      <dl className="mt-6 grid grid-cols-2 gap-px overflow-hidden border border-border bg-border sm:grid-cols-4">
         <div className="bg-card p-4">
           <dt className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">Stories</dt>
           <dd className="mt-1 font-serif text-2xl font-bold text-foreground">{stat?.count ?? storyList.length}</dd>
@@ -164,7 +164,7 @@ export default function SourceProfile({ allStories, sources, sourceStats: stats,
       </p>
 
       {stat ? (
-        <div className="mt-6 max-w-2xl rounded-[2px] border border-border bg-card p-5">
+        <div className="mt-6 max-w-2xl border border-border bg-card p-5">
           <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Hype distribution</h2>
           <Distribution bySpin={stat.bySpin} />
         </div>
@@ -175,7 +175,7 @@ export default function SourceProfile({ allStories, sources, sourceStats: stats,
           <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-muted-foreground">In today's edition</h2>
           <ul className="mt-4 space-y-4">
             {storyList.map((story) => (
-              <li key={story.id} className="rounded-[2px] border border-border/70 bg-card p-4">
+              <li key={story.id} className=" border border-border/70 bg-card p-4">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                   <SpinBadge spin={story.spin} flags={story.flags} />
                   <span className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">

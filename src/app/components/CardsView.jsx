@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { ExternalLink } from "lucide-react";
-import { cn } from "@/lib/utils";
 import SpinBadge from "./SpinBadge.jsx";
 import StoryModal from "./StoryModal.jsx";
 import BookmarkButton from "./BookmarkButton.jsx";
@@ -41,34 +40,27 @@ export default function CardsView({ stories, lastVisit = null }) {
 
   return (
     <div>
-      <ul className="grid grid-cols-1 gap-px overflow-hidden rounded-[2px] border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
+      <div className="wire-head">
+        <span>The wires</span>
+        <span>{stories.length} {stories.length === 1 ? "story" : "stories"} · newest first</span>
+      </div>
+      <ul className="wire-grid">
         {stories.map((story) => (
-          <li key={story.id} className="group relative flex min-h-0 flex-col bg-card p-5">
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                {story.source}
-              </span>
-              <span className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
-                {fmtDate(story.publishedAt)}
-              </span>
+          <li key={story.id} className="group relative flex min-h-0 flex-col">
+            <div className="wire-meta">
+              <span className="src">{story.source}</span>
+              <span>{fmtDate(story.publishedAt)}</span>
               {isNewSinceLastVisit(story.publishedAt, lastVisit) ? (
-                <span className="rounded-[2px] border border-primary/60 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-primary">
-                  New
-                </span>
+                <span className="flag">New</span>
               ) : null}
             </div>
 
-            <h3 className="mt-3 line-clamp-4 break-words font-serif text-lg font-bold leading-snug text-foreground">
-              {story.title}
-            </h3>
+            <h3 className="wire-headline">{story.title}</h3>
 
-            <BookmarkButton
-              story={story}
-              className="absolute right-3 top-3 z-10 size-8 bg-card/80 backdrop-blur-sm"
-            />
+            <BookmarkButton story={story} className="wire-save" />
 
-            <div className="mt-auto pt-4">
-              <div className="flex items-center justify-between gap-3 border-t border-border/70 pt-3">
+            <div className="mt-auto pt-3">
+              <div className="wire-foot">
                 <SpinBadge
                   spin={story.spin}
                   flags={story.flags}
@@ -76,7 +68,7 @@ export default function CardsView({ stories, lastVisit = null }) {
                   hedged={story.hedged}
                   score={story.spinScore}
                 />
-                <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.08em] text-primary opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                <span className="wire-read">
                   Read <ExternalLink className="size-3" aria-hidden="true" />
                 </span>
               </div>
@@ -87,9 +79,7 @@ export default function CardsView({ stories, lastVisit = null }) {
               aria-label={`Open story: ${story.title}`}
               aria-haspopup="dialog"
               onClick={() => open(story)}
-              className={cn(
-                "absolute inset-0 z-0 cursor-pointer rounded-[2px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-              )}
+              className="absolute inset-0 z-0 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             />
           </li>
         ))}

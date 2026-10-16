@@ -5,7 +5,6 @@ import { ArrowLeft, ExternalLink } from "lucide-react";
 import SpinBadge from "./../components/SpinBadge.jsx";
 import StoryModal from "../components/StoryModal.jsx";
 import EmptyState from "../components/EmptyState.jsx";
-import { cn } from "@/lib/utils";
 import { reconcileSaved } from "../lib/savedStories.js";
 import exportSaved from "../lib/exportSaved.js";
 
@@ -67,49 +66,49 @@ export default function Saved({ stories }) {
           action={{ label: "Go to the edition", onClick: () => (window.location.href = "/edition") }}
         />
       ) : (
-        <ul className="mt-6 grid grid-cols-1 gap-px overflow-hidden rounded-[2px] border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
-          {savedList.map((story) => (
-            <li key={story.id} className="group relative flex min-h-0 flex-col bg-card p-5">
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                  {story.source || "Unknown source"}
-                </span>
-                <span className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
-                  {fmtDate(story.publishedAt)}
-                </span>
-              </div>
-
-              <h2 className="mt-3 line-clamp-4 break-words font-serif text-lg font-bold leading-snug text-foreground">
-                {story.title}
-              </h2>
-
-              <div className="mt-auto pt-4">
-                <div className="flex items-center justify-between gap-3 border-t border-border/70 pt-3">
-                  <SpinBadge
-                    spin={story.spin}
-                    flags={story.flags}
-                    signals={story.signals}
-                    hedged={story.hedged}
-                    score={story.spinScore}
-                  />
-                  <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.08em] text-primary opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-                    Read <ExternalLink className="size-3" aria-hidden="true" />
-                  </span>
+        <>
+          <div className="wire-head" style={{ marginTop: 24 }}>
+            <span>Kept for later</span>
+            <span>
+              {savedList.length} {savedList.length === 1 ? "story" : "stories"} · stored in this browser
+            </span>
+          </div>
+          <ul className="wire-grid">
+            {savedList.map((story) => (
+              <li key={story.id} className="group relative flex min-h-0 flex-col">
+                <div className="wire-meta">
+                  <span className="src">{story.source || "Unknown source"}</span>
+                  <span>{fmtDate(story.publishedAt)}</span>
                 </div>
-              </div>
 
-              <button
-                type="button"
-                aria-label={`Open saved story: ${story.title}`}
-                aria-haspopup="dialog"
-                onClick={() => setSelectedId(story.id)}
-                className={cn(
-                  "absolute inset-0 z-0 cursor-pointer rounded-[2px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-                )}
-              />
-            </li>
-          ))}
-        </ul>
+                <h2 className="wire-headline">{story.title}</h2>
+
+                <div className="mt-auto pt-3">
+                  <div className="wire-foot">
+                    <SpinBadge
+                      spin={story.spin}
+                      flags={story.flags}
+                      signals={story.signals}
+                      hedged={story.hedged}
+                      score={story.spinScore}
+                    />
+                    <span className="wire-read">
+                      Read <ExternalLink className="size-3" aria-hidden="true" />
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  aria-label={`Open saved story: ${story.title}`}
+                  aria-haspopup="dialog"
+                  onClick={() => setSelectedId(story.id)}
+                  className="absolute inset-0 z-0 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                />
+              </li>
+            ))}
+          </ul>
+        </>
       )}
 
       <AnimatePresence>

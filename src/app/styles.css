@@ -1,50 +1,100 @@
+/* =====================================================================
+   THE BASELINE — "The Broadsheet" design system
+   ---------------------------------------------------------------------
+   House rules, in order of authority:
+     1. Square corners. Nothing in the product is rounded except a real
+        circle (pips, theme-toggle dot, range handles).
+     2. Rules carry the hierarchy. Hairline separates; a 3px rule declares;
+        a 4px double rule is the front page. Boxes are for content that
+        cannot be separated by a rule.
+     3. Vermillion is scarce. It marks the Hype Index, the spin marker,
+        the score, and today's date — nothing else. If two things on a
+        viewport are red, one of them is wrong.
+     4. Metadata is set in mono with tabular figures so columns of
+        numbers align and a reader can scan a rail without reading it.
+5. Serif (Fraunces) is for things a human said. Sans (Inter) is
+         for things a machine said. Mono is for things that happened.
+
+   Why this direction: The Baseline is a measuring instrument — it counts how
+   loud AI's press is — so it should look like an instrument, not a magazine.
+   Of the three directions explored, A (editorial brutalism) was the only one
+   whose hierarchy comes from rules and type scale instead of cards and
+   shadows, which is what keeps a column of 25 scored headlines scannable.
+   B (internet-native magazine) competed for attention the way the reading
+   experience already does, so it was kept only for its best parts — mono
+   metadata and the pip meter. C (letterpress) contributed the drop cap.
+   ===================================================================== */
+
 /* Declare the cascade layers up front so this file's @layer components
    rules (which are bundled BEFORE the Tailwind import in main.jsx) still
-   beat preflight's base-layer resets (e.g. h1 font-size: inherit). Without
-   this, components would be ordered ahead of base and every chrome rule
-   that fights a preflight default would silently lose. */
+   beat preflight's base-layer resets (e.g. h1 font-size: inherit). */
 @layer theme, base, components, utilities;
 
 :root {
-  --paper: #f4efe4;
-  --paper-dim: #e9e2d2;
-  --ink: #1c1a16;
-  --ink-soft: #5a554a;
-  --vermillion: #b93c22;
-  --rule: #1c1a16;
-  --skeleton: #d8d1bd;
+  /* ── Palette ─────────────────────────────────────────────────────── */
+  --paper: #f2ede1;
+  --paper-dim: #e7e0cf;
+  --ink: #191713;
+  --ink-soft: #5c5548;
+  --vermillion: #b3371c;
+  --rule: #191713;
+  --skeleton: #d6cfba;
+
+  /* ── Derived rules ────────────────────────────────────────────────────
+     `rule` is the ink (structural: masthead, borders, table heads).
+     `hair` is a single hairline that recedes (list separators, dotted
+     leaders). Keeping them apart is what stops the page reading as a
+     wireframe: structure is loud, sequence is quiet. */
+  --hair: color-mix(in oklch, var(--rule), transparent 72%);
+  --hair-strong: color-mix(in oklch, var(--rule), transparent 46%);
+  --wash: color-mix(in oklch, var(--paper-dim), var(--paper) 55%);
+  --vermillion-wash: color-mix(in oklch, var(--vermillion), var(--paper) 90%);
+
+  /* ── Type ─────────────────────────────────────────────────────────────
+     Mono is a system stack: a webfont here would add a 4th blocking
+     face for what is strictly metadata, and system mono is exactly the
+     "instrument readout" register the dateline wants. */
+  --serif: "Fraunces", Georgia, "Times New Roman", serif;
+  --sans: "Inter", system-ui, -apple-system, sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
+
+  /* ── Metrics ──────────────────────────────────────────────────────── */
+  --measure: 1320px;
+  --gutter: clamp(16px, 3.2vw, 44px);
+  --radius: 0px;
+  --radius-pill: 999px; /* reserved for true circles only */
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --paper: #1c1a16;
-    --paper-dim: #2a2722;
-    --ink: #f4efe4;
-    --ink-soft: #b8b0a0;
-    --vermillion: #e87a5a;
-    --rule: #4a453d;
-    --skeleton: #3c382f;
+    --paper: #17150f;
+    --paper-dim: #262218;
+    --ink: #f2ede1;
+    --ink-soft: #b3aa96;
+    --vermillion: #ec7d5a;
+    --rule: #f2ede1;
+    --skeleton: #3a352a;
   }
 }
 
 [data-theme="light"] {
-  --paper: #f4efe4;
-  --paper-dim: #e9e2d2;
-  --ink: #1c1a16;
-  --ink-soft: #5a554a;
-  --vermillion: #b93c22;
-  --rule: #1c1a16;
-  --skeleton: #d8d1bd;
+  --paper: #f2ede1;
+  --paper-dim: #e7e0cf;
+  --ink: #191713;
+  --ink-soft: #5c5548;
+  --vermillion: #b3371c;
+  --rule: #191713;
+  --skeleton: #d6cfba;
 }
 
 [data-theme="dark"] {
-  --paper: #1c1a16;
-  --paper-dim: #2a2722;
-  --ink: #f4efe4;
-  --ink-soft: #b8b0a0;
-  --vermillion: #e87a5a;
-  --rule: #4a453d;
-  --skeleton: #3c382f;
+  --paper: #17150f;
+  --paper-dim: #262218;
+  --ink: #f2ede1;
+  --ink-soft: #b3aa96;
+  --vermillion: #ec7d5a;
+  --rule: #f2ede1;
+  --skeleton: #3a352a;
 }
 
 html {
@@ -86,12 +136,15 @@ html {
 body {
   background: var(--paper);
   color: var(--ink);
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--sans);
   line-height: 1.55;
-  max-width: 1140px;
+  max-width: var(--measure);
   margin: 0 auto;
-  padding: 0 24px 56px;
+  padding: 0 var(--gutter) 72px;
   overflow-wrap: break-word;
+  /* A very slight warm vignette so the paper reads as a surface rather than
+     a flat colour fill, without touching any single element. */
+  background-image: radial-gradient(120% 80% at 50% 0%, color-mix(in oklch, var(--paper), white 3%) 0%, transparent 62%);
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
@@ -99,46 +152,143 @@ body {
    so the first paint reads as "loading" instead of "broken". */
 .skeleton {
   background: var(--skeleton);
+  border-radius: var(--radius);
 }
 
-/* Page chrome (masthead, nav, sections, footer, toast). Kept in the
-   components layer so Tailwind utilities can still override them where the
-   two share class names; the old story-card classes (.grid/.story/.spin/
-   .meter/.filter-chip/.skeleton) were removed because the new components
-   style those with Tailwind utilities. */
 @layer components {
-  .masthead {
-    text-align: center;
-    border-top: 2px solid var(--rule);
-    border-bottom: 4px double var(--rule);
-    padding: 24px 0 22px;
+  /* ===================================================================
+     TYPE PRIMITIVES — the three registers, named once, used everywhere
+     =================================================================== */
+
+  /* Machine-said data: scores, counts, timestamps, source handles. */
+  .mono {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+    letter-spacing: 0.01em;
   }
 
-  .masthead-meta {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px 12px;
-    font-size: 12px;
-    letter-spacing: 0.08em;
+  /* Section furniture: the line that labels a block. Always uppercase,
+     always tracked, always small — its job is to be findable by shape
+     before it is readable. */
+  .kicker {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--ink-soft);
   }
 
-  .masthead-rule { flex: 1; margin: 0 12px; border-bottom: 1px solid var(--ink-soft); transform: translateY(-50%); }
+  /* Section furniture, louder variant (vermillion — rare). */
+  .kicker--accent { color: var(--vermillion); }
 
-  .masthead-title {
-    font-family: Fraunces, Georgia, serif;
-    font-weight: 900;
-    font-size: clamp(40px, 7vw, 68px);
-    letter-spacing: -0.03em;
-    margin: 10px 0 6px;
+  /* Human-said headline. Fraunces, tight, balanced wrapping. */
+  .headline {
+    font-family: var(--serif);
+    font-weight: 700;
+    line-height: 1.06;
+    letter-spacing: -0.02em;
     text-wrap: balance;
   }
 
-  .masthead-link { color: inherit; text-decoration: none; }
-  .masthead-link:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 2px; }
+  /* Human-said deck/summary. Serif italic — the editorial voice. */
+  .deck {
+    font-family: var(--serif);
+    font-style: italic;
+    line-height: 1.42;
+    color: var(--ink-soft);
+  }
+
+  /* Hairline rule. */
+  .hairline { border-top: 1px solid var(--hair); }
+
+  /* A dotted leader — how a printed contents page aligns a label to a
+     figure across an unknown gap. */
+  .leader {
+    flex: 1;
+    min-width: 12px;
+    align-self: flex-end;
+    margin-bottom: 0.35em;
+    border-bottom: 1px dotted var(--hair-strong);
+  }
+
+  /* ===================================================================
+     PAGE CHROME
+     =================================================================== */
+
+  /* The masthead is a newspaper nameplate: a thin rule, a heavy rule, the
+     nameplate between them, a double rule under. Centred nameplate, hard
+     rules — the most recognisable move in the direction. */
+  .masthead {
+    text-align: center;
+    padding: 14px 0 0;
+    /* 3px top rule + 3mm breathing room before the dateline strip. */
+    border-top: 3px solid var(--rule);
+  }
+
+  /* Dateline strip: mono, uppercase, tabular, hairline-separated. This is
+     borrowed from direction B — it is the one piece of "instrument" that
+     earns its place on a front page. */
+  .masthead-meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 4px 14px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-soft);
+    padding: 7px 0;
+    border-top: 1px solid var(--hair);
+    border-bottom: 3px double var(--rule);
+  }
+
+  .masthead-rule {
+    width: 3px;
+    height: 3px;
+    background: var(--hair-strong);
+    flex-shrink: 0;
+  }
+  /* The dot separators only help when the strip fits on one line; once it
+     wraps they strand themselves at the end of a line. */
+  @media (max-width: 620px) {
+    .masthead-rule { display: none; }
+    .masthead-meta { gap: 2px 12px; }
+  }
+
+  .masthead-title {
+    display: block;
+    font-family: var(--serif);
+    font-weight: 900;
+    font-size: clamp(44px, 9.5vw, 104px);
+    line-height: 0.92;
+    letter-spacing: -0.045em;
+    margin: clamp(14px, 2.4vw, 26px) 0 0;
+    text-wrap: balance;
+  }
+
+  .masthead-link {
+    color: inherit;
+    text-decoration: none;
+  }
+  .masthead-link:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 4px; }
+
+  /* The flag line under the nameplate: a rule, then the tagline in mono
+     tracked out, then a rule. Keeps the nameplate optically centred. */
+  .masthead-tagline {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 0;
+    padding: 8px 0 10px;
+    border-bottom: 3px double var(--rule);
+  }
 
   /* Keyboard-first escape hatch: visually off-canvas until it receives focus,
      then it drops into the viewport so the first Tab lands on real content
@@ -151,199 +301,242 @@ body {
     background: var(--ink);
     color: var(--paper);
     padding: 10px 16px;
+    font-family: var(--mono);
     font-size: 11px;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     text-decoration: none;
-    border-radius: 2px;
     transform: translateY(-300%);
     transition: transform 0.15s ease;
   }
-  .skip-link:focus {
-    transform: translateY(0);
-  }
+  .skip-link:focus { transform: translateY(0); }
   .skip-link:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 2px; }
-
-  .masthead-tagline {
-    font-family: Fraunces, Georgia, serif;
-    font-style: italic;
-    font-size: 18px;
-    color: var(--ink-soft);
-  }
 
   .theme-toggle {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 44px;
-    min-height: 44px;
-    padding: 0 8px;
-    border: 1px solid var(--rule);
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0 10px;
+    border: 0;
+    border-bottom: 2px solid var(--rule);
     color: var(--ink);
     background: none;
-    border-radius: 9999px;
     cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease;
+    transition: color 0.15s ease;
   }
-  .theme-toggle:hover { background: var(--paper-dim); color: var(--ink); }
+  .theme-toggle:hover { color: var(--vermillion); }
   .theme-toggle:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 2px; }
 
   .btn-outline {
     background: none;
-    border: 1px solid var(--rule);
+    border: 0;
+    border-bottom: 2px solid var(--rule);
     color: var(--ink);
-    min-height: 44px;
-    padding: 10px 18px;
+    min-height: 40px;
+    padding: 8px 0;
+    font-family: var(--mono);
     font-size: 11px;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     cursor: pointer;
-    border-radius: 2px;
-    transition: background 0.15s ease;
+    transition: color 0.15s ease, border-color 0.15s ease;
   }
-  .btn-outline:hover { background: var(--paper-dim); }
+  .btn-outline:hover { color: var(--vermillion); border-color: var(--vermillion); }
   .btn-outline:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 2px; }
 
+  /* Solid inverse button — the one filled control in the system. Used for
+     primary actions only, so "filled" keeps meaning "do this". */
+  .btn-solid {
+    background: var(--ink);
+    color: var(--paper);
+    border: 1px solid var(--ink);
+    min-height: 40px;
+    padding: 10px 18px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .btn-solid:hover { background: var(--vermillion); border-color: var(--vermillion); }
+  .btn-solid:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 2px; }
+
+  /* ── Navigation ──────────────────────────────────────────────────────
+     A sticky mono rail. Active state is an inverted block (black on paper)
+     rather than an underline: a printed contents page marks the current
+     entry by weight and inversion, not by a drawn line.
+     Below the row breakpoint the links become one horizontally scrollable
+     strip — a nav that wraps to three rows on a phone would eat a third of
+     the viewport while staying pinned. */
   .site-nav {
     position: sticky;
     top: 0;
     z-index: 40;
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
-    gap: 8px 20px;
+    gap: 0 10px;
     background: var(--paper);
-    border-bottom: 4px double var(--rule);
-    padding: 8px 0;
-    margin-bottom: 36px;
+    border-bottom: 1px solid var(--rule);
+    padding: 0;
+    margin-bottom: clamp(20px, 3vw, 40px);
   }
 
   .site-nav-wordmark {
-    font-family: Fraunces, Georgia, serif;
+    font-family: var(--serif);
     font-weight: 900;
-    font-size: 18px;
-    letter-spacing: -0.01em;
+    font-size: 19px;
+    letter-spacing: -0.03em;
     color: var(--ink);
     text-decoration: none;
     white-space: nowrap;
+    flex: 0 0 auto;
+    padding: 10px 12px 10px 0;
+    border-bottom: 3px solid transparent;
   }
   .site-nav-wordmark:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 2px; }
 
   .site-nav-links {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 2px;
-    margin-left: auto;
+    align-items: stretch;
+    gap: 0;
+    flex: 1 1 auto;
+    min-width: 0;
+    /* One scrollable row of links; the scrollbar is hidden because a visible
+       4px scrollbar under a 40px nav reads as a bug, not as an affordance —
+       the partial next link at the edge is what signals scrollability. */
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
+  .site-nav-links::-webkit-scrollbar { display: none; }
 
   .site-nav-links a {
     color: var(--ink);
     text-decoration: none;
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 0.1em;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     display: inline-flex;
     align-items: center;
-    min-height: 44px;
-    padding: 0 12px;
+    min-height: 40px;
+    padding: 0 13px;
+    white-space: nowrap;
+    border-left: 1px solid var(--hair);
   }
 
   .site-nav-divider {
     width: 1px;
-    height: 18px;
-    background: var(--rule);
-    margin: 0 8px;
-    flex-shrink: 0;
+    height: 16px;
+    align-self: center;
+    background: var(--hair-strong);
+    margin: 0 6px;
+    flex: 0 0 auto;
   }
 
-  /* Secondary destinations stay on the same rail but one visual step back:
-     quieter color, normal weight. The active state still underlines in
-     vermillion so "where am I" is never ambiguous. */
   .site-nav-secondary { display: contents; }
-  .site-nav-secondary a {
-    color: var(--ink-soft);
-    font-weight: 400;
-  }
-  .site-nav-links a:hover { text-decoration: underline; text-underline-offset: 4px; }
+  .site-nav-secondary a { color: var(--ink-soft); font-weight: 400; }
+  .site-nav-links a:hover { background: var(--wash); color: var(--ink); }
   .site-nav-links a.active {
-    text-decoration: underline;
-    text-decoration-color: var(--vermillion);
-    text-underline-offset: 4px;
-    text-decoration-thickness: 2px;
+    background: var(--ink);
+    color: var(--paper);
   }
-  .site-nav-links a:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 2px; }
+  .site-nav-links a:focus-visible { outline: 2px solid var(--vermillion); outline-offset: -2px; }
 
-  .section { margin-top: 56px; padding-top: 24px; border-top: 3px solid var(--rule); }
-  .section-title { font-family: Fraunces, Georgia, serif; font-weight: 900; font-size: 28px; letter-spacing: -0.01em; margin-bottom: 8px; }
+  .site-nav .theme-toggle { flex: 0 0 auto; }
+
+  /* Below the row breakpoint the nameplate above already says "The Baseline"
+     and the nav sits directly beneath it, so the sticky bar drops the
+     duplicate wordmark and spends that width on links instead. A mask fades
+     the right edge so a link clipped by the scroll reads as "there is more",
+     not as a layout break. */
+  @media (max-width: 639px) {
+    .site-nav-wordmark { display: none; }
+    .site-nav-links {
+      -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent 100%);
+      mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent 100%);
+    }
+    .site-nav-links a { padding: 0 12px; }
+  }
+
+  .section { margin-top: clamp(40px, 5vw, 68px); padding-top: 20px; border-top: 3px solid var(--rule); }
+  .section-title { font-family: var(--serif); font-weight: 900; font-size: clamp(24px, 3.2vw, 34px); letter-spacing: -0.02em; margin-bottom: 8px; }
   .section-note { color: var(--ink-soft); margin-bottom: 20px; }
 
   .spin-legend { display: flex; gap: 12px; flex-wrap: wrap; }
 
+  /* ── Source list ───────────────────────────────────────────────────── */
   .source-list { list-style: none; columns: 2; column-gap: 40px; }
   @media (max-width: 640px) { .source-list { columns: 1; } }
-  .source-list li { padding: 8px 0; border-bottom: 1px solid var(--paper-dim); }
-  .source-link {
-    color: var(--ink);
-    text-decoration: none;
-    font-weight: 600;
+  .source-list li {
+    padding: 9px 0;
+    border-bottom: 1px solid var(--hair);
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
   }
-  .source-link:hover { text-decoration: underline; text-underline-offset: 4px; }
+  .source-link { color: var(--ink); text-decoration: none; font-weight: 600; }
+  .source-link:hover { color: var(--vermillion); }
   .source-link:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 2px; }
-  .source-list .status { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; margin-left: 8px; }
+  .source-list .status { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; margin-left: auto; white-space: nowrap; }
   .source-list .ok { color: var(--ink-soft); }
   .source-list .err { color: var(--vermillion); }
 
-  .about-copy { max-width: 62ch; color: var(--ink-soft); }
+  .about-copy { max-width: 66ch; color: var(--ink-soft); }
 
+  /* ── Footer ────────────────────────────────────────────────────────── */
   .site-footer {
-    margin-top: 56px;
-    padding-top: 28px;
-    border-top: 4px double var(--rule);
+    margin-top: clamp(48px, 6vw, 80px);
+    padding-top: 22px;
+    border-top: 3px double var(--rule);
   }
 
   .site-footer-grid {
     display: grid;
     grid-template-columns: 2fr 1fr 1fr;
-    gap: 28px;
+    gap: 28px 40px;
   }
 
   @media (max-width: 720px) {
-    .site-footer-grid { grid-template-columns: 1fr; gap: 20px; }
+    .site-footer-grid { grid-template-columns: 1fr; gap: 22px; }
   }
 
   .site-footer-wordmark {
-    font-family: Fraunces, Georgia, serif;
+    font-family: var(--serif);
     font-weight: 900;
-    font-size: 22px;
-    letter-spacing: -0.01em;
+    font-size: 24px;
+    letter-spacing: -0.03em;
     color: var(--ink);
     text-decoration: none;
   }
   .site-footer-wordmark:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 2px; }
 
   .site-footer-tagline {
-    font-family: Fraunces, Georgia, serif;
-    font-style: italic;
-    font-size: 15px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
     color: var(--ink-soft);
-    margin-top: 2px;
+    margin-top: 4px;
   }
 
   .site-footer-copy {
-    font-size: 13px;
-    line-height: 1.6;
+    font-size: 13.5px;
+    line-height: 1.62;
     color: var(--ink-soft);
-    max-width: 40ch;
-    margin-top: 10px;
+    max-width: 44ch;
+    margin-top: 12px;
   }
 
   .site-footer-heading {
-    font-size: 11px;
+    font-family: var(--mono);
+    font-size: 10px;
     text-transform: uppercase;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.2em;
     color: var(--ink-soft);
     margin-bottom: 10px;
   }
@@ -352,58 +545,55 @@ body {
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 7px;
   }
 
   .site-footer-link {
     color: var(--ink);
     text-decoration: none;
     font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.02em;
   }
-  .site-footer-link:hover { text-decoration: underline; text-underline-offset: 4px; }
+  .site-footer-link:hover { color: var(--vermillion); }
   .site-footer-link:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 2px; }
 
   .site-footer-term {
+    font-family: var(--mono);
     color: var(--ink);
-    font-size: 12px;
+    font-size: 11.5px;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
     margin-right: 6px;
   }
-  .site-footer-note {
-    color: var(--ink-soft);
-    font-size: 12px;
-  }
+  .site-footer-note { color: var(--ink-soft); font-size: 12.5px; }
 
   .site-footer-legal {
-    margin-top: 24px;
+    margin-top: 26px;
     padding-top: 14px;
-    border-top: 1px solid var(--rule);
+    border-top: 1px solid var(--hair);
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
-    gap: 8px 24px;
-    font-size: 12px;
+    gap: 6px 24px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
     color: var(--ink-soft);
-    text-align: center;
   }
 
-  .empty { padding: 40px 0; text-align: center; }
-  .empty .kicker { font-family: Fraunces, Georgia, serif; font-weight: 900; font-size: 40px; }
-  .empty p { color: var(--ink-soft); margin-top: 8px; }
+  .empty { padding: 48px 0; text-align: center; }
+  .empty .kicker { font-family: var(--serif); font-weight: 900; font-size: 44px; letter-spacing: -0.03em; text-transform: none; color: var(--ink); }
+  .empty p { color: var(--ink-soft); margin-top: 10px; }
 
+  /* ── Spin badge ────────────────────────────────────────────────────── */
   .spin-badge { line-height: 1; }
   .spin-reason > summary { list-style: none; }
   .spin-reason > summary::-webkit-details-marker { display: none; }
   .spin-reason[open] > summary { background: var(--accent, var(--paper-dim)); color: var(--ink); }
-  .spin-reason > span {
-    /* Hidden until opened; works without hover and is keyboard reachable. */
-    display: none;
-  }
+  .spin-reason > span { display: none; }
   .spin-reason[open] > span { display: block; }
 
+  /* ── Search ────────────────────────────────────────────────────────── */
   .search-icon {
     position: absolute;
     left: 12px;
@@ -416,7 +606,7 @@ body {
   }
   .search-clear {
     position: absolute;
-    right: 8px;
+    right: 6px;
     top: 50%;
     transform: translateY(-50%);
     display: inline-flex;
@@ -424,66 +614,67 @@ body {
     justify-content: center;
     width: 28px;
     height: 28px;
-    border: none;
+    border: 0;
     background: none;
     color: var(--ink-soft);
     cursor: pointer;
-    border-radius: 9999px;
   }
-  .search-clear:hover { background: var(--paper-dim); color: var(--ink); }
+  .search-clear:hover { color: var(--vermillion); }
   .search-clear:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 2px; }
 
+  /* ── Sort control ────────────────────────────────────────────────────
+     Treated as a set of type specimens, not a pill bar: the active
+     option inverts, the rest are plain mono. */
   .sort-control {
     display: inline-flex;
     flex-wrap: wrap;
-    align-items: center;
-    gap: 4px;
+    align-items: stretch;
+    gap: 0;
     border: 1px solid var(--rule);
-    border-radius: 2px;
-    padding: 3px;
     background: var(--paper);
   }
   .sort-label {
-    font-size: 10px;
+    font-family: var(--mono);
+    font-size: 9.5px;
     text-transform: uppercase;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.18em;
     color: var(--ink-soft);
-    padding: 0 6px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 10px;
+    border-right: 1px solid var(--rule);
   }
   .sort-control button {
     min-height: 34px;
     padding: 0 12px;
-    border: none;
+    border: 0;
+    border-right: 1px solid var(--hair);
     background: none;
-    font-size: 11px;
-    letter-spacing: 0.08em;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--ink-soft);
     cursor: pointer;
-    border-radius: 2px;
     transition: background 0.15s ease, color 0.15s ease;
   }
-  .sort-control button:hover { color: var(--ink); }
-  .sort-control button.active {
-    background: var(--ink);
-    color: var(--paper);
-  }
-  .sort-control button:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 2px; }
+  .sort-control button:last-child { border-right: 0; }
+  .sort-control button:hover { color: var(--ink); background: var(--wash); }
+  .sort-control button.active { background: var(--ink); color: var(--paper); }
+  .sort-control button:focus-visible { outline: 2px solid var(--vermillion); outline-offset: -2px; }
 
-  /* Filter disclosure toggle — styled as a sibling of the sort-control
-     groups so the primary row reads as one control surface. */
+  /* ── Filter disclosure toggle ──────────────────────────────────────── */
   .filter-toggle {
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    min-height: 42px;
-    padding: 0 12px;
+    min-height: 36px;
+    padding: 0 13px;
     border: 1px solid var(--rule);
-    border-radius: 2px;
     background: var(--paper);
-    font-family: inherit;
-    font-size: 11px;
-    letter-spacing: 0.08em;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--ink-soft);
     cursor: pointer;
@@ -491,12 +682,9 @@ body {
   }
   .filter-toggle:hover { color: var(--ink); }
   .filter-toggle.active { border-color: var(--ink); color: var(--ink); }
-  .filter-toggle[aria-expanded="true"] {
-    background: var(--ink);
-    border-color: var(--ink);
-    color: var(--paper);
-  }
+  .filter-toggle[aria-expanded="true"] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
   .filter-toggle:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 2px; }
+  /* The count badge is the one genuinely circular element in the chrome. */
   .filter-count {
     display: inline-flex;
     align-items: center;
@@ -504,14 +692,16 @@ body {
     min-width: 16px;
     height: 16px;
     padding: 0 4px;
-    border-radius: 9999px;
+    border-radius: var(--radius-pill);
     background: var(--vermillion);
     color: var(--paper);
+    font-family: var(--mono);
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 0;
   }
 
+  /* ── Toast ─────────────────────────────────────────────────────────── */
   .toast-region {
     position: fixed;
     bottom: 24px;
@@ -527,22 +717,23 @@ body {
   .toast {
     background: var(--ink);
     color: var(--paper);
-    border: 1px solid var(--rule);
-    padding: 10px 18px;
-    font-size: 13px;
-    letter-spacing: 0.02em;
-    border-radius: 2px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    border: 0;
+    border-top: 3px solid var(--vermillion);
+    padding: 11px 18px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.28);
     animation: toast-in 0.25s ease-out;
     pointer-events: auto;
-    max-width: min(90vw, 480px);
+    max-width: min(90vw, 520px);
     text-align: center;
   }
   :root:not([data-theme="light"]) .toast,
   [data-theme="dark"] .toast {
     background: var(--paper);
     color: var(--ink);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.5);
   }
   @keyframes toast-in {
     from { opacity: 0; transform: translateY(12px); }
@@ -554,61 +745,1101 @@ body {
   .toast { animation: none; }
   .animate-pulse { animation: none; }
   html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }
 
-/* Consistent image slot for story cards: every card reserves the same fixed
-   height so a feed that never ships images can't make the grid look patchy.
-   The text-only placeholder is a deliberate editorial mark (subtle halftone
-   texture + a double-rule) rather than an empty void. */
-.card-img-slot {
-  height: 176px;
-  overflow: hidden;
+/* =====================================================================
+   EDITION (/edition)
+   ---------------------------------------------------------------------
+   A newspaper front page: a lead story with a deck and a drop cap,
+   then a ruled index of the remaining stories. Rank numerals in the
+   left rail are the motif that ties the edition to the Hype Index.
+   ===================================================================== */
+
+/* Edition head — the nameplate of the day's page 1. */
+.edition-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 12px clamp(24px, 4vw, 56px);
+  border-top: 3px solid var(--rule);
+  border-bottom: 3px double var(--rule);
+  padding: 14px 0 12px;
+  margin-bottom: clamp(20px, 2.6vw, 32px);
 }
-.card-img-slot img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.edition-head .edition-titles { min-width: 0; }
+.edition-head .edition-kicker {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--vermillion);
+  margin-bottom: 6px;
+}
+.edition-head h1 {
+  font-family: var(--serif);
+  font-weight: 900;
+  font-size: clamp(30px, 5.4vw, 56px);
+  line-height: 0.96;
+  letter-spacing: -0.038em;
+  margin: 0;
+}
+.edition-head .edition-deck {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: clamp(15px, 1.7vw, 19px);
+  line-height: 1.4;
+  color: var(--ink-soft);
+  margin: 8px 0 0;
+  max-width: 54ch;
+}
+
+/* The facts panel: a mono dateline block on the right of the head. Four
+   figures, stacked and labelled — a printed "box this morning" panel. */
+.edition-head .facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, auto));
+  gap: 6px clamp(20px, 2.4vw, 34px);
+  text-align: right;
+  padding-left: clamp(16px, 2vw, 28px);
+  border-left: 1px solid var(--hair);
+}
+.edition-head .facts .fact { min-width: 0; }
+.edition-head .facts .fact .k {
+  display: block;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  line-height: 1.4;
+}
+.edition-head .facts .fact .v {
+  display: block;
+  font-family: var(--mono);
+  font-size: clamp(16px, 2vw, 21px);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+.edition-head .facts .fact--accent .v { color: var(--vermillion); }
+
+@media (max-width: 860px) {
+  .edition-head { grid-template-columns: 1fr; align-items: start; }
+  .edition-head .facts {
+    text-align: left;
+    padding-left: 0;
+    border-left: 0;
+    border-top: 1px solid var(--hair);
+    padding-top: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+  }
+}
+
+/* ── Lead story ──────────────────────────────────────────────────────
+   The one story that gets a real newspaper shape: big serif headline,
+   italic deck with a drop cap, a mono byline rule, and a rail on the
+   right for the hype score + save control. */
+.lead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 232px);
+  gap: clamp(24px, 3.4vw, 52px);
+  align-items: start;
+  padding-bottom: clamp(20px, 2.4vw, 30px);
+  border-bottom: 3px solid var(--rule);
+  margin-bottom: 4px;
+}
+.lead .lead-body { min-width: 0; }
+.lead .lead-kicker {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--vermillion);
+}
+.lead .lead-headline {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: clamp(30px, 4.6vw, 56px);
+  line-height: 1.02;
+  letter-spacing: -0.028em;
+  margin: 10px 0 0;
+  text-wrap: balance;
+}
+.lead .lead-deck {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: clamp(17px, 1.9vw, 22px);
+  line-height: 1.44;
+  color: var(--ink);
+  max-width: 52ch;
+  margin: 14px 0 0;
+}
+.lead .lead-byline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  border-top: 1px solid var(--hair);
+  padding-top: 9px;
+  margin-top: 16px;
+}
+.lead .lead-byline b { color: var(--ink); font-weight: 600; }
+
+/* Right rail of the lead: the hype instrument. Mono, tabular, ruled. */
+.lead .lead-rail { min-width: 0; }
+.lead .lead-score {
+  border: 1px solid var(--rule);
+  padding: 12px 14px;
+}
+.lead .lead-score .score-k {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
   display: block;
 }
-.card-img-placeholder {
-  height: 30px;
-  background:
-    repeating-linear-gradient(45deg, transparent 0 6px, rgba(0, 0, 0, 0.045) 6px 7px),
-    var(--paper-dim);
-  border-bottom: 2px double var(--rule);
-  position: relative;
+.lead .lead-score .score-v {
+  font-family: var(--mono);
+  font-size: clamp(30px, 3.6vw, 42px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  display: block;
+  margin-top: 4px;
 }
-.card-img-placeholder::after {
-  content: "NO PHOTO - THE WIRES CAME IN TEXT-ONLY";
+.lead .lead-score .score-band {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--vermillion);
+  display: block;
+  margin-top: 2px;
+}
+/* One red thing per viewport: the lead's own reading is hot. */
+.lead .lead-score.is-hot { border-color: var(--vermillion); }
+.lead .lead-score.is-hot .score-v { color: var(--vermillion); }
+.lead .lead-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  align-items: center;
+  margin-top: 12px;
+  /* Above the full-article hit area: this row holds the only real buttons in
+     the lead, and the overlay button is a later sibling with z-index 0. */
+  position: relative;
+  z-index: 1;
+}
+.lead .lead-figure { margin-top: 12px; border-top: 1px solid var(--hair); padding-top: 10px; }
+.lead .lead-figure svg { width: 100%; height: auto; display: block; }
+.lead .lead-figure .cap {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-top: 6px;
+}
+
+@media (max-width: 860px) {
+  .lead { grid-template-columns: 1fr; gap: 20px; }
+  .lead .lead-rail { display: flex; flex-wrap: wrap; gap: 14px 20px; align-items: flex-start; }
+  .lead .lead-score { flex: 0 0 auto; }
+  .lead .lead-figure { flex: 1 1 220px; margin-top: 0; }
+}
+
+/* ── The index: ruled rows with a rank numeral ───────────────────────
+   This replaces the card grid. The rank numeral is the motif: it makes
+   a long list scannable and matches the Hype Index page's board. */
+.index { margin: 0; }
+.index-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  border-bottom: 3px solid var(--rule);
+  padding: 8px 0;
+  margin: 0 0 2px;
+}
+.index-row {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) minmax(0, 190px);
+  gap: 0 clamp(16px, 2vw, 28px);
+  align-items: start;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--hair);
+  position: relative;
+  transition: background 0.15s ease;
+}
+.index-row:hover { background: var(--wash); }
+
+/* Rank numeral: mono, tabular, right-aligned in its rail, ink-soft until
+   hovered. Not vermillion — vermillion is reserved for hype. */
+.index-row .rank {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  text-align: right;
+  padding-top: 4px;
+  border-right: 1px solid var(--hair);
+  padding-right: 14px;
+  min-height: 26px;
+}
+.index-row:hover .rank { color: var(--ink); }
+
+.index-row .body { min-width: 0; padding: 0; }
+.index-row .kicker {
+  display: block;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.index-row .kicker .spin { color: var(--vermillion); }
+.index-row h2 {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: clamp(18px, 2.1vw, 24px);
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  margin: 6px 0 0;
+  text-wrap: balance;
+}
+.index-row h2 a { color: inherit; text-decoration: none; }
+.index-row h2 a:hover { color: var(--vermillion); }
+.index-row h2 a:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 3px; }
+.index-row .summary {
+  font-size: 14.5px;
+  line-height: 1.58;
+  color: var(--ink-soft);
+  margin: 8px 0 0;
+  max-width: 62ch;
+}
+.index-row .meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-top: 9px;
+}
+.index-row .meta .src { color: var(--ink); font-weight: 600; }
+.index-row .meta .spin-flag { color: var(--vermillion); }
+
+/* Right rail of a row: optional thumb, hype figure, save control. */
+.index-row .rail {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  padding-top: 3px;
+  text-align: right;
+}
+/* Newspapers do run small photos inside an index column. Kept deliberately
+   small, and dropped entirely below 1024px so a phone still gets a pure text
+   column with maximum headline density. */
+.index-row .rail .row-thumb {
+  width: 112px;
+  height: 66px;
+  min-height: 0;
+  margin-bottom: 2px;
+}
+.index-row .rail .row-thumb img { object-fit: cover; }
+.index-row .rail .row-thumb.card-img-placeholder { min-height: 66px; }
+@media (max-width: 1023px) {
+  .index-row .rail .row-thumb { display: none; }
+}
+/* Keyboard-driven selection (j / k). Marked with an ink bar in the left
+   gutter plus an inverted rank cell — the same "current entry" signal the
+   nav uses, so one idiom means "you are here" across the whole site. */
+.index-row.is-active { background: var(--wash); }
+.index-row.is-active::before,
+.lead.is-active::before {
+  content: "";
   position: absolute;
-  inset: 0;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--ink);
+}
+.lead.is-active::before { bottom: 0; }
+.index-row.is-active .rank {
+  color: var(--paper);
+  background: var(--ink);
+  border-right-color: var(--ink);
+}
+.lead.is-active .lead-kicker { color: var(--ink); }
+.index-row .rail .fig {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+}
+.index-row .rail .fig b { color: var(--ink); font-weight: 700; }
+.index-row .rail .fig.is-hot b { color: var(--vermillion); }
+.index-row .rail .rail-actions {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-family: Inter, system-ui, sans-serif;
-  font-size: 8px;
-  letter-spacing: 0.14em;
-  color: var(--ink-soft);
-  opacity: 0.7;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  position: relative;
+  z-index: 1;
+}
+.index-row:hover .rail-actions,
+.index-row:focus-within .rail-actions { opacity: 1; }
+/* Touch and keyboard users must always see the save control; the hover
+   reveal is a progressive enhancement on top of this, not a gate. */
+@media (hover: none) {
+  .index-row .rail .rail-actions { opacity: 1; }
 }
 
-/* ------------------------------------------------------------------ */
-/* Front page redesign (ported from the OpenDesign concept). Scoped    */
-/* under .fp so none of these names can collide with page chrome.      */
-/* ------------------------------------------------------------------ */
-.fp section { padding: clamp(48px, 7vw, 88px) 0; }
+/* ── Edition toolbar ────────────────────────────────────────────────
+   One ruled strip holding every control that acts on the edition. Hairline
+   top and bottom instead of a card: the controls belong to the page, not
+   to a panel floating above it. */
+.edition-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 0;
+  margin-bottom: 18px;
+  border-top: 1px solid var(--hair);
+  border-bottom: 1px solid var(--hair);
+}
+@media (min-width: 640px) {
+  .edition-toolbar { flex-direction: row; align-items: center; justify-content: space-between; }
+}
+.edition-toolbar > div:first-child { position: relative; min-width: 0; }
+@media (min-width: 640px) {
+  /* flex-basis only means "width" once the toolbar is a row; in the column
+     layout below it would become a HEIGHT and stretch the search field. */
+  .edition-toolbar > div:first-child { flex: 1 1 240px; }
+}
+/* On a phone the labelled control groups need three rows, which pushes the
+   first headline off the first screen. Dropping the "View"/"Sort" labels and
+   tightening the gaps gets it to two — the groups stay legible because the
+   active option is inverted. */
+@media (max-width: 559px) {
+  .edition-toolbar > div:last-child { gap: 6px; }
+  .sort-label { display: none; }
+  .sort-control button { padding: 0 9px; letter-spacing: 0.06em; }
+  .filter-toggle { padding: 0 11px; }
+}
+.edition-toolbar input[type="search"] {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  min-height: 36px;
+  background: none;
+  border-color: var(--hair-strong);
+  border-radius: var(--radius);
+}
+.edition-toolbar input[type="search"]::placeholder { color: var(--ink-soft); }
+.edition-toolbar input[type="search"]:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 1px; }
+
+/* Notices: a mono label then the sentence. Vermillion is not used here on
+   purpose — an unreachable wire is a fact, not an emergency. */
+.edition-notice {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  border-left: 3px solid var(--rule);
+  padding: 8px 0 8px 14px;
+  margin-bottom: 16px;
+}
+.notice-action {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  padding: 1px 0;
+  cursor: pointer;
+}
+.notice-action:hover { color: var(--vermillion); border-color: var(--vermillion); }
+.notice-action:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 2px; }
+
+/* Active deep-link filter chip: an inverted block, like the nav. */
+.source-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 5px 6px 5px 10px;
+  margin-bottom: 16px;
+}
+.source-filter .kicker { color: color-mix(in oklch, var(--paper), transparent 40%); }
+.source-filter__clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid color-mix(in oklch, var(--paper), transparent 55%);
+  background: none;
+  color: var(--paper);
+  cursor: pointer;
+}
+.source-filter__clear:hover { background: var(--vermillion); border-color: var(--vermillion); }
+.source-filter__clear:focus-visible { outline: 2px solid var(--vermillion); outline-offset: 2px; }
+
+/* Advanced filter disclosure: a boxed inset because it IS a panel — the one
+   place on the page where controls sit on top of the reading column. */
+.edition-filters {
+  border: 1px solid var(--rule);
+  padding: 12px 14px 14px;
+  margin-bottom: 18px;
+  background: var(--wash);
+}
+
+/* Image slot: reserved box for a photo, or the editorial "no photo" mark.
+   Height is capped low so a text-only feed cannot push headlines below
+   the fold — the whole point of the index is headline density. */
+.card-img-slot {
+  height: 108px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--hair);
+}
+.card-img-slot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.card-img-placeholder {
+  height: 100%;
+  min-height: 108px;
+  background:
+    repeating-linear-gradient(45deg, transparent 0 7px, color-mix(in oklch, var(--ink), transparent 96%) 7px 8px),
+    var(--wash);
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+}
+.card-img-placeholder::after {
+  content: "NO PHOTO · TEXT-ONLY WIRE";
+  position: relative;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  opacity: 0.75;
+  padding: 0 8px 7px;
+}
+
+@media (max-width: 900px) {
+  .index-row { grid-template-columns: 34px minmax(0, 1fr); }
+  .index-row .rail {
+    grid-column: 2;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: left;
+    gap: 12px;
+    padding-top: 10px;
+  }
+  .index-row .rank { padding-right: 12px; }
+}
+
+@media (max-width: 420px) {
+  .index-row { grid-template-columns: 26px minmax(0, 1fr); gap: 0 12px; }
+  .index-row .rank { font-size: 11px; padding-right: 10px; }
+}
+
+/* =====================================================================
+   CARDS VIEW (/edition?view=cards) — the "wire" view
+   ---------------------------------------------------------------------
+   A genuine alternative to the index, built from the same primitives:
+   hairline-separated cells, mono metadata, no boxes and no rounding. The
+   grid gap IS the rule — cells touch and share one 1px line, the way a
+   printed page divides columns.
+   ===================================================================== */
+.wire-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  border-bottom: 3px solid var(--rule);
+  padding: 8px 0;
+  margin-bottom: -1px;
+}
+.wire-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+  gap: 0;
+  border-top: 1px solid var(--hair);
+  border-left: 1px solid var(--hair);
+}
+.wire-grid > li {
+  position: relative;
+  border-right: 1px solid var(--hair);
+  border-bottom: 1px solid var(--hair);
+  padding: 13px 14px 12px;
+  min-width: 0;
+  transition: background 0.15s ease;
+}
+.wire-grid > li:hover { background: var(--wash); }
+
+.wire-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 3px 10px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  padding-right: 34px;
+}
+.wire-meta .src { color: var(--ink); font-weight: 600; }
+.wire-meta .flag { color: var(--vermillion); font-weight: 600; }
+
+.wire-headline {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 17.5px;
+  line-height: 1.16;
+  letter-spacing: -0.012em;
+  margin: 9px 0 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-wrap: pretty;
+}
+
+/* Save control pinned to the cell's top-right, above the hit area. */
+.wire-save {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  z-index: 1;
+  background: var(--paper);
+  border-color: var(--hair-strong);
+}
+
+.wire-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-top: 1px solid var(--hair);
+  padding-top: 9px;
+  margin-top: 9px;
+}
+.wire-read {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--vermillion);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.wire-grid > li:hover .wire-read,
+.wire-grid > li:focus-within .wire-read { opacity: 1; }
+@media (hover: none) {
+  .wire-read { opacity: 1; }
+}
+
+/* =====================================================================
+   HYPE INDEX (/hype-index)
+   ---------------------------------------------------------------------
+   The index page is the product's one instrument panel, so it gets the
+   strongest numerals on the site and a table that behaves like a table.
+   ===================================================================== */
+.hx .page-head {
+  max-width: 860px;
+  margin: 0 auto;
+  text-align: center;
+}
+.hx .page-title {
+  font-family: var(--serif);
+  font-weight: 900;
+  font-size: clamp(42px, 8vw, 92px);
+  line-height: 0.94;
+  letter-spacing: -0.04em;
+  margin: 12px 0 0;
+  text-wrap: balance;
+}
+.hx .page-deck {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: clamp(17px, 2.1vw, 23px);
+  line-height: 1.42;
+  color: var(--ink-soft);
+  margin: 16px auto 0;
+  max-width: 58ch;
+}
+
+.hx .chart-section { border-top: 3px solid var(--rule); padding: clamp(28px, 4vw, 46px) 0; }
+
+/* The index mast — the day's number as a market indicator. */
+.hx-mast {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: clamp(24px, 4vw, 64px);
+  align-items: end;
+  padding: clamp(20px, 3vw, 40px) 0 clamp(16px, 2.4vw, 28px);
+}
+.hx-big {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: clamp(76px, 11vw, 148px);
+  line-height: 0.8;
+  letter-spacing: -0.06em;
+  margin: 8px 0 0;
+  font-variant-numeric: tabular-nums;
+}
+.hx-big-unit { font-size: 0.28em; font-weight: 600; color: var(--ink-soft); margin-left: 4px; }
+.hx-mast-word {
+  font-size: 14px;
+  color: var(--ink-soft);
+  margin: 10px 0 0;
+  max-width: 36ch;
+}
+.hx-mast-scale { display: flex; flex-direction: column; gap: 16px; padding-bottom: 6px; }
+.hx-scale-track {
+  position: relative;
+  display: block;
+  height: 12px;
+  border-bottom: 2px solid var(--rule);
+}
+.hx-tick {
+  position: absolute;
+  bottom: 0;
+  width: 1px;
+  height: 6px;
+  background: var(--hair-strong);
+  transform: translateX(-0.5px);
+}
+.hx-marker {
+  position: absolute;
+  bottom: -2px;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 9px solid var(--vermillion);
+  transform: translateX(-6px);
+}
+.hx-scale-ends {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+  margin-top: 6px;
+}
+.hx-mast-delta { font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: 0.06em; }
+.hx-delta-up { color: var(--vermillion); }
+.hx-delta-down { color: var(--ink); }
+.hx-delta-flat { color: var(--ink-soft); font-weight: 500; }
+.hx-mast-signal { max-width: 250px; padding-bottom: 6px; }
+.hx-top-signal {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 1.3;
+  margin: 8px 0 0;
+}
+.hx-top-count { font-family: var(--mono); font-size: 11px; color: var(--ink-soft); }
+.hx-top-quiet { color: var(--ink-soft); font-style: italic; font-weight: 400; }
+.hx-mast-note {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+  margin: 12px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--hair);
+}
+@media (max-width: 900px) {
+  .hx-mast { grid-template-columns: 1fr; gap: 22px; align-items: start; }
+  .hx-mast-signal { max-width: none; }
+}
+
+.hx .chart-scroll { position: relative; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.hx .chart-wrap { position: relative; min-width: 640px; }
+.hx svg.chart { width: 100%; height: auto; display: block; }
+.hx svg.chart .grid { stroke: var(--rule); stroke-width: 1; opacity: 0.14; }
+.hx svg.chart .axis {
+  font-family: var(--mono);
+  font-size: 11px;
+  fill: var(--ink-soft);
+  letter-spacing: 0.04em;
+}
+.hx svg.chart .area { fill: url(#hxAreaGrad); stroke: none; }
+.hx svg.chart .line {
+  fill: none;
+  stroke: var(--vermillion);
+  stroke-width: 2.2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.hx svg.chart .dot { fill: var(--paper); stroke: var(--vermillion); stroke-width: 2; }
+.hx svg.chart .crosshair { stroke: var(--vermillion); stroke-width: 1; stroke-dasharray: 3 3; opacity: 0; }
+.hx svg.chart .cross-dot { fill: var(--vermillion); opacity: 0; }
+.hx .chart-tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  padding: 7px 10px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16);
+  opacity: 0;
+  transform: translate(-50%, -130%);
+  transition: opacity 0.15s ease;
+  white-space: nowrap;
+  z-index: 5;
+}
+.hx .chart-tooltip.on { opacity: 1; }
+.hx .chart-tooltip .t-date { color: var(--ink-soft); letter-spacing: 0.1em; text-transform: uppercase; font-size: 9px; display: block; }
+.hx .chart-tooltip .t-val { font-weight: 700; font-size: 15px; }
+
+/* Distribution strip — the pip meter borrowed from direction B. Reads the
+   share of stories at each band without a chart. */
+.hx-dist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--hair);
+  border-bottom: 1px solid var(--hair);
+}
+.hx-dist li {
+  flex: 1 1 132px;
+  min-width: 0;
+  padding: 11px 12px;
+  border-right: 1px solid var(--hair);
+}
+.hx-dist li:last-child { border-right: 0; }
+.hx-dist .band {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  display: block;
+}
+.hx-dist .count {
+  font-family: var(--mono);
+  font-size: clamp(19px, 2.4vw, 25px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  display: block;
+  margin-top: 3px;
+}
+.hx-dist li.is-top .count { color: var(--vermillion); }
+.hx-dist .share { font-family: var(--mono); font-size: 0.52em; font-weight: 500; color: var(--ink-soft); letter-spacing: 0.06em; }
+.hx-dist .fp-bar { display: block; height: 3px; margin-top: 8px; }
+.hx-dist > div.fact dd { margin: 0; }
+
+/* Calendar strip — a printed contents page: one cell per day, figure
+   under a small date label, today's cell inverted. */
+.hx .cal-section { border-top: 1px solid var(--rule); padding: clamp(28px, 3.6vw, 42px) 0; }
+.hx .section-kicker {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 14px;
+}
+.hx .cal { display: flex; gap: 0; overflow-x: auto; padding-bottom: 6px; border-top: 1px solid var(--hair); }
+.hx .cal-day {
+  flex: 1 0 auto;
+  min-width: 58px;
+  border-right: 1px solid var(--hair);
+  padding: 9px 6px;
+  text-align: center;
+  background: none;
+}
+.hx .cal-day .d-num {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  color: var(--ink-soft);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  display: block;
+}
+.hx .cal-day .d-val {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  margin-top: 3px;
+  display: block;
+}
+.hx .cal-day.today { background: var(--vermillion); }
+.hx .cal-day.today .d-val,
+.hx .cal-day.today .d-num { color: var(--paper); }
+@media (max-width: 640px) {
+  .hx .cal-day { min-width: 50px; }
+}
+
+/* Analysis panels: a hairline box is right here because these sit side by
+   side and need a visible edge to be told apart as separate instruments. */
+.hx-panel {
+  border: 1px solid var(--rule);
+  padding: 14px 16px 16px;
+  background: var(--paper);
+  min-width: 0;
+}
+.hx-panel > .kicker { display: block; margin-bottom: 12px; }
+
+/* First-reading / no-history state. Ruled, not carded, and it leads with the
+   reason so a fresh reader is never left wondering what broke. */
+.hx-await {
+  border-top: 3px solid var(--rule);
+  border-bottom: 1px solid var(--hair);
+  padding: 20px 0 18px;
+  margin-top: 8px;
+}
+.hx-await-lead {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: clamp(17px, 2vw, 21px);
+  line-height: 1.32;
+  margin: 8px 0 10px;
+  max-width: 46ch;
+}
+
+/* Leaderboard — a real table: mono head, tabular figures, hairline rows. */
+.hx .board-section { border-top: 3px solid var(--rule); padding: clamp(28px, 3.6vw, 42px) 0; }
+/* contain: paint keeps the 560px table's scrollable overflow inside this box.
+   Without it Chromium propagates the table's width to the document and the
+   whole page scrolls sideways on phones; the strip still scrolls internally. */
+.hx .board-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 14px; contain: paint; }
+.hx .board { width: 100%; border-collapse: collapse; min-width: 560px; }
+.hx .board th {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-align: left;
+  padding: 9px 12px;
+  border-bottom: 2px solid var(--rule);
+  white-space: nowrap;
+}
+.hx .board td { font-size: 15px; padding: 13px 12px; border-bottom: 1px solid var(--hair); vertical-align: middle; }
+.hx .board tbody tr { transition: background 0.15s ease; }
+.hx .board tbody tr:hover { background: var(--wash); }
+.hx .board .rank {
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+  width: 44px;
+  border-right: 1px solid var(--hair);
+}
+.hx .board .name { font-family: var(--serif); font-weight: 700; font-size: 17px; }
+.hx .board .name:hover { color: var(--vermillion); }
+.hx .board .val { font-family: var(--mono); font-variant-numeric: tabular-nums; font-weight: 600; font-size: 15px; }
+.hx .board .val.is-hot { color: var(--vermillion); }
+.hx .board th.num, .hx .board td.num { text-align: right; }
+
+.hx .method {
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  line-height: 1.62;
+  max-width: 72ch;
+  margin-top: 24px;
+}
+.hx .method a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.hx .method a:hover { color: var(--vermillion); }
+
+/* =====================================================================
+   STORY PAGE (/story/:id)
+   ===================================================================== */
+.sp-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0;
+  background: var(--vermillion);
+  z-index: 200;
+  transition: width 0.08s linear;
+}
+
+.sp-article { padding: clamp(28px, 4vw, 52px) 0 clamp(44px, 6vw, 80px); }
+.sp-article-head { max-width: 860px; margin: 0 auto 8px; text-align: left; }
+.sp-headline {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: clamp(32px, 5.6vw, 62px);
+  line-height: 1.02;
+  letter-spacing: -0.032em;
+  margin: 10px 0 0;
+  text-wrap: balance;
+}
+.sp-deck {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: clamp(17px, 2.2vw, 24px);
+  line-height: 1.4;
+  color: var(--ink-soft);
+  margin: 16px auto 0;
+  max-width: 62ch;
+}
+.sp-byline {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 6px 18px;
+  align-items: baseline;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  border-top: 1px solid var(--hair);
+  border-bottom: 1px solid var(--hair);
+  padding: 10px 0;
+  margin: 24px auto 0;
+  max-width: 860px;
+}
+.sp-byline b { color: var(--ink); font-weight: 600; }
+
+.sp-hero-fig { max-width: 1020px; margin: clamp(24px, 4vw, 44px) auto 0; }
+.sp-hero-fig .frame { border: 1px solid var(--rule); background: var(--wash); overflow: hidden; }
+.sp-hero-fig .frame svg { width: 100%; height: auto; display: block; }
+.sp-fig-cap {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  padding-top: 10px;
+  margin: 0;
+  border-top: 1px solid var(--hair);
+  display: flex;
+  gap: 10px;
+}
+.sp-fig-cap::before {
+  content: "";
+  width: 24px;
+  height: 1px;
+  background: var(--ink-soft);
+  flex: 0 0 auto;
+  margin-top: 6px;
+}
+
+.sp-body { max-width: 68ch; margin: clamp(30px, 4vw, 48px) auto 0; font-size: 17.5px; line-height: 1.66; }
+.sp-body p { margin: 0 0 1.15em; }
+/* Drop cap: the letterpress move from direction C, applied once per
+   article so it reads as a considered opening rather than a tic. */
+.sp-body > p:first-child::first-letter {
+  font-family: var(--serif);
+  font-weight: 900;
+  float: left;
+  font-size: 4.2em;
+  line-height: 0.8;
+  padding: 4px 10px 0 0;
+  color: var(--vermillion);
+}
+
+/* The detector's verdict, set as a display quote between double rules. */
+.sp-verdict {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: clamp(23px, 3.2vw, 32px);
+  line-height: 1.28;
+  margin: 36px 0;
+  padding: 20px 0;
+  border-top: 3px double var(--rule);
+  border-bottom: 3px double var(--rule);
+}
+.sp-verdict cite {
+  display: block;
+  font-family: var(--mono);
+  font-style: normal;
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-top: 14px;
+}
+
+.sp-callout { background: var(--wash); border: 1px solid var(--rule); padding: 18px 20px; }
+
+@media (max-width: 900px) { .sp-byline { gap: 6px 10px; } }
+
+/* =====================================================================
+   FRONT PAGE (/ — landing)
+   ===================================================================== */
+.fp section { padding: clamp(40px, 6vw, 76px) 0; }
 
 .fp-kicker {
-  font-size: 12px;
-  font-weight: 700;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 500;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--vermillion);
 }
 .fp-eyebrow {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.18em;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--ink-soft);
 }
@@ -619,20 +1850,21 @@ body {
   justify-content: space-between;
   gap: 16px;
   border-bottom: 3px double var(--rule);
-  padding-bottom: 10px;
-  margin-bottom: 30px;
+  padding-bottom: 9px;
+  margin-bottom: 26px;
 }
 .fp .section-head h2 {
-  font-family: Fraunces, Georgia, serif;
+  font-family: var(--serif);
   font-weight: 700;
-  font-size: clamp(26px, 4vw, 40px);
-  letter-spacing: -0.01em;
+  font-size: clamp(24px, 3.6vw, 38px);
+  letter-spacing: -0.025em;
   margin: 0;
 }
 .fp .section-head .more {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--ink-soft);
   transition: color 0.2s ease;
@@ -640,415 +1872,259 @@ body {
 }
 .fp .section-head .more:hover { color: var(--vermillion); }
 
-/* Hero — the Hype Index leads the front page */
-.fp .fp-hero { padding: clamp(20px, 3vw, 36px) 0 clamp(44px, 6vw, 72px); }
+.fp .fp-hero { padding: clamp(14px, 2.4vw, 26px) 0 clamp(36px, 5vw, 60px); }
 .fp-hero-grid {
   display: grid;
-  grid-template-columns: 1.25fr 1fr;
+  grid-template-columns: 1.2fr minmax(240px, 340px);
   gap: clamp(28px, 4vw, 56px);
   align-items: center;
 }
 .fp-hero-lede {
-  font-family: Fraunces, Georgia, serif;
-  font-size: clamp(18px, 2.2vw, 24px);
-  line-height: 1.45;
+  font-family: var(--serif);
+  font-size: clamp(18px, 2.1vw, 24px);
+  line-height: 1.42;
   color: var(--ink);
   max-width: 48ch;
-  margin: 16px 0 26px;
+  margin: 14px 0 22px;
 }
-.fp-hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  align-items: center;
-}
-.fp-btn-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 14px 26px;
-  text-decoration: none;
-}
-.fp-hero-score {
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-  background: var(--paper-dim);
-  padding: 26px 28px;
-}
-.fp-hero-score .val {
-  font-family: Fraunces, Georgia, serif;
-  font-weight: 700;
-  font-size: clamp(64px, 9vw, 104px);
-  line-height: 1;
-  letter-spacing: -0.02em;
-  margin: 10px 0 6px;
-}
-.fp-hero-score .unit {
-  font-size: 0.38em;
-  font-weight: 600;
-  color: var(--ink-soft);
-  margin-left: 2px;
-}
-.fp-hero-score .descriptor {
-  font-size: 13px;
-  letter-spacing: 0.02em;
-  color: var(--ink-soft);
-  border-top: 1px solid var(--rule);
-  padding-top: 12px;
-  margin: 14px 0 0;
-}
-.fp-hero-score .meta {
-  font-size: 11px;
-  letter-spacing: 0.08em;
+.fp-hero-actions { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+.fp-btn-link { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; text-decoration: none; }
+
+/* The hero score is the product's front-page number: mono, tabular, huge,
+   inside a hairline box. Vermillion only if today's reading is hot. */
+.fp-hero-score { border: 1px solid var(--rule); padding: 20px 22px; background: var(--wash); }
+.fp-hero-score .k {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--ink-soft);
-  margin: 10px 0 0;
+  display: block;
+}
+.fp-hero-score .val {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: clamp(60px, 8.6vw, 104px);
+  line-height: 0.86;
+  letter-spacing: -0.06em;
+  font-variant-numeric: tabular-nums;
+  margin: 8px 0 4px;
+  display: block;
+}
+.fp-hero-score .unit { font-size: 0.3em; font-weight: 600; color: var(--ink-soft); margin-left: 4px; }
+.fp-hero-score .descriptor {
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+  border-top: 1px solid var(--hair);
+  padding-top: 10px;
+  margin: 12px 0 0;
+}
+.fp-hero-score .meta {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 8px 0 0;
 }
 
-/* Lead story */
-.fp-lead-grid {
-  display: grid;
-  grid-template-columns: 1.35fr 1fr;
-  gap: clamp(28px, 4vw, 56px);
-  align-items: start;
-}
+.fp-lead-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: clamp(24px, 4vw, 52px); align-items: start; }
 .fp-lead-headline {
-  font-family: Fraunces, Georgia, serif;
+  font-family: var(--serif);
   font-weight: 700;
-  font-size: clamp(34px, 5.4vw, 68px);
-  line-height: 1.04;
-  letter-spacing: -0.02em;
-  margin: 14px 0 0;
+  font-size: clamp(32px, 5vw, 62px);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  margin: 12px 0 0;
   text-wrap: balance;
 }
 .fp a.fp-lead-headline { color: inherit; }
 .fp a.fp-lead-headline:hover { color: var(--vermillion); }
 .fp-lead-deck {
-  font-family: Fraunces, Georgia, serif;
+  font-family: var(--serif);
   font-style: italic;
-  font-size: clamp(18px, 2.2vw, 24px);
+  font-size: clamp(17px, 2.1vw, 23px);
   line-height: 1.4;
   color: var(--ink-soft);
-  margin: 18px 0 22px;
-  max-width: 46ch;
+  margin: 16px 0 20px;
+  max-width: 48ch;
 }
 .fp-byline {
-  font-size: 12.5px;
-  letter-spacing: 0.06em;
-  color: var(--ink-soft);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  border-top: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
-  padding: 10px 0;
-  margin-bottom: 22px;
+  color: var(--ink-soft);
+  border-top: 1px solid var(--hair);
+  border-bottom: 1px solid var(--hair);
+  padding: 9px 0;
+  margin-bottom: 20px;
 }
 .fp-byline b { color: var(--ink); font-weight: 600; }
 
-.fp-lead-cover {
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-  background: var(--paper-dim);
-  position: sticky;
-  top: 16px;
-  overflow: hidden;
-}
+.fp-lead-cover { border: 1px solid var(--rule); background: var(--wash); position: sticky; top: 16px; overflow: hidden; }
 .fp-lead-cover svg { width: 100%; height: auto; display: block; }
 .fp-lead-cover .cap {
-  font-size: 11px;
-  letter-spacing: 0.08em;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
   color: var(--ink-soft);
   text-transform: uppercase;
-  padding: 10px 12px;
-  border-top: 1px solid var(--rule);
+  padding: 9px 11px;
+  border-top: 1px solid var(--hair);
 }
 
-/* Story feed */
-.fp-feed-grid {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 28px;
-}
-.fp-card { display: flex; flex-direction: column; }
-.fp-card .thumb {
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-  overflow: hidden;
-  background: var(--paper-dim);
-  aspect-ratio: 16 / 10;
-}
+.fp-feed-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 0 clamp(24px, 3vw, 40px); }
+.fp-card { display: flex; flex-direction: column; padding: 18px 0; border-bottom: 1px solid var(--hair); }
+.fp-card .thumb { border: 1px solid var(--rule); background: var(--wash); overflow: hidden; aspect-ratio: 16 / 10; }
 .fp-card .thumb svg { width: 100%; height: 100%; display: block; }
 .fp-card h3 {
-  font-family: Fraunces, Georgia, serif;
+  font-family: var(--serif);
   font-weight: 700;
-  line-height: 1.12;
-  margin: 14px 0 0;
+  font-size: 21px;
+  line-height: 1.14;
+  letter-spacing: -0.015em;
+  margin: 12px 0 0;
   text-wrap: balance;
 }
 .fp-card .meta {
-  font-size: 11.5px;
-  letter-spacing: 0.08em;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ink-soft);
-  margin-top: 8px;
+  margin-top: 7px;
 }
-.fp-card p { font-size: 14.5px; color: var(--ink-soft); margin: 8px 0 0; }
-.fp-card a.block { transition: transform 0.25s ease; }
-.fp-card a.block:hover { transform: translateY(-4px); }
+.fp-card p { font-size: 14.5px; line-height: 1.56; color: var(--ink-soft); margin: 8px 0 0; }
 .fp-card a.block:hover h3 { color: var(--vermillion); }
-.fp-card .fp-kicker { color: var(--ink); margin-top: 14px; }
+.fp-card .fp-kicker { color: var(--ink); margin-top: 12px; }
 
 .fp-card-feature { grid-column: span 7; }
-.fp-card-feature h3 { font-size: clamp(24px, 3vw, 34px); }
+.fp-card-feature h3 { font-size: clamp(23px, 2.8vw, 32px); }
 .fp-card-feature .thumb { aspect-ratio: 16 / 9; }
-
 .fp-card-mid { grid-column: span 5; }
-.fp-card-mid h3 { font-size: clamp(20px, 2.4vw, 26px); }
-
+.fp-card-mid h3 { font-size: clamp(19px, 2.3vw, 25px); }
 .fp-list-col { grid-column: span 4; }
 .fp-list-col .item {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 14px;
-  padding: 16px 0;
-  border-top: 1px solid var(--rule);
+  padding: 14px 0;
+  border-top: 1px solid var(--hair);
 }
 .fp-list-col .item:first-of-type { border-top: 0; padding-top: 4px; }
 .fp-list-col .num {
-  font-family: Fraunces, Georgia, serif;
+  font-family: var(--mono);
   font-weight: 700;
-  font-size: 26px;
-  color: var(--vermillion);
-  line-height: 1;
-  min-width: 34px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  min-width: 26px;
+  font-variant-numeric: tabular-nums;
+  border-right: 1px solid var(--hair);
+  padding-right: 12px;
 }
-.fp-list-col h3 {
-  font-family: Fraunces, Georgia, serif;
-  font-weight: 700;
-  font-size: 18px;
-  margin: 0;
-  line-height: 1.15;
-}
+.fp-list-col h3 { font-family: var(--serif); font-weight: 700; font-size: 17px; margin: 0; line-height: 1.18; }
 .fp-list-col .item:hover h3 { color: var(--vermillion); }
-
 .fp-card-std { grid-column: span 4; }
 
-/* Hype Index band */
-.fp-hype { background: var(--paper-dim); }
-.fp-hype .fp-cols {
-  display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  gap: clamp(28px, 4vw, 56px);
-  align-items: start;
-}
-.fp-chart-card {
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-  background: var(--paper);
-  padding: 22px 22px 14px;
-}
-.fp-chart-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-.fp-chart-head .val {
-  font-family: Fraunces, Georgia, serif;
-  font-weight: 700;
-  font-size: 34px;
-  letter-spacing: -0.01em;
-}
-.fp-chart-head .delta {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--vermillion);
-  white-space: nowrap;
-}
+.fp-hype { background: var(--wash); }
+.fp-hype .fp-cols { display: grid; grid-template-columns: 1.4fr 1fr; gap: clamp(24px, 4vw, 52px); align-items: start; }
+.fp-chart-card { border: 1px solid var(--rule); background: var(--paper); padding: 18px 20px 12px; }
+.fp-chart-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+.fp-chart-head .val { font-family: var(--mono); font-weight: 700; font-size: 32px; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+.fp-chart-head .delta { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--vermillion); white-space: nowrap; }
 .fp-chart-card svg { width: 100%; height: auto; display: block; }
-.fp-chart-foot {
-  font-size: 11px;
-  color: var(--ink-soft);
-  letter-spacing: 0.06em;
-  margin-top: 8px;
-}
+.fp-chart-foot { font-family: var(--mono); font-size: 10px; color: var(--ink-soft); letter-spacing: 0.08em; margin-top: 7px; }
 
 .fp-rank { list-style: none; margin: 0; padding: 0; }
-.fp-rank li { padding: 12px 0; border-top: 1px solid var(--rule); }
+.fp-rank li { padding: 11px 0; border-top: 1px solid var(--hair); }
 .fp-rank li:first-child { border-top: 0; }
-.fp-rank .top {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-}
-.fp-rank .name {
-  font-family: Fraunces, Georgia, serif;
-  font-weight: 700;
-  font-size: 17px;
-}
+.fp-rank .top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.fp-rank .name { font-family: var(--serif); font-weight: 700; font-size: 17px; }
 .fp-rank a.name:hover { color: var(--vermillion); }
-.fp-rank .score {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink-soft);
-}
-.fp-bar {
-  height: 6px;
-  background: var(--paper);
-  border-radius: 2px;
-  margin-top: 8px;
-  overflow: hidden;
-  border: 1px solid var(--rule);
-}
+.fp-rank .score { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.fp-bar { height: 5px; background: var(--paper-dim); margin-top: 7px; overflow: hidden; border: 1px solid var(--hair); }
 .fp-bar > span { display: block; height: 100%; background: var(--vermillion); }
 
-/* Hype signal on landing previews */
-.fp-byline-spin {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 10px 0 18px;
-}
-.fp-byline-score {
-  font-size: 12px;
-  letter-spacing: 0.06em;
-  color: var(--ink-soft);
-  font-variant-numeric: tabular-nums;
-}
-.fp-card-spin { margin-top: 12px; }
+.fp-byline-spin { display: flex; align-items: center; gap: 10px; margin: 9px 0 16px; }
+.fp-byline-score { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.fp-card-spin { margin-top: 10px; }
 
-/* Why this exists — the argument, set like an editorial */
-.fp-why {
-  border-top: 1px solid var(--rule);
-  padding: clamp(44px, 6vw, 80px) 0;
-}
-.fp-why-grid {
-  display: grid;
-  grid-template-columns: 1.1fr 1fr;
-  gap: clamp(28px, 4vw, 64px);
-  align-items: start;
-}
+.fp-why { border-top: 3px solid var(--rule); padding: clamp(36px, 5vw, 64px) 0; }
+.fp-why-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: clamp(24px, 4vw, 60px); align-items: start; }
 .fp-why-statement {
-  font-family: Fraunces, Georgia, serif;
+  font-family: var(--serif);
   font-weight: 700;
-  font-size: clamp(26px, 3.4vw, 42px);
-  line-height: 1.15;
-  letter-spacing: -0.01em;
+  font-size: clamp(25px, 3.2vw, 40px);
+  line-height: 1.12;
+  letter-spacing: -0.025em;
   margin: 0;
   text-wrap: balance;
 }
 .fp-why-body p {
   color: var(--ink-soft);
   font-size: 15.5px;
-  line-height: 1.65;
+  line-height: 1.64;
   margin: 0 0 14px;
-  max-width: 52ch;
+  max-width: 54ch;
 }
 .fp-why-body p:last-child { margin-bottom: 0; }
-.fp-why-body em { color: var(--ink); font-family: Fraunces, Georgia, serif; }
+.fp-why-body em { color: var(--ink); font-family: var(--serif); }
 
-/* How a score is built — the day's loudest headline, itemized */
-.fp-how { padding: clamp(40px, 5vw, 64px) 0; }
-.fp-how-grid {
-  display: grid;
-  grid-template-columns: 1fr 1.1fr;
-  gap: clamp(28px, 4vw, 64px);
-  align-items: start;
-}
-.fp-how-lede {
-  color: var(--ink-soft);
-  font-size: 15px;
-  line-height: 1.65;
-  max-width: 46ch;
-  margin: 12px 0 20px;
-}
-.fp-tiers {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  border-top: 1px solid var(--rule);
-}
-.fp-tiers li {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  padding: 10px 0;
-  border-bottom: 1px solid color-mix(in oklch, var(--rule), transparent 72%);
-}
-.fp-tiers .tier-name {
-  font-family: Fraunces, Georgia, serif;
-  font-weight: 600;
-  font-size: 17px;
-}
-.fp-tiers .tier-range {
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  color: var(--ink-soft);
-  font-variant-numeric: tabular-nums;
-}
+.fp-how { padding: clamp(32px, 4vw, 54px) 0; }
+.fp-how-grid { display: grid; grid-template-columns: 1fr 1.1fr; gap: clamp(24px, 4vw, 60px); align-items: start; }
+.fp-how-lede { color: var(--ink-soft); font-size: 15px; line-height: 1.64; max-width: 48ch; margin: 12px 0 18px; }
+.fp-tiers { list-style: none; margin: 0; padding: 0; border-top: 3px solid var(--rule); }
+.fp-tiers li { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--hair); }
+.fp-tiers .tier-name { font-family: var(--serif); font-weight: 600; font-size: 17px; }
+.fp-tiers .tier-range { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
 
-/* The live example card */
-.fp-example {
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-  background: var(--paper);
-  padding: 22px 24px 18px;
-}
-.fp-example .fp-eyebrow { display: block; margin-bottom: 12px; }
+.fp-example { border: 1px solid var(--rule); background: var(--paper); padding: 20px 22px 16px; }
+.fp-example .fp-eyebrow { display: block; margin-bottom: 10px; }
 .fp-example-headline {
-  font-family: Fraunces, Georgia, serif;
+  font-family: var(--serif);
   font-weight: 700;
-  font-size: clamp(19px, 2.2vw, 24px);
-  line-height: 1.25;
-  letter-spacing: -0.01em;
+  font-size: clamp(18px, 2.1vw, 23px);
+  line-height: 1.24;
+  letter-spacing: -0.015em;
   display: block;
 }
 .fp-example-headline:hover { color: var(--vermillion); }
-.fp-example-source {
-  font-size: 12px;
-  letter-spacing: 0.05em;
-  color: var(--ink-soft);
-  margin: 8px 0 0;
-}
-.fp-example-signals {
-  list-style: none;
-  margin: 16px 0 0;
-  padding: 0;
-}
+.fp-example-source { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em; color: var(--ink-soft); margin: 8px 0 0; }
+.fp-example-signals { list-style: none; margin: 15px 0 0; padding: 0; border-top: 1px solid var(--hair); }
 .fp-example-signals li {
   display: flex;
   align-items: baseline;
   gap: 10px;
   padding: 7px 0;
-  border-top: 1px solid color-mix(in oklch, var(--rule), transparent 78%);
+  border-bottom: 1px solid var(--hair);
   font-size: 13.5px;
 }
 .fp-example-signals .sig-label { color: var(--ink); }
 .fp-example-signals .sig-dots {
   flex: 1;
-  border-bottom: 1px dotted color-mix(in oklch, var(--rule), transparent 55%);
-  transform: translateY(-3px);
+  min-width: 12px;
+  align-self: flex-end;
+  margin-bottom: 0.34em;
+  border-bottom: 1px dotted var(--hair-strong);
 }
-.fp-example-signals .sig-points {
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
-  color: var(--vermillion);
-}
-.fp-example-total {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid var(--rule);
-}
+.fp-example-signals .sig-points { font-family: var(--mono); font-variant-numeric: tabular-nums; font-weight: 600; color: var(--vermillion); }
+.fp-example-total { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 13px; padding-top: 12px; border-top: 3px double var(--rule); }
 .fp-example-link {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ink-soft);
   display: inline-flex;
@@ -1056,207 +2132,80 @@ body {
   gap: 6px;
 }
 .fp-example-link:hover { color: var(--vermillion); }
-.fp-example-quiet {
-  color: var(--ink-soft);
-  font-size: 14.5px;
-  line-height: 1.6;
-  margin: 4px 0 0;
-}
+.fp-example-quiet { color: var(--ink-soft); font-size: 14.5px; line-height: 1.6; margin: 4px 0 0; }
 .fp-example-foot {
-  font-size: 12px;
+  font-size: 12.5px;
   color: var(--ink-soft);
-  margin: 14px 0 0;
+  margin: 13px 0 0;
   padding-top: 10px;
-  border-top: 1px solid color-mix(in oklch, var(--rule), transparent 72%);
+  border-top: 1px solid var(--hair);
   font-style: italic;
-  font-family: Fraunces, Georgia, serif;
+  font-family: var(--serif);
 }
 
-/* The signal loop — a colophon, not a process graphic */
-.fp-loop {
-  border-top: 1px solid var(--rule);
-  padding: clamp(44px, 6vw, 80px) 0;
-}
-.fp-loop-grid {
-  display: grid;
-  grid-template-columns: 1fr 1.2fr;
-  gap: clamp(28px, 4vw, 64px);
-  align-items: start;
-}
-.fp-loop-lede {
-  color: var(--ink-soft);
-  font-size: 15px;
-  line-height: 1.65;
-  max-width: 40ch;
-  margin: 14px 0 18px;
-}
-.fp-loop-link {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
+.fp-loop { border-top: 3px solid var(--rule); padding: clamp(36px, 5vw, 64px) 0; }
+.fp-loop-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: clamp(24px, 4vw, 60px); align-items: start; }
+.fp-loop-lede { color: var(--ink-soft); font-size: 15px; line-height: 1.64; max-width: 42ch; margin: 13px 0 16px; }
+.fp-loop-link { font-family: var(--mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; display: inline-flex; align-items: center; gap: 6px; }
 .fp-loop-link:hover { color: var(--vermillion); }
-.fp-loop-steps {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.fp-loop-steps li {
-  display: grid;
-  grid-template-columns: 44px 1fr;
-  gap: 16px;
-  padding: 14px 0;
-  border-top: 1px solid color-mix(in oklch, var(--rule), transparent 72%);
-}
+.fp-loop-steps { list-style: none; margin: 0; padding: 0; border-top: 3px solid var(--rule); }
+.fp-loop-steps li { display: grid; grid-template-columns: 40px 1fr; gap: 16px; padding: 13px 0; border-bottom: 1px solid var(--hair); }
 .fp-loop-steps li:first-child { border-top: 0; padding-top: 0; }
-.fp-loop-steps .step-num {
-  font-family: Fraunces, Georgia, serif;
-  font-weight: 700;
-  font-size: 15px;
-  color: var(--vermillion);
-  font-variant-numeric: tabular-nums;
-  padding-top: 2px;
-}
-.fp-loop-steps h3 {
-  font-family: Fraunces, Georgia, serif;
-  font-weight: 700;
-  font-size: 18px;
-  margin: 0 0 3px;
-  letter-spacing: -0.005em;
-}
-.fp-loop-steps p {
-  color: var(--ink-soft);
-  font-size: 14px;
-  line-height: 1.55;
-  margin: 0;
-  max-width: 52ch;
-}
+.fp-loop-steps .step-num { font-family: var(--mono); font-weight: 600; font-size: 12px; color: var(--ink-soft); font-variant-numeric: tabular-nums; padding-top: 4px; border-right: 1px solid var(--hair); }
+.fp-loop-steps h3 { font-family: var(--serif); font-weight: 700; font-size: 18px; margin: 0 0 3px; letter-spacing: -0.01em; }
+.fp-loop-steps p { color: var(--ink-soft); font-size: 14px; line-height: 1.56; margin: 0; max-width: 54ch; }
 
-/* The wires — tracked sources as a typographic strip */
-.fp-wires {
-  border-top: 1px solid var(--rule);
-  padding: clamp(36px, 5vw, 56px) 0;
-}
-.fp-wires-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 16px;
-}
-.fp-wires-head .more {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
+.fp-wires { border-top: 3px solid var(--rule); padding: clamp(30px, 4vw, 48px) 0; }
+.fp-wires-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+.fp-wires-head .more { font-family: var(--mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; }
 .fp-wires-head .more:hover { color: var(--vermillion); }
-.fp-wires-list {
-  list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  margin: 18px 0 0;
-  padding: 0;
-  column-gap: 8px;
-}
+.fp-wires-list { list-style: none; display: flex; flex-wrap: wrap; margin: 16px 0 0; padding: 0; column-gap: 8px; }
 .fp-wires-list li {
   display: flex;
   align-items: baseline;
-  font-family: Fraunces, Georgia, serif;
+  font-family: var(--serif);
   font-weight: 600;
   font-size: clamp(16px, 1.8vw, 20px);
-  letter-spacing: -0.005em;
-}
-.fp-wires-list li + li::before {
-  content: "·";
-  color: var(--vermillion);
-  margin-right: 8px;
-  font-weight: 400;
-}
-.fp-wires-list a:hover { color: var(--vermillion); }
-.fp-wires-note {
-  color: var(--ink-soft);
-  font-size: 13px;
-  margin: 14px 0 0;
-  max-width: 64ch;
-}
-
-
-/* Closing band — final CTA + the honest RSS subscription */
-.fp-final {
-  border-top: 3px double var(--rule);
-  padding: clamp(40px, 6vw, 72px) 0;
-}
-.fp-final-grid {
-  display: grid;
-  grid-template-columns: 1.25fr 1fr;
-  gap: clamp(28px, 4vw, 56px);
-  align-items: center;
-}
-.fp-final-cta h2 {
-  font-family: Fraunces, Georgia, serif;
-  font-weight: 700;
-  font-size: clamp(30px, 4.4vw, 52px);
-  margin: 0;
   letter-spacing: -0.01em;
-  text-wrap: balance;
 }
-.fp-final-cta p.lede {
-  color: var(--ink-soft);
-  max-width: 46ch;
-  margin: 12px 0 22px;
-  font-family: Fraunces, Georgia, serif;
-  font-style: italic;
-}
-.fp-final-rss .fp-eyebrow {
-  display: block;
-  margin-bottom: 10px;
-}
-.fp-signup {
-  display: flex;
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-  background: var(--paper);
-  min-width: 340px;
-}
+.fp-wires-list li + li::before { content: "·"; color: var(--vermillion); margin-right: 8px; font-weight: 400; }
+.fp-wires-list a:hover { color: var(--vermillion); }
+.fp-wires-note { color: var(--ink-soft); font-size: 13.5px; margin: 13px 0 0; max-width: 66ch; }
+
+.fp-final { border-top: 3px double var(--rule); padding: clamp(34px, 5vw, 62px) 0; }
+.fp-final-grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: clamp(24px, 4vw, 52px); align-items: center; }
+.fp-final-cta h2 { font-family: var(--serif); font-weight: 700; font-size: clamp(28px, 4.2vw, 48px); margin: 0; letter-spacing: -0.025em; text-wrap: balance; }
+.fp-final-cta p.lede { color: var(--ink-soft); max-width: 48ch; margin: 12px 0 20px; font-family: var(--serif); font-style: italic; }
+.fp-final-rss .fp-eyebrow { display: block; margin-bottom: 10px; }
+.fp-signup { display: flex; border: 1px solid var(--rule); background: var(--paper); min-width: 340px; }
 .fp-signup input {
   flex: 1;
   min-width: 0;
   border: 0;
   background: transparent;
   color: var(--ink);
-  font-family: Inter, system-ui, sans-serif;
-  font-size: 14px;
-  padding: 16px;
-  border-radius: 2px;
+  font-family: var(--mono);
+  font-size: 13px;
+  padding: 14px 14px;
 }
 .fp-signup input::placeholder { color: var(--ink-soft); }
 .fp-btn-primary {
-  background: var(--vermillion);
+  background: var(--ink);
   color: var(--paper);
   border: 0;
-  font-family: Inter, system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  letter-spacing: 0.12em;
+  border-left: 1px solid var(--rule);
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  padding: 0 26px;
-  border-radius: 2px;
+  padding: 0 22px;
   cursor: pointer;
   transition: background 0.2s ease;
   white-space: nowrap;
 }
-.fp-btn-primary:hover { background: color-mix(in oklch, var(--vermillion), black 14%); }
-.fp-news-status {
-  font-size: 13px;
-  letter-spacing: 0.02em;
-  margin: 12px 0 0;
-  min-height: 1.1em;
-  color: var(--ink-soft);
-}
+.fp-btn-primary:hover { background: var(--vermillion); border-color: var(--vermillion); }
+.fp-news-status { font-size: 13px; letter-spacing: 0.01em; margin: 11px 0 0; min-height: 1.1em; color: var(--ink-soft); }
 .fp-news-status.err { color: var(--vermillion); }
 .fp-news-status a { text-decoration: underline; text-underline-offset: 3px; }
 .fp-news-status a:hover { color: var(--vermillion); }
@@ -1280,568 +2229,112 @@ body {
 @media (max-width: 560px) {
   .fp-signup { flex-direction: column; }
   .fp-signup input { border-bottom: 1px solid var(--rule); }
-  .fp-btn-primary { padding: 14px; }
+  .fp-btn-primary { padding: 13px; border-left: 0; border-top: 1px solid var(--rule); }
 }
 
-/* ------------------------------------------------------------------ */
-/* Story page redesign (ported from the OpenDesign concept). Scoped    */
-/* under .sp; shares .fp-* feed classes for the related strip.         */
-/* ------------------------------------------------------------------ */
-.sp-progress {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 3px;
-  width: 0;
-  background: var(--vermillion);
-  z-index: 200;
-  transition: width 0.08s linear;
-}
-
-.sp-article { padding: clamp(36px, 5vw, 64px) 0 clamp(48px, 7vw, 88px); }
-.sp-article-head {
-  max-width: 820px;
-  margin: 0 auto 8px;
-  text-align: center;
-}
-.sp-headline {
-  font-family: Fraunces, Georgia, serif;
-  font-weight: 700;
-  font-size: clamp(34px, 6vw, 62px);
-  line-height: 1.04;
-  letter-spacing: -0.02em;
-  margin: 14px 0 0;
-  text-wrap: balance;
-}
-.sp-deck {
-  font-family: Fraunces, Georgia, serif;
-  font-style: italic;
-  font-size: clamp(18px, 2.4vw, 25px);
-  line-height: 1.4;
-  color: var(--ink-soft);
-  margin: 20px auto 0;
-  max-width: 60ch;
-}
-.sp-byline {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px 18px;
-  align-items: baseline;
-  font-size: 12.5px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-  border-top: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
-  padding: 12px 0;
-  margin: 28px auto 0;
-  max-width: 820px;
-}
-.sp-byline b { color: var(--ink); font-weight: 600; }
-
-.sp-hero-fig { max-width: 980px; margin: clamp(32px, 5vw, 56px) auto 0; }
-.sp-hero-fig .frame {
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-  background: var(--paper-dim);
-  overflow: hidden;
-}
-.sp-hero-fig .frame svg { width: 100%; height: auto; display: block; }
-.sp-fig-cap {
-  font-size: 12px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-  padding-top: 12px;
-  margin: 0;
-  border-top: 1px solid var(--rule);
-  display: flex;
-  gap: 10px;
-}
-.sp-fig-cap::before {
-  content: "";
-  width: 28px;
-  height: 2px;
-  background: var(--ink-soft);
-  flex: 0 0 auto;
-  margin-top: 6px;
-}
-
-.sp-body {
-  max-width: 68ch;
-  margin: clamp(36px, 5vw, 56px) auto 0;
-  font-size: 17px;
-  line-height: 1.68;
-}
-.sp-body > p:first-child::first-letter {
-  font-family: Fraunces, Georgia, serif;
-  font-weight: 700;
-  float: left;
-  font-size: 4.4em;
-  line-height: 0.78;
-  padding: 6px 12px 0 0;
-  color: var(--ink);
-}
-
-/* The detector's verdict, set like a pull quote — real computed data, not an
-   invented quotation from the article. */
-.sp-verdict {
-  font-family: Fraunces, Georgia, serif;
-  font-style: italic;
-  font-size: clamp(24px, 3.4vw, 33px);
-  line-height: 1.28;
-  margin: 40px 0;
-  padding: 22px 0;
-  border-top: 2px solid var(--vermillion);
-  border-bottom: 2px solid var(--vermillion);
-}
-.sp-verdict cite {
-  display: block;
-  font-family: Inter, system-ui, sans-serif;
-  font-style: normal;
-  font-weight: 600;
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-  margin-top: 16px;
-}
-
-/* Why-this-score callout in the print idiom */
-.sp-callout {
-  background: var(--paper-dim);
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-  padding: 20px 22px;
-}
-
-@media (max-width: 900px) {
-  .sp-byline { gap: 6px 10px; }
-}
-
-/* ------------------------------------------------------------------ */
-/* Hype Index page redesign (ported from the OpenDesign concept).      */
-/* Scoped under .hx.                                                   */
-/* ------------------------------------------------------------------ */
-.hx .page-head {
-  max-width: 820px;
-  margin: 0 auto;
-  text-align: center;
-}
-.hx .page-title {
-  font-family: Fraunces, Georgia, serif;
-  font-weight: 700;
-  font-size: clamp(44px, 8vw, 88px);
-  line-height: 1;
-  letter-spacing: -0.025em;
-  margin: 14px 0 0;
-  text-wrap: balance;
-}
-.hx .page-deck {
-  font-family: Fraunces, Georgia, serif;
-  font-style: italic;
-  font-size: clamp(17px, 2.2vw, 23px);
-  line-height: 1.42;
-  color: var(--ink-soft);
-  margin: 18px auto 0;
-  max-width: 58ch;
-}
-
-.hx .chart-section { border-top: 1px solid var(--rule); padding: clamp(36px, 5vw, 56px) 0; }
-
-/* The index mast — the day's number as a market indicator */
-.hx-mast {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: clamp(28px, 5vw, 72px);
-  align-items: end;
-  padding: clamp(28px, 4vw, 48px) 0 clamp(20px, 3vw, 32px);
-}
-.hx-big {
-  font-family: Fraunces, Georgia, serif;
-  font-weight: 700;
-  font-size: clamp(72px, 10vw, 128px);
-  line-height: 0.85;
-  letter-spacing: -0.03em;
-  margin: 10px 0 0;
-  font-variant-numeric: tabular-nums;
-}
-.hx-big-unit {
-  font-size: 0.32em;
-  font-weight: 600;
-  color: var(--ink-soft);
-  margin-left: 2px;
-}
-.hx-mast-word {
-  font-size: 13px;
-  color: var(--ink-soft);
-  margin: 12px 0 0;
-  max-width: 34ch;
-}
-.hx-mast-scale {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  padding-bottom: 8px;
-}
-.hx-scale-track {
-  position: relative;
-  display: block;
-  height: 14px;
-  border-bottom: 2px solid var(--rule);
-}
-.hx-tick {
-  position: absolute;
-  bottom: 0;
-  width: 1px;
-  height: 7px;
-  background: color-mix(in oklch, var(--rule), transparent 35%);
-  transform: translateX(-0.5px);
-}
-.hx-marker {
-  position: absolute;
-  bottom: -2px;
-  width: 0;
-  height: 0;
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-bottom: 9px solid var(--vermillion);
-  transform: translateX(-6px);
-}
-.hx-scale-ends {
-  display: flex;
-  justify-content: space-between;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  color: var(--ink-soft);
-  margin-top: 6px;
-}
-.hx-mast-delta {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-}
-.hx-delta-up { color: var(--vermillion); }
-.hx-delta-down { color: var(--ink); }
-.hx-delta-flat { color: var(--ink-soft); font-weight: 500; }
-.hx-mast-signal {
-  max-width: 240px;
-  padding-bottom: 8px;
-}
-.hx-top-signal {
-  font-family: Fraunces, Georgia, serif;
-  font-weight: 600;
-  font-size: 18px;
-  line-height: 1.3;
-  margin: 8px 0 0;
-}
-.hx-top-count {
-  font-family: Inter, system-ui, sans-serif;
-  font-weight: 400;
-  font-size: 13px;
-  color: var(--ink-soft);
-}
-.hx-top-quiet { color: var(--ink-soft); font-style: italic; font-weight: 400; }
-.hx-mast-note {
-  font-size: 11px;
-  color: var(--ink-soft);
-  margin: 12px 0 0;
-  padding-top: 8px;
-  border-top: 1px solid color-mix(in oklch, var(--rule), transparent 72%);
-}
-@media (max-width: 900px) {
-  .hx-mast {
-    grid-template-columns: 1fr;
-    gap: 24px;
-    align-items: start;
-  }
-  .hx-mast-signal { max-width: none; }
-}
-
-.hx .chart-scroll { position: relative; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.hx .chart-wrap { position: relative; min-width: 640px; }
-.hx svg.chart { width: 100%; height: auto; display: block; }
-.hx svg.chart .grid { stroke: var(--rule); stroke-width: 1; opacity: 0.16; }
-.hx svg.chart .axis {
-  font-family: Inter, system-ui, sans-serif;
-  font-size: 11px;
-  fill: var(--ink-soft);
-  letter-spacing: 0.03em;
-}
-.hx svg.chart .area { fill: url(#hxAreaGrad); stroke: none; }
-.hx svg.chart .line {
-  fill: none;
-  stroke: var(--vermillion);
-  stroke-width: 2.2;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-}
-.hx svg.chart .dot { fill: var(--paper); stroke: var(--vermillion); stroke-width: 2; }
-.hx svg.chart .crosshair {
-  stroke: var(--vermillion);
-  stroke-width: 1;
-  stroke-dasharray: 3 3;
-  opacity: 0;
-}
-.hx svg.chart .cross-dot { fill: var(--vermillion); opacity: 0; }
-.hx .chart-tooltip {
-  position: absolute;
-  pointer-events: none;
-  background: var(--paper);
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-  padding: 8px 11px;
-  font-family: Inter, system-ui, sans-serif;
-  color: var(--ink);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.14);
-  opacity: 0;
-  transform: translate(-50%, -130%);
-  transition: opacity 0.15s ease;
-  white-space: nowrap;
-  z-index: 5;
-}
-.hx .chart-tooltip.on { opacity: 1; }
-.hx .chart-tooltip .t-date {
-  color: var(--ink-soft);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  font-size: 10px;
-}
-.hx .chart-tooltip .t-val {
-  font-family: Fraunces, Georgia, serif;
-  font-weight: 700;
-  font-size: 17px;
-}
-
-/* Calendar strip */
-.hx .cal-section { border-top: 1px solid var(--rule); padding: clamp(32px, 4vw, 48px) 0; }
-.hx .section-kicker {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-  margin-bottom: 18px;
-}
-.hx .cal {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 8px;
-}
-.hx .cal-day {
-  flex: 1 0 auto;
-  min-width: 52px;
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-  padding: 9px 6px;
-  text-align: center;
-  background: var(--paper-dim);
-}
-.hx .cal-day .d-num {
-  font-size: 10.5px;
-  color: var(--ink-soft);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-.hx .cal-day .d-val {
-  font-family: Fraunces, Georgia, serif;
-  font-weight: 700;
-  font-size: 19px;
-  margin-top: 3px;
-}
-.hx .cal-day.today { border-color: var(--vermillion); background: var(--paper); }
-.hx .cal-day.today .d-val,
-.hx .cal-day.today .d-num { color: var(--vermillion); }
-
-/* Leaderboard */
-.hx .board-section { border-top: 1px solid var(--rule); padding: clamp(32px, 4vw, 48px) 0; }
-.hx .board-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 14px; }
-.hx .board { width: 100%; border-collapse: collapse; min-width: 560px; }
-.hx .board th {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-  text-align: left;
-  padding: 10px 12px;
-  border-bottom: 2px solid var(--rule);
-}
-.hx .board td {
-  font-size: 15px;
-  padding: 14px 12px;
-  border-bottom: 1px solid var(--rule);
-  vertical-align: middle;
-}
-.hx .board tbody tr { transition: background 0.15s ease; }
-.hx .board tbody tr:hover { background: var(--paper-dim); }
-.hx .board .rank {
-  font-family: Fraunces, Georgia, serif;
-  font-weight: 700;
-  font-size: 18px;
-  color: var(--ink-soft);
-  width: 38px;
-}
-.hx .board .name {
-  font-family: Fraunces, Georgia, serif;
-  font-weight: 700;
-  font-size: 17px;
-}
-.hx .board .name:hover { color: var(--vermillion); }
-.hx .board .val { font-variant-numeric: tabular-nums; font-weight: 600; font-size: 16px; }
-.hx .board th.num,
-.hx .board td.num { text-align: right; }
-
-.hx .method {
-  font-size: 13px;
-  color: var(--ink-soft);
-  line-height: 1.6;
-  max-width: 70ch;
-  margin-top: 28px;
-}
-.hx .method a {
-  color: var(--ink);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.hx .method a:hover { color: var(--vermillion); }
-
-/* ------------------------------------------------------------------ */
-/* Editorial pages (About / Methodology) — ported from OpenDesign.     */
-/* Scoped under .ed; reuses .fp-kicker and .sp-callout.                */
-/* ------------------------------------------------------------------ */
-.ed .page-head {
-  max-width: 860px;
-  margin: 0 auto;
-  text-align: center;
-}
+/* =====================================================================
+   EDITORIAL PAGES (/about, /methodology) — scoped under .ed
+   ===================================================================== */
+.ed .page-head { max-width: 880px; margin: 0 auto; text-align: left; }
 .ed .page-title {
-  font-family: Fraunces, Georgia, serif;
-  font-weight: 700;
-  font-size: clamp(44px, 8vw, 88px);
-  line-height: 1;
-  letter-spacing: -0.025em;
-  margin: 14px 0 0;
+  font-family: var(--serif);
+  font-weight: 900;
+  font-size: clamp(42px, 7.6vw, 84px);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  margin: 12px 0 0;
   text-wrap: balance;
 }
 .ed .page-deck {
-  font-family: Fraunces, Georgia, serif;
+  font-family: var(--serif);
   font-style: italic;
-  font-size: clamp(17px, 2.2vw, 23px);
+  font-size: clamp(17px, 2.1vw, 23px);
   line-height: 1.42;
   color: var(--ink-soft);
-  margin: 18px auto 0;
+  margin: 16px auto 0;
   max-width: 58ch;
 }
 
-.ed .reading {
-  max-width: 68ch;
-  margin: clamp(32px, 5vw, 56px) auto 0;
-  font-size: 17px;
-  line-height: 1.66;
-}
-.ed .reading p { margin: 0 0 22px; }
+.ed .reading { max-width: 68ch; margin: clamp(26px, 4vw, 46px) auto 0; font-size: 17.5px; line-height: 1.66; }
+.ed .reading p { margin: 0 0 1.1em; }
 .ed .reading.has-cap > p:first-of-type::first-letter {
   float: left;
-  font-family: Fraunces, Georgia, serif;
-  font-weight: 700;
+  font-family: var(--serif);
+  font-weight: 900;
   color: var(--vermillion);
-  font-size: 4.2em;
+  font-size: 4.1em;
   line-height: 0.76;
-  padding: 0.04em 0.1em 0 0;
-  margin-top: 0.04em;
+  padding: 0.02em 0.09em 0 0;
+  margin-top: 0.03em;
 }
 
 .ed .section-kicker {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--ink-soft);
   margin-bottom: 10px;
 }
 
-/* Numbered editorial list with big serif numerals in a left rail */
-.ed .numbered { max-width: 860px; margin: clamp(36px, 5vw, 60px) auto 0; }
-.ed .item {
-  display: grid;
-  grid-template-columns: 92px 1fr;
-  gap: 28px;
-  padding: 28px 0;
-  border-top: 1px solid var(--rule);
-}
-.ed .item:last-child { border-bottom: 1px solid var(--rule); }
+/* Numbered editorial list: mono index in a left rail, hairline rules. */
+.ed .numbered { max-width: 880px; margin: clamp(30px, 4vw, 52px) auto 0; border-top: 3px solid var(--rule); }
+.ed .item { display: grid; grid-template-columns: 72px 1fr; gap: clamp(18px, 2.4vw, 32px); padding: 24px 0; border-bottom: 1px solid var(--hair); }
 .ed .item .num {
-  font-family: Fraunces, Georgia, serif;
+  font-family: var(--mono);
   font-weight: 700;
-  font-size: clamp(40px, 6vw, 64px);
-  line-height: 0.9;
-  letter-spacing: -0.02em;
-  color: var(--ink);
-}
-.ed .item h3 {
-  font-family: Fraunces, Georgia, serif;
-  font-weight: 700;
-  font-size: clamp(22px, 3vw, 28px);
-  line-height: 1.1;
-  margin: 2px 0 10px;
-  letter-spacing: -0.01em;
-}
-.ed .item p {
-  font-size: 16px;
-  line-height: 1.6;
+  font-size: clamp(26px, 4vw, 40px);
+  line-height: 1;
+  letter-spacing: -0.05em;
   color: var(--ink-soft);
-  margin: 0;
-  max-width: 62ch;
+  font-variant-numeric: tabular-nums;
+  border-right: 1px solid var(--hair);
+  padding-right: 12px;
 }
+.ed .item h3 { font-family: var(--serif); font-weight: 700; font-size: clamp(21px, 2.8vw, 27px); line-height: 1.1; margin: 0 0 9px; letter-spacing: -0.018em; }
+.ed .item p { font-size: 16px; line-height: 1.6; color: var(--ink-soft); margin: 0; max-width: 64ch; }
 
 .ed .colophon {
-  font-size: 13px;
+  font-size: 13.5px;
   color: var(--ink-soft);
   line-height: 1.6;
-  margin-top: 28px;
-  padding-top: 20px;
-  border-top: 1px solid var(--rule);
-  max-width: 68ch;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid var(--hair);
+  max-width: 70ch;
 }
 
 @media (max-width: 600px) {
-  .ed .item { grid-template-columns: 56px 1fr; gap: 16px; }
-  .ed .reading { font-size: 16px; }
+  .ed .item { grid-template-columns: 46px 1fr; gap: 14px; }
+  .ed .reading { font-size: 16.5px; }
 }
 
-/* Monochrome intensity pips (Edition feed/cards), from the OpenDesign pass */
-.intensity-pips {
-  display: inline-flex;
-  gap: 3px;
-}
+/* =====================================================================
+   SHARED PRIMITIVES
+   ===================================================================== */
+
+/* Monochrome intensity pips — a five-step square meter. Square because
+   the direction has no rounded corners; the step reads as a printed
+   tally block. */
+.intensity-pips { display: inline-flex; gap: 2px; }
 .intensity-pips .pip {
-  width: 9px;
-  height: 9px;
-  border: 1px solid var(--ink-soft);
-  border-radius: 1px;
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--hair-strong);
   background: transparent;
 }
-.intensity-pips .pip.on {
-  background: var(--ink);
-  border-color: var(--ink);
-}
+.intensity-pips .pip.on { background: var(--ink); border-color: var(--ink); }
 
-/* ------------------------------------------------------------------ */
-/* Print stylesheet — Cmd+P on the edition should read like a printed  */
-/* edition, not a web page. Kill the chrome, force paper + ink, keep   */
-/* the masthead, the date/edition line, headlines, and summaries.      */
-/* ------------------------------------------------------------------ */
+/* =====================================================================
+   PRINT — Cmd+P should read like a printed edition
+   ===================================================================== */
 @media print {
   @page { margin: 16mm; }
 
   html { scroll-behavior: auto; }
-  body { background: #fff !important; color: #000 !important; }
+  body { background: #fff !important; color: #000 !important; max-width: none !important; background-image: none !important; }
 
-  /* Chrome (nav, toggles, search, chips, sort) gets clipped entirely. */
   .skip-link,
   .site-nav,
   .theme-toggle,
@@ -1851,6 +2344,8 @@ body {
   .site-footer,
   .toast-region,
   .btn-outline,
+  .btn-solid,
+  .filter-toggle,
   button,
   [role="dialog"],
   .canvas-stage,
@@ -1859,39 +2354,20 @@ body {
     display: none !important;
   }
 
-  /* The sticky nav was the only sticky element; without it the masthead
-     sits at the top of page 1 where a masthead belongs. */
-  .masthead {
-    position: static !important;
-    margin: 0 0 4mm;
-    padding: 0 0 3mm;
-    border-bottom: 3px double #000;
-  }
-  .masthead-meta { color: #000; }
+  .masthead { position: static !important; margin: 0 0 4mm; padding: 0 0 2mm; border-bottom: 3px double #000; }
+  .masthead-meta { color: #000; border-top: 0; }
   .masthead-title a { color: #000; text-decoration: none; }
+  .masthead-tagline { color: #000; }
 
-  /* Keep the story cards readable: plain rules instead of hover chrome. */
-  .group,
-  article {
-    break-inside: avoid;
-  }
-  .group [class*="opacity-0"],
-  .group-hover\:opacity-100 {
-    display: none !important;
-  }
+  .group, article { break-inside: avoid; }
+  .group [class*="opacity-0"], .group-hover\:opacity-100 { display: none !important; }
 
-  /* A link's href is only useful on paper when it's not the page itself. */
+  /* Rails and index numerals are reading aids on screen; in print the
+     rules already carry the structure. */
+  .index-row .rank, .lead .lead-rail, .hx .cal { display: none !important; }
+  .index-row, .index-row .rail { grid-template-columns: 1fr; }
+
   a { color: #000; text-decoration: underline; text-underline-offset: 2px; }
-  a[href^="http"]::after {
-    content: " (" attr(href) ")";
-    font-size: 9px;
-    color: #555;
-    text-decoration: none;
-  }
-  /* Internal navigation and the wordmark are chrome, not sources. */
-  a[href^="/"]::after,
-  .site-nav a::after,
-  .site-footer a::after {
-    content: none !important;
-  }
+  a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 9px; color: #555; text-decoration: none; }
+  a[href^="/"]::after, .site-nav a::after, .site-footer a::after { content: none !important; }
 }

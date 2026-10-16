@@ -28,7 +28,10 @@
   --border: var(--rule);
   --input: var(--rule);
   --ring: var(--vermillion);
-  --radius: 0.125rem;
+  /* The Broadsheet house rule is square corners: every shadcn/Tailwind
+     radius token resolves to 0, so a pulled-in component cannot reintroduce
+     rounding behind the design system's back. */
+  --radius: 0px;
   --chart-1: var(--vermillion);
   --chart-2: var(--ink);
   --chart-3: var(--ink-soft);
@@ -57,10 +60,10 @@
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
-  --radius-sm: calc(var(--radius) - 2px);
-  --radius-md: var(--radius);
-  --radius-lg: calc(var(--radius) + 2px);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
   --font-sans: "Inter", system-ui, sans-serif;
   --font-serif: "Fraunces", Georgia, serif;
 }

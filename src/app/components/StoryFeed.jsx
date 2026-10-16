@@ -22,9 +22,13 @@ function fmtDate(iso) {
     : d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
-// Monochrome pip meter from the OpenDesign edition pass — a quiet visual
-// read of the same score the number states, kept out of the accessibility
-// tree because the score text already carries it.
+function fmtRank(n) {
+  return String(n).padStart(2, "0");
+}
+
+// Monochrome pip meter — a quiet visual read of the same score the number
+// states, kept out of the accessibility tree because the score text already
+// carries it.
 function IntensityPips({ score }) {
   const filled = Math.max(1, Math.min(4, Math.ceil((score ?? 0) / 25)));
   return (
@@ -45,7 +49,7 @@ function SourceLine({ story, isNew = false }) {
       <span className="font-semibold text-foreground">{story.source}</span>
       <span className="text-muted-foreground">{fmtDate(story.publishedAt)}</span>
       {isNew ? (
-        <span className="rounded-[2px] border border-primary/60 px-1.5 py-0.5 text-[9px] font-bold tracking-[0.12em] text-primary">
+        <span className=" border border-primary/60 px-1.5 py-0.5 text-[9px] font-bold tracking-[0.12em] text-primary">
           New
         </span>
       ) : null}
@@ -66,16 +70,11 @@ function SignalLine({ story }) {
   );
 }
 
-function CardImage({ story, isLead = false }) {
+function CardImage({ story, isLead = false, className }) {
   const [failed, setFailed] = useState(false);
   const show = Boolean(story.image) && !failed;
   return (
-    <div
-      className={cn(
-        "card-img-slot mb-4 -mx-5 -mt-5 rounded-t-[2px] sm:-mx-6 sm:-mt-6 sm:rounded-t-[2px]",
-        !show && "card-img-placeholder",
-      )}
-    >
+    <div className={cn("card-img-slot", className, !show && "card-img-placeholder")}>
       {show ? (
         <img
           src={story.image}
@@ -90,48 +89,111 @@ function CardImage({ story, isLead = false }) {
   );
 }
 
-function CardShell({ story, isLead = false, onOpen, active = false, isNew = false }) {
+// The lead story gets a real newspaper shape: kicker, big serif headline,
+// italic deck, mono byline rule. The article element IS the two-column grid
+// so the score rail stays inside it (the permalink anchors and the save
+// control both hang off `story-<id>`).
+function LeadStory({ story, isNew, active, onOpen }) {
+  const hot = story.spinScore >= 60;
   return (
     <m.article
       id={`story-${story.id}`}
       layoutId={`story-${story.id}`}
-      className={cn(
-        "group relative block rounded-[2px] border border-border/70 bg-card p-5 text-left transition-colors duration-150 sm:p-6",
-        "hover:border-primary/50 hover:bg-accent/40 hover:shadow-sm",
-        isLead && "mb-10 border-t-2 border-border/80 p-6 sm:p-8",
-        active && "border-primary ring-2 ring-primary/30",
-      )}
-      style={isLead ? { borderTopColor: "var(--vermillion)" } : undefined}
+      className={cn("lead group relative", active && "is-active")}
+      tabIndex={-1}
     >
-            <CardImage story={story} isLead={isLead} />
-      <h2
-        className={cn(
-          "break-words font-serif font-bold leading-snug tracking-[-0.01em] text-foreground",
-          isLead ? "text-3xl sm:text-4xl" : "line-clamp-3 text-lg sm:text-xl",
-        )}
-      >
-        {story.title}
-      </h2>
-      <div className="mt-2.5">
-        <SourceLine story={story} isNew={isNew} />
+      <div className="lead-body">
+        <CardImage story={story} isLead className="mb-5" />
+        <p className="lead-kicker">Lead story</p>
+        <h2 className="lead-headline">{story.title}</h2>
+        {story.summary ? <p className="lead-deck">{story.summary}</p> : null}
+        <div className="lead-byline">
+          <span>
+            Filed by <b>{story.source}</b>
+          </span>
+          <span>{fmtDate(story.publishedAt)}</span>
+          {isNew ? <span className="text-primary">New</span> : null}
+        </div>
+        <SignalLine story={story} />
       </div>
-      <SignalLine story={story} />
-      {isLead && story.summary ? (
-        <p className="mt-3 max-w-[60ch] text-[15px] leading-relaxed text-muted-foreground">{story.summary}</p>
-      ) : null}
-      <BookmarkButton
-        story={story}
-        className="absolute right-3 top-3 z-10 size-8 bg-card/80 backdrop-blur-sm"
-      />
-      <span className="mt-3 inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.08em] text-primary opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-        Read <ExternalLink className="size-3" aria-hidden="true" />
-      </span>
+
+      <div className="lead-rail">
+        <div className={cn("lead-score", hot && "is-hot")}>
+          <span className="score-k">Hype index</span>
+          <span className="score-v">{story.spinScore}</span>
+          <span className="score-band">{story.spin} · of 100</span>
+        </div>
+        <div className="lead-actions">
+          <button
+            type="button"
+            className="btn-solid"
+            aria-haspopup="dialog"
+            onClick={onOpen}
+          >
+            Read <ExternalLink className="size-3.5" aria-hidden="true" />
+          </button>
+          <BookmarkButton story={story} />
+        </div>
+      </div>
+
+      {/* Full-article hit area. Sits under the rail's own buttons so those stay
+          clickable; the headline and deck are text, not links, so the whole
+          block is reachable by one target. */}
       <button
         type="button"
         aria-label={`Open story: ${story.title}`}
         aria-haspopup="dialog"
         onClick={onOpen}
-        className="absolute inset-0 z-0 cursor-pointer rounded-[2px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        className="absolute inset-0 z-0 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      />
+    </m.article>
+  );
+}
+
+// The rest of the edition is a ruled index: rank numeral in the left rail,
+// headline and summary in the body, the measurement and the save control in
+// the right rail. One hairline per story instead of a box per story, which is
+// what lets a long edition stay scannable.
+function IndexRow({ story, rank, isNew, active, onOpen }) {
+  const hot = story.spinScore >= 60;
+  return (
+    <m.article
+      id={`story-${story.id}`}
+      layoutId={`story-${story.id}`}
+      className={cn("index-row group", active && "is-active")}
+      tabIndex={-1}
+    >
+      <span className="rank" aria-hidden="true">{fmtRank(rank)}</span>
+
+      <div className="body">
+        <span className="kicker">
+          {story.source} <span className="spin">· {story.spin}</span>
+        </span>
+        <h2>{story.title}</h2>
+        {story.summary ? <p className="summary">{story.summary}</p> : null}
+        <div className="meta">
+          <span className="src">{story.source}</span>
+          <span>{fmtDate(story.publishedAt)}</span>
+          {isNew ? <span className="spin-flag">New</span> : null}
+        </div>
+      </div>
+
+      <div className="rail">
+        <CardImage story={story} className="row-thumb" />
+        <span className={cn("fig", hot && "is-hot")}>
+          hype <b>{story.spinScore}</b>/100
+        </span>
+        <div className="rail-actions">
+          <BookmarkButton story={story} />
+        </div>
+      </div>
+
+      <button
+        type="button"
+        aria-label={`Open story: ${story.title}`}
+        aria-haspopup="dialog"
+        onClick={onOpen}
+        className="absolute inset-0 z-0 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
       />
     </m.article>
   );
@@ -201,37 +263,62 @@ export default function StoryFeed({ stories, lastVisit = null }) {
     return true;
   }
 
-  // A single filtered story is just a card — promoting it to the 4xl lead
-  // slot when it's the whole result looks absurd. Lead treatment only earns
-  // its weight above a 2-card edition.
+  // A single filtered story is just a row — promoting it to the lead slot when
+  // it's the whole result looks absurd. Lead treatment only earns its weight
+  // above a 2-card edition.
   const showLead = stories.length > 1;
   const lead = showLead ? stories[0] : null;
-  const grid = showLead ? stories.slice(1) : stories;
-
-  // The Glitch is an editorial punctuation mark for the single hottest story;
-  // wrapping every On Fire card in its own WebGL loop would pin the GPU on
-  // mobile. Only the lead earns the effect.
-  const renderCard = (story, { lead: isLead = false } = {}) => {
-    const isNew = isNewSinceLastVisit(story.publishedAt, lastVisit);
-    const card = <CardShell story={story} isLead={isLead} active={story.id === activeId} isNew={isNew} onOpen={() => open(story)} />;
-    if (isLead && story.spin === "On Fire") {
-      return (
-        <Suspense fallback={<div key={story.id}>{card}</div>}>
-          <Glitch key={story.id} intensity={0.85} interval={4} duration={0.3} slices={20} rgbShift={5}>
-            {card}
-          </Glitch>
-        </Suspense>
-      );
-    }
-    return <div key={story.id}>{card}</div>;
-  };
+  const rest = showLead ? stories.slice(1) : stories;
 
   return (
     <div>
-      {lead ? renderCard(lead, { lead: true }) : null}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:gap-6">
-        {grid.map((story) => (selectedId === story.id ? null : renderCard(story)))}
-      </div>
+      {lead ? (
+        (() => {
+          const isNew = isNewSinceLastVisit(lead.publishedAt, lastVisit);
+          const leadNode = (
+            <LeadStory story={lead} isNew={isNew} active={lead.id === activeId} onOpen={() => open(lead)} />
+          );
+          // The Glitch is an editorial punctuation mark for the single hottest
+          // story; wrapping every On Fire card in its own WebGL loop would pin
+          // the GPU on mobile. Only the lead earns the effect.
+          if (lead.spin === "On Fire") {
+            return (
+              <Suspense fallback={<div key={lead.id}>{leadNode}</div>}>
+                <Glitch key={lead.id} intensity={0.85} interval={4} duration={0.3} slices={20} rgbShift={5}>
+                  {leadNode}
+                </Glitch>
+              </Suspense>
+            );
+          }
+          return <div key={lead.id}>{leadNode}</div>;
+        })()
+      ) : null}
+
+      {rest.length > 0 ? (
+        <>
+          <p className="index-head">
+            <span>In this edition</span>
+            <span>
+              {fmtRank(1)}–{fmtRank(stories.length)} · ranked by filing order
+            </span>
+          </p>
+          <div className="index">
+            {rest.map((story, i) =>
+              selectedId === story.id ? null : (
+                <IndexRow
+                  key={story.id}
+                  story={story}
+                  rank={i + 2}
+                  isNew={isNewSinceLastVisit(story.publishedAt, lastVisit)}
+                  active={story.id === activeId}
+                  onOpen={() => open(story)}
+                />
+              ),
+            )}
+          </div>
+        </>
+      ) : null}
+
       <AnimatePresence>
         {selectedStory ? <StoryModal key={selectedStory.id} story={selectedStory} onClose={close} /> : null}
       </AnimatePresence>

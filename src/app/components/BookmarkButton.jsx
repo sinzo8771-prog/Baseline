@@ -24,7 +24,7 @@ export default function BookmarkButton({ story, className }) {
       aria-label={saved ? `Remove from saved: ${story.title}` : `Save for later: ${story.title}`}
       title={saved ? "Saved — tap to remove" : "Save for later"}
       className={cn(
-        "inline-flex size-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+        "inline-flex size-8 items-center justify-center  border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
         saved && "border-primary text-primary",
         className,
       )}
