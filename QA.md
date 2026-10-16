@@ -76,6 +76,7 @@ Automated sweep of all 11 routes × 5 viewports against the local dev server, pl
 | Route params: no double-decode (URIError crash fixed `f0859a8`) | ✅ PASS |
 | Service worker: same-origin only, never caches errors | ✅ PASS |
 | localStorage: try/catch + shape validation everywhere | ✅ PASS |
+| Document security headers (CSP / nosniff / referrer-policy) on **every** document | ❌ **GAP — pre-existing, live in production.** `wrangler.toml` sets `not_found_handling = "single-page-application"` but leaves `html_handling` at its `auto-trailing-slash` default, so Cloudflare's asset layer serves `/` straight from `index.html` **without invoking the Worker**. `src/index.js:129` (`withSecurityHeaders(await env.ASSETS.fetch(request))`) therefore never runs for the root URL. Confirmed live: `https://the-baseline.baseline-news.workers.dev/` → 200 with **no** `content-security-policy`, while `/edition`, `/methodology` and deep links carry all three. One-line fix — `html_handling = "none"` under `[assets]` — verified locally: `/` then serves CSP/nosniff/referrer-policy and every route still boots (landing, edition, 404 all render with zero page errors). **Not applied**: it is a production config change and needs its own deploy |
 
 ## Accessibility checklist
 
@@ -113,16 +114,16 @@ Automated sweep of all 11 routes × 5 viewports against the local dev server, pl
 > Bundle note: the masthead WebGL effects are now lazy chunks loaded on idle;
 > the main chunk no longer carries them (was 148.8 kB gzip, now 92.0 kB).
 
-## Production smoke (local Worker, 2026-08-24)
+## Production smoke (local Worker, 2026-08-24; branch re-run 2026-10-16)
 
 | Check | Result |
 |---|---|
-| All SPA routes (`/`, `/edition`, `/hype-index`, `/sources`, `/sources/:name`, `/saved`, `/week-in-review`, `/methodology`, `/about`, 404) | render, zero console errors |
+| All SPA routes (`/`, `/edition`, `/hype-index`, `/sources`, `/sources/:name`, `/story/:id`, `/saved`, `/week-in-review`, `/methodology`, `/about`, 404) | render, zero console errors |
 | `/feed.xml`, `/feed.json`, `/api/feeds`, `/robots.txt`, `/sitemap.xml` | all 200 |
 | Canonical / `og:url` / `og:image` | consistent, served from `src/lib/site.js` origin |
 | Partial ingestion | "N of M sources did not respond" notice verified with mocked dead wires |
 
-> The smoke above was last run 2026-08-24 against `master`. It was **not** re-run on `redesign-experiment` — that branch changed visual markup only, and no production smoke is claimed for it.
+> **2026-10-16 re-run on `redesign-experiment`**, against the local Worker (`npm run dev`): all 11 routes render with one `h1` each, canonical + `og:url` + JSON-LD present, and **zero console errors**; all five endpoints return 200 with the right content types (`application/rss+xml`, `application/feed+json`, `application/json`, `text/plain`, `application/xml`); `og:image` resolves to the configured worker origin. This is a **local Worker run, not production** — the two smoke runs above the note (2026-08-24) are the production one. The security-header gap on `/` is recorded in the security checklist above and was confirmed against production.
 
 ## Known limitations (accepted)
 
