@@ -91,6 +91,13 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
+    // "/index.html" is the same app shell as "/" but a second canonical URL for
+    // it. Assets config sets run_worker_first so the file reaches us instead of
+    // being answered by the asset layer, which lets us send it to the real one.
+    if (url.pathname === "/index.html") {
+      return Response.redirect(new URL("/", url), 301);
+    }
+
     if (url.pathname === "/api/feeds" || url.pathname === "/api/feed") {
       if (!(await allowRequest(request, url.pathname))) {
         return json({ error: "rate_limited", message: "Too many requests from this address. Take a breath, then try again." }, 429);

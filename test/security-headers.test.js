@@ -19,6 +19,14 @@ async function fetchThrough({ path, contentType, body = "<!DOCTYPE html><title>t
   });
 }
 
+test("/index.html redirects to the canonical /", async () => {
+  // /index.html is the same app shell as / but a second URL for it. The asset
+  // layer used to answer it directly; run_worker_first sends it here instead.
+  const res = await fetchThrough({ path: "/index.html", contentType: "text/html; charset=utf-8" });
+  assert.equal(res.status, 301);
+  assert.equal(res.headers.get("location"), `${ORIGIN}/`);
+});
+
 test("document responses carry CSP (incl. frame-ancestors), nosniff, and referrer-policy", async () => {
   const res = await fetchThrough({ path: "/", contentType: "text/html; charset=utf-8" });
   const csp = res.headers.get("content-security-policy");
