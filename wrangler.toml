@@ -6,6 +6,17 @@ compatibility_date = "2026-08-01"
 directory = "./dist"
 binding = "ASSETS"
 not_found_handling = "single-page-application"
+# Without this, html_handling defaults to "auto-trailing-slash", so Cloudflare
+# serves "/" straight from index.html without ever invoking the Worker. The
+# fetch handler is what adds the CSP/nosniff/referrer-policy headers
+# (src/index.js, withSecurityHeaders), so the root document — the most-visited
+# URL — shipped with none of them. "none" routes every request through the
+# Worker. Routes are client-side, so no trailing-slash redirects are needed.
+html_handling = "none"
+# run_worker_first also sends real file matches (notably /index.html, which is
+# the same app shell) through the Worker, so they get the headers too. Without
+# it the asset layer serves exact matches itself and they stay header-less.
+run_worker_first = true
 
 # PR preview deployments (see .github/workflows/preview-deploy.yml). A
 # separate worker (the-baseline-preview on baseline-news.workers.dev) so
