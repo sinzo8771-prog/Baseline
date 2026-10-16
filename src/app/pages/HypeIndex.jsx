@@ -53,11 +53,23 @@ function TrendChart({ series }) {
   const geo = useMemo(() => buildGeometry(series), [series]);
 
   if (!geo || series.length < 2) {
+    // A fresh browser must not read as a broken chart. The trend is genuinely
+    // unavailable until a second day exists, so say exactly that and say what
+    // will fill it — no placeholder grid, no invented line.
     return (
-      <p className="method">
-        The baseline starts the day you read your first edition. The trend line draws itself from tomorrow — come back
-        after your next visit.
-      </p>
+      <div className="hx-await">
+        <p className="kicker kicker--accent">No trend yet</p>
+        <p className="hx-await-lead">
+          {series.length === 1
+            ? "This is your first recorded reading, so there is nothing to draw a line against yet."
+            : "The baseline starts the day you read your first edition."}
+        </p>
+        <p className="method" style={{ marginTop: 0 }}>
+          The trend line is built only from the editions this browser has actually read — it is never filled in from
+          anyone else&rsquo;s history. Come back after your next visit and tomorrow&rsquo;s reading will have a line to
+          sit on.
+        </p>
+      </div>
     );
   }
 
@@ -235,64 +247,62 @@ function WeekInHype({ series }) {
     const date = new Date(2000, mo - 1, d);
     return Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
   };
+  const figures = [
+    { k: "Average", v: `${avg}%`, note: null },
+    { k: "Peak", v: `${peak.hypePercent}%`, note: short(peak.date) },
+    { k: "Low", v: `${low.hypePercent}%`, note: short(low.date) },
+  ];
   return (
-    <div className="mt-3 grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-3">
-      <div>
-        <div className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">Average</div>
-        <div className="font-serif text-2xl font-bold text-foreground">{avg}%</div>
-      </div>
-      <div>
-        <div className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">Peak</div>
-        <div className="font-serif text-2xl font-bold text-foreground">
-          {peak.hypePercent}% <span className="text-sm font-medium text-muted-foreground">· {short(peak.date)}</span>
+    <dl className="hx-dist" style={{ marginTop: 0 }}>
+      {figures.map((f) => (
+        <div key={f.k} className="fact">
+          <dt className="band">{f.k}</dt>
+          <dd className="count">
+            {f.v} {f.note ? <span className="share">· {f.note}</span> : null}
+          </dd>
         </div>
-      </div>
-      <div>
-        <div className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">Low</div>
-        <div className="font-serif text-2xl font-bold text-foreground">
-          {low.hypePercent}% <span className="text-sm font-medium text-muted-foreground">· {short(low.date)}</span>
-        </div>
-      </div>
-    </div>
+      ))}
+    </dl>
   );
 }
 
 const TIERS = ["Measured", "Warm", "Hot", "On Fire"];
 
+// The distribution reads as four ruled cells across the page — a printed
+// contents row — with a thin meter under each figure so the share stays
+// comparable without a separate chart.
 function Distribution({ stats }) {
   const total = stats?.total ?? 0;
   const bySpin = stats?.bySpin ?? {};
   return (
-    <div>
-      <div className="mt-4 space-y-2">
-        {TIERS.map((tier) => {
-          const n = bySpin[tier] ?? 0;
-          const pct = total ? Math.round((n / total) * 100) : 0;
-          const width = total ? Math.max(2, pct) : 0;
-          return (
-            <div key={tier} className="flex items-center gap-3">
-              <span className="w-24 shrink-0 text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
-                {tier}
-                <span className="ml-1 block normal-case tracking-normal text-muted-foreground">{TIER_RANGES[tier]}</span>
-              </span>
-              <div
-                className="fp-bar h-3 flex-1"
-                role="meter"
-                aria-label={`${tier}: ${n} stories (${pct}%)`}
-                aria-valuenow={n}
-                aria-valuemin={0}
-                aria-valuemax={Math.max(1, total)}
-              >
-                <span style={{ width: `${width}%` }} />
-              </div>
-              <span className="w-16 shrink-0 text-right tabular-nums text-sm text-foreground">
-                {n}<span className="text-muted-foreground"> · {pct}%</span>
-              </span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+    <ul className="hx-dist">
+      {TIERS.map((tier) => {
+        const n = bySpin[tier] ?? 0;
+        const pct = total ? Math.round((n / total) * 100) : 0;
+        const width = total ? Math.max(1.5, pct) : 0;
+        const isTop = tier === "On Fire" && n > 0;
+        return (
+          <li key={tier} className={isTop ? "is-top" : undefined}>
+            <span className="band">
+              {tier} · {TIER_RANGES[tier]}
+            </span>
+            <span className="count">
+              {n} <span className="share">{total ? `· ${pct}%` : "· —"}</span>
+            </span>
+            <span
+              className="fp-bar"
+              role="meter"
+              aria-label={`${tier}: ${n} stories (${pct}%)`}
+              aria-valuenow={n}
+              aria-valuemin={0}
+              aria-valuemax={Math.max(1, total)}
+            >
+              <span style={{ width: `${width}%` }} />
+            </span>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
@@ -379,8 +389,8 @@ function BiggestShift({ stats, history }) {
 
 function Panel({ title, children }) {
   return (
-    <div className="sp-callout rounded-none p-5">
-      <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{title}</h2>
+    <div className="hx-panel">
+      <h2 className="kicker">{title}</h2>
       {children}
     </div>
   );
@@ -520,10 +530,8 @@ export default function HypeIndex({ stats, allStories, sourceStats, loaded, offl
               <Panel title="Hype distribution"><Distribution stats={stats} /></Panel>
             </div>
             {series.length >= 2 ? (
-              <div className="sp-callout mt-4 p-5">
-                <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                  Your week so far
-                </h2>
+              <div className="hx-panel mt-4">
+                <h2 className="kicker">Your week so far</h2>
                 <WeekInHype series={series} />
               </div>
             ) : null}

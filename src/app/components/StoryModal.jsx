@@ -74,7 +74,7 @@ export default function StoryModal({ story, onClose, overlayColor = "bg-backgrou
         role="dialog"
         aria-modal="true"
         aria-label={story.title}
-        className="fixed inset-x-4 top-6 bottom-6 z-50 overflow-hidden rounded-[2px] border border-border bg-card sm:inset-x-8 md:inset-x-16 md:top-16 md:bottom-16"
+        className="fixed inset-x-4 top-6 bottom-6 z-50 overflow-hidden border border-border bg-card sm:inset-x-8 md:inset-x-16 md:top-16 md:bottom-16"
       >
         <div className="flex h-full flex-col overflow-y-auto">
           <header className="flex items-center justify-between gap-4 border-b border-border p-4 sm:p-6">
@@ -90,7 +90,7 @@ export default function StoryModal({ story, onClose, overlayColor = "bg-backgrou
               type="button"
               onClick={onClose}
               aria-label="Close story"
-              className="inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              className="inline-flex size-9 shrink-0 items-center justify-center border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             >
               <X className="size-4" aria-hidden="true" />
             </button>
@@ -119,7 +119,7 @@ export default function StoryModal({ story, onClose, overlayColor = "bg-backgrou
               </p>
             )}
 
-            <div className="mt-6 max-w-2xl rounded-[2px] border border-border bg-accent/40 p-5">
+            <div className="mt-6 max-w-2xl border border-border bg-accent/40 p-5">
               <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                 Why this score
               </h3>
@@ -140,7 +140,7 @@ export default function StoryModal({ story, onClose, overlayColor = "bg-backgrou
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-8 inline-flex items-center gap-2 rounded-[2px] bg-primary px-5 py-2.5 text-xs font-medium uppercase tracking-[0.08em] text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                className="mt-8 inline-flex items-center gap-2 bg-primary px-5 py-2.5 text-xs font-medium uppercase tracking-[0.08em] text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               >
                 Read original <ExternalLink className="size-3.5" aria-hidden="true" />
               </a>
@@ -152,7 +152,7 @@ export default function StoryModal({ story, onClose, overlayColor = "bg-backgrou
                 type="button"
                 onClick={onCopy}
                 className={cn(
-                  "inline-flex items-center gap-2 rounded-[2px] border border-border bg-card px-5 py-2.5 text-xs font-medium uppercase tracking-[0.08em] text-foreground transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                  "inline-flex items-center gap-2  border border-border bg-card px-5 py-2.5 text-xs font-medium uppercase tracking-[0.08em] text-foreground transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                   copied && "border-primary text-primary",
                 )}
               >
