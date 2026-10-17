@@ -18,7 +18,9 @@ playwright-report/
 # Lighthouse CI local run artifacts
 .lighthouseci/
 
-# graft's local graph cache — regenerable, not committed (run `graft build`).
+# Agent context graph (trail — formerly graft). The graph cache is per-machine
+# and regenerable, so .trail/.gitignore excludes .trail/cache/; graft/ is the
+# old cache directory, ignored in case a stray one reappears.
 graft/
 
 # Local agent/editor state (per-machine, not project content)

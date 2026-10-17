@@ -10,12 +10,10 @@
       ],
       "enabled": true
     },
-    "graft": {
+    "trail": {
       "type": "local",
       "command": [
-        "npx",
-        "-y",
-        "@nanonets/graft",
+        "trail",
         "mcp"
       ],
       "enabled": true
