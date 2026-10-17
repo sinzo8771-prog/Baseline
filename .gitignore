@@ -23,8 +23,14 @@ playwright-report/
 # old cache directory, ignored in case a stray one reappears.
 graft/
 
-# Local agent/editor state (per-machine, not project content)
-.claude/
+# Local agent/editor state (per-machine, not project content).
+# .claude/settings.json is the single exception: it wires the trail
+# session-start hook that .trail/README.md asks to be shared. Everything else
+# under .claude/ (settings.local.json, autoharness state) stays per-machine,
+# which is why this is .claude/* and not .claude/ — git cannot re-include a
+# file whose parent directory is excluded.
+.claude/*
+!.claude/settings.json
 .cursor/
 .windsurf/
 .mcp.json
