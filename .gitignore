@@ -16,6 +16,10 @@ dist/
 .claude/autoharness/
 .playwright-mcp/
 
+# Graphify knowledge graph — regenerable per-machine output, like .trail/cache/.
+# Refresh with `graphify update .`; do not commit the graph itself.
+graphify-out/
+
 # Profiling harness (see CANVAS-PERF-AUDIT.md) - untracked by design
 _perf/
 
