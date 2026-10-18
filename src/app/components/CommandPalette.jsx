@@ -46,13 +46,22 @@ export default function CommandPalette({ open, onClose, stories }) {
     return rankMatches(query, all);
   }, [query, pages, storyResults]);
 
-  // Reset the query and cursor whenever the palette opens.
+  // Reset the query and cursor whenever the palette opens, remembering what had
+  // focus so closing it — Escape, click-away, or a chosen result — puts the
+  // reader back where they were instead of dropping them on <body>.
+  const returnFocusRef = useRef(null);
   useEffect(() => {
     if (open) {
+      returnFocusRef.current =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null;
       setQuery("");
       setCursor(0);
       window.setTimeout(() => inputRef.current?.focus(), 0);
+      return;
     }
+    const target = returnFocusRef.current;
+    returnFocusRef.current = null;
+    if (target?.isConnected) target.focus();
   }, [open]);
 
   useEffect(() => {
@@ -129,7 +138,7 @@ export default function CommandPalette({ open, onClose, stories }) {
           <input
             id="command-palette-input"
             ref={inputRef}
-            className="w-full bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground"
+            className="w-full bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vermillion/20"
             type="search"
             placeholder="Search stories and pages…"
             value={query}

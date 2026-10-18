@@ -48,6 +48,19 @@ describe("SignalBreakdown", () => {
     render(<SignalBreakdown signals={[]} hedged={false} />);
     expect(screen.getByText(/no hype signals detected/i)).toBeInTheDocument();
   });
+
+  it("names the exact token that fired a mechanical signal", () => {
+    // "all-caps +6 pts" is not auditable on its own; the matched word must be
+    // shown so a reader can check the call.
+    render(
+      <SignalBreakdown
+        signals={[{ id: "caps", category: "formatting", label: "all-caps", points: 6, detail: "MASSIVE" }]}
+        hedged={false}
+      />,
+    );
+    expect(screen.getByText(/all-caps/i)).toBeInTheDocument();
+    expect(screen.getByText(/MASSIVE/)).toBeInTheDocument();
+  });
 });
 
 describe("SpinBadge", () => {
@@ -187,5 +200,32 @@ describe("StoryFeed NEW badges", () => {
       </MemoryRouter>,
     );
     expect(screen.queryByText("New")).not.toBeInTheDocument();
+  });
+});
+
+describe("StoryFeed index numbering", () => {
+  it("numbers a lone result 01 to match the 01–01 header", () => {
+    // Filtering down to one story drops the lead treatment, so the single row
+    // must be numeral 01 — it used to render 02 against an "01–01" header.
+    const { container } = render(
+      <MemoryRouter>
+        <StoryFeed stories={[storyWithSignals]} />
+      </MemoryRouter>,
+    );
+    const ranks = [...container.querySelectorAll(".index .rank")].map((el) => el.textContent.trim());
+    expect(ranks).toEqual(["01"]);
+    expect(container.querySelector(".index-head").textContent).toContain("01–01");
+  });
+
+  it("keeps the lead as 01 and starts the index rows at 02", () => {
+    const second = { ...storyWithSignals, id: "s2", title: "Second story" };
+    const { container } = render(
+      <MemoryRouter>
+        <StoryFeed stories={[storyWithSignals, second]} />
+      </MemoryRouter>,
+    );
+    const ranks = [...container.querySelectorAll(".index .rank")].map((el) => el.textContent.trim());
+    expect(ranks).toEqual(["02"]);
+    expect(container.querySelector(".index-head").textContent).toContain("01–02");
   });
 });

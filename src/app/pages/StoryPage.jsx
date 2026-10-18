@@ -71,11 +71,13 @@ function useStoryMeta(story) {
     const prevCanonical = canonical.getAttribute("href");
     canonical.setAttribute("href", url);
 
-    const setMeta = (prop, val) => {
-      let el = document.querySelector(`meta[property="${prop}"]`);
+    // `attr` selects the tag flavour: OG tags key on `property`, the search and
+    // social mirrors key on `name`.
+    const setMeta = (prop, val, attr = "property") => {
+      let el = document.querySelector(`meta[${attr}="${prop}"]`);
       if (!el) {
         el = document.createElement("meta");
-        el.setAttribute("property", prop);
+        el.setAttribute(attr, prop);
         document.head.appendChild(el);
       }
       const prev = el.getAttribute("content");
@@ -87,6 +89,12 @@ function useStoryMeta(story) {
       setMeta("og:description", description),
       setMeta("og:url", url),
       setMeta("og:type", "article"),
+      // useSeo() deliberately skips /story/ routes, so without these the page
+      // kept the previous route's generic description in search results and
+      // social cards even though the title and OG tags had already switched.
+      setMeta("description", description, "name"),
+      setMeta("twitter:title", story.title, "name"),
+      setMeta("twitter:description", description, "name"),
     ];
 
     const script = document.createElement("script");
@@ -113,21 +121,24 @@ function useStoryMeta(story) {
       document.title = prevTitle;
       canonical?.setAttribute("href", prevCanonical || "");
       const metas = [
-        ["og:title", prevs[0]],
-        ["og:description", prevs[1]],
-        ["og:url", prevs[2]],
-        ["og:type", prevs[3]],
+        ["og:title", prevs[0], "property"],
+        ["og:description", prevs[1], "property"],
+        ["og:url", prevs[2], "property"],
+        ["og:type", prevs[3], "property"],
+        ["description", prevs[4], "name"],
+        ["twitter:title", prevs[5], "name"],
+        ["twitter:description", prevs[6], "name"],
       ];
-      for (const [prop, val] of metas) {
-        const el = document.querySelector(`meta[property="${prop}"]`);
-        if (el) el.setAttribute("content", val);
+      for (const [key, val, attr] of metas) {
+        const el = document.querySelector(`meta[${attr}="${key}"]`);
+        if (el && val != null) el.setAttribute("content", val);
       }
       document.getElementById("story-jsonld")?.remove();
     };
   }, [story]);
 }
 
-export default function StoryPage({ allStories, stories, loaded, offline, reload }) {
+export default function StoryPage({ allStories, stories, loaded, settled, offline, reload }) {
   const { id } = useParams();
   const story = useMemo(() => allStories.find((s) => s.id === id) || null, [allStories, id]);
 
@@ -182,15 +193,22 @@ export default function StoryPage({ allStories, stories, loaded, offline, reload
     await onCopy();
   };
 
+  // The skeleton doubles as the lookup state: until every feed has settled a
+  // story can legitimately be absent from the partial set and still arrive, so
+  // "not in the files" must not fire on a bare `!loaded` (loaded flips on the
+  // FIRST feed to land). Without the `settled` gate a valid permalink showed
+  // the not-found page for several seconds before the story streamed in.
+  const skeleton = (
+    <section className="section" aria-busy="true">
+      <div className="h-5 w-40 animate-pulse rounded skeleton" />
+      <div className="mx-auto mt-8 h-12 w-11/12 max-w-3xl animate-pulse rounded skeleton" />
+      <div className="mx-auto mt-3 h-12 w-7/12 max-w-2xl animate-pulse rounded skeleton" />
+      <div className="mx-auto mt-10 h-72 w-full max-w-4xl animate-pulse rounded skeleton" />
+    </section>
+  );
+
   if (!loaded) {
-    return (
-      <section className="section" aria-busy="true">
-        <div className="h-5 w-40 animate-pulse rounded skeleton" />
-        <div className="mx-auto mt-8 h-12 w-11/12 max-w-3xl animate-pulse rounded skeleton" />
-        <div className="mx-auto mt-3 h-12 w-7/12 max-w-2xl animate-pulse rounded skeleton" />
-        <div className="mx-auto mt-10 h-72 w-full max-w-4xl animate-pulse rounded skeleton" />
-      </section>
-    );
+    return skeleton;
   }
 
   if (offline && !story) {
@@ -201,6 +219,10 @@ export default function StoryPage({ allStories, stories, loaded, offline, reload
         action={{ label: "TRY AGAIN", onClick: reload }}
       />
     );
+  }
+
+  if (!story && !settled) {
+    return skeleton;
   }
 
   if (!story) {

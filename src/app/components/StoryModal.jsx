@@ -74,9 +74,9 @@ export default function StoryModal({ story, onClose, overlayColor = "bg-backgrou
         role="dialog"
         aria-modal="true"
         aria-label={story.title}
-        className="fixed inset-x-4 top-6 bottom-6 z-50 overflow-hidden border border-border bg-card sm:inset-x-8 md:inset-x-16 md:top-16 md:bottom-16"
+        className="fixed inset-x-4 top-6 z-50 max-h-[calc(100dvh-3rem)] overflow-hidden border border-border bg-card sm:inset-x-8 md:inset-x-16 md:top-16 md:max-h-[calc(100dvh-8rem)]"
       >
-        <div className="flex h-full flex-col overflow-y-auto">
+        <div className="flex max-h-[inherit] flex-col overflow-y-auto">
           <header className="flex items-center justify-between gap-4 border-b border-border p-4 sm:p-6">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <SpinBadge spin={story.spin} flags={story.flags} signals={story.signals} hedged={story.hedged} score={story.spinScore} />

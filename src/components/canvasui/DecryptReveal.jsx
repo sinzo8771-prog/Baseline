@@ -981,7 +981,10 @@ export function DecryptReveal({
               position: "relative",
               width: "100%",
               height: "100%",
-              overflow: "auto",
+              // hidden, not auto: the tagline's mono line box can overhang a
+              // hair, and an auto scrollport would paint a scrollbar in the
+              // masthead. The clip is identical (capture uses clientHeight).
+              overflow: "hidden",
             }}>
             {children}
           </div>
@@ -994,7 +997,8 @@ export function DecryptReveal({
             position: "relative",
             width: "100%",
             height: "100%",
-            overflow: "auto",
+            // hidden, not auto — see the note above.
+            overflow: "hidden",
           }}>
           {children}
         </div>

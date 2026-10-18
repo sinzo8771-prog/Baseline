@@ -90,7 +90,13 @@ async function composeEdition(results) {
   // Signal-category breakdown powers the Hype Index "WHY TODAY?" panel and
   // day-over-day "biggest shift" — always derived from real stories.
   stats.signalBreakdown = signalStats(edition);
-  return { edition, all, stats, sources: sourceStats(all) };
+  // Per-source analytics describe the same printed edition the surfaces claim to
+  // measure: the Sources page ranks intensity "across the latest edition" and a
+  // source page says "Counts cover today's edition only", so computing them over
+  // the uncapped `all` set made every count exceed the edition it was labelled
+  // with. hypeHistory.recordSourceStats documents the same contract ("the output
+  // of pipeline.sourceStats (full edition)").
+  return { edition, all, stats, sources: sourceStats(edition) };
 }
 
 // Feed results -> the shape the Sources page renders. Each entry carries the

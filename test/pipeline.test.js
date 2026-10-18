@@ -40,6 +40,19 @@ test("dailyStats computes hype percent and breakdown", () => {
   assert.ok(Date.parse(stats.generatedAt) > 0);
 });
 
+test("dailyStats reports mean intensity so a sub-threshold day is not a bare 0%", () => {
+  // hypePercent counts only stories above Measured, so an edition of quiet
+  // headlines reads 0% even though it still has real intensity to show.
+  const quiet = [
+    { source: "A", spin: "Measured", spinScore: 10, signals: [] },
+    { source: "A", spin: "Measured", spinScore: 5, signals: [] },
+  ];
+  const stats = dailyStats(quiet);
+  assert.equal(stats.hypePercent, 0);
+  assert.equal(stats.avgIntensity, 7.5);
+  assert.equal(dailyStats([]).avgIntensity, 0);
+});
+
 test("sourceStats aggregates count, avg hype, and distribution per source", () => {
   const stories = composeStories(results);
   const stats = sourceStats(stories);

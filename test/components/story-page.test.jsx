@@ -140,3 +140,18 @@ describe("StoryPage share/copy buttons", () => {
     );
   });
 });
+
+describe("StoryPage lookup before declaring a story missing", () => {
+  it("holds the loading state while feeds are still settling", () => {
+    // `loaded` flips on the FIRST feed to land; a permalink whose story sits in
+    // a feed still in flight must not read as missing.
+    const { container } = renderStory("zzz", { allStories: [], stories: [], settled: false });
+    expect(screen.queryByText(/not in the files/i)).not.toBeInTheDocument();
+    expect(container.querySelector('[aria-busy="true"]')).not.toBeNull();
+  });
+
+  it("reports not-found only once every feed has settled", () => {
+    renderStory("zzz", { allStories: [], stories: [], settled: true });
+    expect(screen.getByText(/not in the files/i)).toBeInTheDocument();
+  });
+});

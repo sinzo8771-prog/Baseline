@@ -429,13 +429,20 @@ function IndexMast({ stats, change, yesterday }) {
         <p className="hx-mast-word">
           {dayWord(stats.hypePercent)} — {hyped} of {stats.total} stories scored above Measured
         </p>
+        {/* The share above counts only stories that crossed the Warm threshold,
+            so a day of 8–11 pt headlines reads "0%". The mean score keeps that
+            real-but-sub-threshold intensity on the page. */}
+        <p className="hx-mast-avg">
+          Average headline intensity <b>{stats.avgIntensity}/100</b> across all {stats.total}{" "}
+          {stats.total === 1 ? "story" : "stories"}
+        </p>
       </div>
 
       <div className="hx-mast-scale">
         <div
           className="hx-scale"
           role="meter"
-          aria-label={`Headline intensity ${stats.hypePercent} of 100 — share of today's stories scored above Measured`}
+          aria-label={`Headline intensity ${stats.hypePercent} of 100 — share of today's stories scored above Measured; average headline intensity ${stats.avgIntensity} of 100`}
           aria-valuenow={stats.hypePercent}
           aria-valuemin={0}
           aria-valuemax={100}
@@ -471,7 +478,10 @@ function IndexMast({ stats, change, yesterday }) {
         ) : (
           <p className="hx-top-signal hx-top-quiet">No hype signals fired today.</p>
         )}
-        <p className="hx-mast-note">Hype measures headline intensity, not truth.</p>
+        <p className="hx-mast-note">
+          The index counts the share of today's stories that scored Warm or louder (each headline scores 0–100); the
+          average is the mean score across all of them. Hype measures headline intensity, not truth.
+        </p>
       </div>
     </section>
   );

@@ -1,9 +1,10 @@
 import { cn } from "@/lib/utils";
 
 // Per-signal breakdown of one story's Hype score. Renders each fired signal
-// with its exact point contribution, the hedged-framing note when present, and
-// the site-wide disclaimer that intensity is not truth. Every value comes from
-// the story's own `signals` (produced by src/lib/hype.js) — nothing is invented.
+// with its exact point contribution, the matched token for mechanical signals
+// (so "all-caps" can be audited), the hedged-framing note when present, and the
+// site-wide disclaimer that intensity is not truth. Every value comes from the
+// story's own `signals` (produced by src/lib/hype.js) — nothing is invented.
 export default function SignalBreakdown({ signals, hedged = false, className }) {
   const list = signals?.filter((s) => s?.points > 0) ?? [];
   if (list.length === 0) {
@@ -21,7 +22,12 @@ export default function SignalBreakdown({ signals, hedged = false, className }) 
       <ul className="space-y-1">
         {list.map((s) => (
           <li key={s.id} className="flex items-baseline justify-between gap-3 border-b border-border/50 py-1.5 last:border-0">
-            <span className="text-[13px] capitalize text-foreground">{s.label}</span>
+            <span className="text-[13px] capitalize text-foreground">
+              {s.label}
+              {s.detail ? (
+                <span className="ml-1.5 font-mono text-[11px] normal-case text-muted-foreground">“{s.detail}”</span>
+              ) : null}
+            </span>
             <span className="tabular-nums text-[13px] text-muted-foreground">+{s.points} pts</span>
           </li>
         ))}

@@ -308,7 +308,11 @@ export default function StoryFeed({ stories, lastVisit = null }) {
                 <IndexRow
                   key={story.id}
                   story={story}
-                  rank={i + 2}
+                  // The lead (when present) owns numeral 01, so the index rows
+                  // start at 02. Without a lead the first row IS 01 — otherwise a
+                  // single filtered result would be numbered 02 against an
+                  // "01–01" header.
+                  rank={i + (showLead ? 2 : 1)}
                   isNew={isNewSinceLastVisit(story.publishedAt, lastVisit)}
                   active={story.id === activeId}
                   onOpen={() => open(story)}

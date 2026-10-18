@@ -123,8 +123,61 @@ const EMOTION_WORDS = [
   "demolishes", "dominates", "wrecks",
 ];
 
-// A signal is a { id, category, label, points, count } with a focused matcher
-// returning how many signals fired (0 = none). `maxCount` bounds how much one
+// All-caps is a formatting shout, but in sentence-case news copy an all-caps
+// token is an acronym or a product name far more often than it is a shout: the
+// reported false positive was "Meta removes AI CSAM content", and a length test
+// alone still read "…with CRISPR-like repeats" as one. Scored against the ten
+// live wires, 163 of 2,618 headlines carried a 4+ letter capital run and
+// essentially all of them were acronyms (NVIDIA, FedRAMP, NORAD, METR, EMEA).
+// So in sentence case caps only counts when the word is one the scorer already
+// reads as hype or emphasis ("MASSIVE", "HUGE", "EVERYTHING", "FASTEST"); a
+// headline shouted end to end counts however mundane its words. Tokens are
+// returned so the UI can show exactly what fired the signal, instead of an
+// unattributable "all-caps +6".
+const CAPS_WORD_MIN = 5;
+const CAPS_TOKEN = /\b[A-Z][A-Z0-9]*\b/g;
+// 5+ letter initialisms that would otherwise read as shouted words.
+const CAPS_INITIALISMS = new Set(["covid", "gdpr", "laser", "nafta", "radar", "scuba", "sonar"]);
+// Words a headline capitalises for emphasis rather than as an initialism. Kept
+// narrow: every entry is a word a writer can shout, and none is a newsroom
+// acronym a wire would legitimately print in caps.
+const CAPS_EMPHASIS_WORDS = [
+  "everything", "nothing", "everyone", "nobody", "never", "forever", "finally",
+  "literally", "actually", "hype", "dead", "doomed", "insane", "crazy", "wild",
+  "epic", "chaos", "panic", "disaster", "boom", "bust", "warning", "urgent",
+  "breaking", "exclusive", "alert",
+];
+// The lowercase vocabulary the scorer already reads as hype, plus the emphasis
+// words above: printed in caps, those are shouting rather than acronyms.
+const CAPS_SHOUT_WORDS = new Set(
+  [...HEAVY_WORDS, ...BOAST_WORDS, ...EMOTION_WORDS, ...CAPS_EMPHASIS_WORDS].map((word) => word.toLowerCase()),
+);
+// Short all-caps hype words ("AI", "AGI") are still acronyms, not shouting, so a
+// word has to be at least this long before its meaning can be believed.
+const CAPS_SHOUT_MIN = 4;
+
+function isShoutWord(token) {
+  const word = token.toLowerCase();
+  if (word.length < CAPS_SHOUT_MIN || CAPS_INITIALISMS.has(word)) return false;
+  return CAPS_SHOUT_WORDS.has(word) || superlativeCount(word) > 0;
+}
+
+function shoutedCaps(title) {
+  const tokens = title.match(CAPS_TOKEN) ?? [];
+  if (!tokens.length) return [];
+  // Every letter uppercase => the whole headline is being shouted, however
+  // short its words ("AI WINS"). A lone short acronym ("GPT-5") is not.
+  if (title === title.toUpperCase()) {
+    const shouted = [...new Set(tokens.filter((t) => t.length >= 2))];
+    if (shouted.length >= 2 || (shouted.length === 1 && shouted[0].length >= CAPS_WORD_MIN)) return shouted;
+    return [];
+  }
+  return [...new Set(tokens.filter(isShoutWord))];
+}
+
+// A signal is a { id, category, label, points } with a focused matcher
+// returning how many signals fired (0 = none) and an optional `detail` naming
+// the exact token that fired it. `maxCount` bounds how much one
 // family can contribute so a single overloaded headline can't saturate.
 // `format` signals are mechanical (caps, punctuation, emoji) and are not
 // dampened by hedging the way language claims are.
@@ -195,7 +248,8 @@ const SIGNAL_DEFS = [
     label: "all-caps",
     points: 6,
     format: true,
-    count: (title) => (/[A-Z]{4,}/.test(title) ? 1 : 0),
+    count: (title) => (shoutedCaps(title).length ? 1 : 0),
+    detail: (title) => shoutedCaps(title).join(", ") || null,
   },
   {
     id: "exclamation",
@@ -204,6 +258,7 @@ const SIGNAL_DEFS = [
     points: 3,
     format: true,
     count: (title) => (/!+/.test(title) ? 1 : 0),
+    detail: (title) => [...new Set(title.match(/!+/g) ?? [])].join(" ") || null,
   },
   {
     id: "emoji",
@@ -212,6 +267,7 @@ const SIGNAL_DEFS = [
     points: 4,
     format: true,
     count: (text) => (/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}]/u.test(text) ? 1 : 0),
+    detail: (text) => [...new Set(text.match(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}]/gu) ?? [])].join(" ") || null,
   },
 ];
 
@@ -242,7 +298,14 @@ export function scoreHype({ title, summary }) {
     if (isHedged && !def.format) {
       points = Math.max(1, Math.floor(points * 0.5));
     }
-    signals.push({ id: def.id, category: def.category, label: def.label, points });
+    const sig = { id: def.id, category: def.category, label: def.label, points };
+    // `detail` names the token that fired a mechanical signal so a reader can
+    // audit it; omitted entirely when there is nothing to show.
+    if (def.detail) {
+      const detail = def.detail(haystack);
+      if (detail) sig.detail = detail;
+    }
+    signals.push(sig);
   }
 
   // Cross-category stacking bonus.

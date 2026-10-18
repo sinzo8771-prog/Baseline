@@ -36,8 +36,16 @@ export function dailyStats(stories) {
   }
   const hyped = stories.filter((s) => s.spin !== "Measured").length;
   const hypePercent = stories.length > 0 ? Math.round((hyped / stories.length) * 100) : 0;
+  // Mean headline-intensity score (0–100, one decimal). `hypePercent` is a
+  // threshold count, so an edition full of 8–11 pt headlines reads "0%" — true
+  // for the share, but easy to misread as "no signal at all". The average keeps
+  // that sub-threshold intensity visible without changing what the index counts.
+  const avgIntensity = stories.length > 0
+    ? Math.round((stories.reduce((sum, s) => sum + (s.spinScore ?? 0), 0) / stories.length) * 10) / 10
+    : 0;
   return {
     hypePercent,
+    avgIntensity,
     bySpin,
     total: stories.length,
     // Per-category signal counts drive the "WHY TODAY?" and "biggest shift"

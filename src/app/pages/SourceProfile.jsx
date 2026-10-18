@@ -36,13 +36,16 @@ function Distribution({ bySpin }) {
   );
 }
 
-export default function SourceProfile({ allStories, sources, sourceStats: stats, loaded, offline, reload }) {
+export default function SourceProfile({ stories, sources, sourceStats: stats, loaded, settled, offline, reload }) {
   // useParams already percent-decodes the segment (react-router decodePath);
   // re-decoding here would corrupt names with literal "%" and throw URIError
   // on malformed input like "/sources/%".
   const { name: decoded } = useParams();
 
-  const storyList = useMemo(() => allStories.filter((s) => s.source === decoded), [allStories, decoded]);
+  // The edition, not the full deduped set: the heading says "In today's edition"
+  // and the stat card above it counts that same edition, so the list and the
+  // number must describe the same stories.
+  const storyList = useMemo(() => stories.filter((s) => s.source === decoded), [stories, decoded]);
   const stat = useMemo(() => stats?.find((s) => s.name === decoded) || null, [stats, decoded]);
   const feed = useMemo(() => sources?.find((s) => s.name === decoded) || null, [sources, decoded]);
 
@@ -53,13 +56,18 @@ export default function SourceProfile({ allStories, sources, sourceStats: stats,
     if (decoded) document.title = `${decoded} — The Baseline`;
   }, [decoded]);
 
+  // The skeleton doubles as the lookup state: feeds stream in, so a source's
+  // wire may still be in flight. "NO SUCH DESK" must not fire until every feed
+  // has settled, or a valid source page flashes "no such desk" first.
+  const skeleton = (
+    <section className="section">
+      <div className="h-5 w-48 animate-pulse rounded skeleton" />
+      <div className="mt-4 h-6 w-72 animate-pulse rounded skeleton" />
+    </section>
+  );
+
   if (!loaded) {
-    return (
-      <section className="section">
-        <div className="h-5 w-48 animate-pulse rounded skeleton" />
-        <div className="mt-4 h-6 w-72 animate-pulse rounded skeleton" />
-      </section>
-    );
+    return skeleton;
   }
 
   if (offline && !stat && !feed) {
@@ -70,6 +78,10 @@ export default function SourceProfile({ allStories, sources, sourceStats: stats,
         action={{ label: "TRY AGAIN", onClick: reload }}
       />
     );
+  }
+
+  if (!stat && !feed && !settled) {
+    return skeleton;
   }
 
   if (!stat && !feed) {

@@ -12,7 +12,7 @@ const SIGNAL_NOTES = {
   superlatives: "Fastest, largest, world-first, unbeatable, best-in-class… Measured collocations like “best practices” never fire.",
   benchmark: "Outperforms, surpasses, shatters the record, state-of-the-art… “Benchmark” as a noun is neutral; beating it is not.",
   numerical: "10x, 3× faster, 40% better — promotional multipliers only. “$1 billion investment” is a fact, not spin.",
-  formatting: "All-caps words, exclamation marks, emoji. Mechanical signals: if it shouts, it scores.",
+  formatting: "Shouted all-caps words, exclamation marks, emoji. Standard acronyms are not shouting. Mechanical signals: if it shouts, it scores.",
   emotional: "Amazing, incredible, stunning, destroys, crushes…",
 };
 
@@ -22,6 +22,7 @@ const NOT_COUNTED = [
   "Hedged research framing: “Researchers examine whether AI could become superhuman” is a question under study, so the weight of hype words is halved.",
   "Words inside quotation marks: a headline quoting someone else’s “breakthrough” is reporting on the claim, not making it.",
   "“Best practices”, “best of”, and similar measured collocations do not fire the superlative signal.",
+  "Standard acronyms and initialisms: “AI”, “CSAM”, “CRISPR”, “GDPR” are not shouting, even when the source prints them in caps.",
 ];
 
 const DAY_NUMBER = [

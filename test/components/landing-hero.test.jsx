@@ -22,10 +22,10 @@ function renderLanding(props = {}) {
 }
 
 describe("Landing hero", () => {
-  it("puts the Hype Index in the hero with the intensity descriptor", () => {
+  it("puts the Hype Index in the hero with the share descriptor", () => {
     renderLanding();
     expect(screen.getByText("Today's Hype Index")).toBeInTheDocument();
-    expect(screen.getByText("Headline intensity across today's tracked AI news.")).toBeInTheDocument();
+    expect(screen.getByText("Share of today's stories scored Warm or louder.")).toBeInTheDocument();
     expect(screen.getByText(/not truth, quality, or importance/)).toBeInTheDocument();
   });
 

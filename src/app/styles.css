@@ -447,6 +447,25 @@ body {
   }
   .site-nav-links a:focus-visible { outline: 2px solid var(--vermillion); outline-offset: -2px; }
 
+  /* Rendered only while the link strip is actually overflowing: a labelled
+     arrow that scrolls it, so the sections off the right edge are discoverable
+     and reachable by keyboard, not just by a sideways swipe. */
+  .site-nav-more {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    min-height: 40px;
+    background: none;
+    border: 0;
+    border-left: 1px solid var(--hair);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .site-nav-more:hover { background: var(--wash); }
+  .site-nav-more:focus-visible { outline: 2px solid var(--vermillion); outline-offset: -2px; }
+
   .site-nav .theme-toggle { flex: 0 0 auto; }
 
   /* Below the row breakpoint the nameplate above already says "The Baseline"
@@ -702,12 +721,15 @@ body {
   }
 
   /* ── Toast ─────────────────────────────────────────────────────────── */
+  /* Sits under the modal overlay (z 40) and dialog (z 50): an open dialog is
+     the reader's current context, so the toast dims behind it instead of
+     floating over the dialog's own content. */
   .toast-region {
     position: fixed;
     bottom: 24px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 100;
+    z-index: 30;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1439,6 +1461,16 @@ body {
   margin: 10px 0 0;
   max-width: 36ch;
 }
+/* Secondary read under the big number: the mean headline score, so a
+   sub-threshold day (0% of stories above Measured) still shows its intensity. */
+.hx-mast-avg {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+  margin: 8px 0 0;
+}
+.hx-mast-avg b { font-weight: 700; color: var(--ink); }
 .hx-mast-scale { display: flex; flex-direction: column; gap: 16px; padding-bottom: 6px; }
 .hx-scale-track {
   position: relative;

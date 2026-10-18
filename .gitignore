@@ -2,6 +2,14 @@ node_modules/
 .wrangler/
 .dev.vars/
 *.log
+
+# Local secrets — never commit. The `.dev.vars/` rule above only matches a
+# directory, but wrangler's .dev.vars is a file, so cover both. Server-side
+# integrations read their keys from the environment only.
+.dev.vars
+.env
+.env.*
+!.env.example
 dist/ 
 
 # Tool-generated artifacts (agent harnesses, browser screenshots)

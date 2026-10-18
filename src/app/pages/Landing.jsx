@@ -66,7 +66,7 @@ function Hero({ stats, loaded, offline }) {
             {hasScore ? stats.hypePercent : "—"}
             {hasScore ? <span className="unit" aria-hidden="true">%</span> : null}
           </p>
-          <p className="descriptor">Headline intensity across today's tracked AI news.</p>
+          <p className="descriptor">Share of today's stories scored Warm or louder.</p>
           <p className="meta">{meta}</p>
         </div>
       </div>

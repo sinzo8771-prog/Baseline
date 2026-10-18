@@ -295,7 +295,7 @@ export default function App() {
   // screen. Uses the printed edition size to keep the claim honest.
   useEffect(() => {
     if (settled && !offline && stats && stories.length > 0) {
-      showToast(`The presses are rolling — ${stories.length} stories, ${stats.hypePercent}% hype.`);
+      showToast(`The presses are rolling — ${stories.length} stories, ${stats.hypePercent}% scored above Measured.`);
     }
   }, [settled, offline, stats, stories]);
 
@@ -353,8 +353,8 @@ export default function App() {
               <Route path="/edition" element={<Home stories={stories} offline={offline} loaded={loaded} reload={reload} servedFromCache={servedFromCache} savedAt={savedAt} lastVisit={lastVisitRef.current} sources={sources} settled={settled} />} />
               <Route path="/hype-index" element={<HypeIndex stats={stats} sourceStats={sourceStats} allStories={allStories} loaded={loaded} offline={offline} reload={reload} />} />
               <Route path="/sources" element={<Sources sources={sources} sourceStats={sourceStats} loaded={loaded} offline={offline} reload={reload} />} />
-              <Route path="/sources/:name" element={<SourceProfile allStories={allStories} sources={sources} sourceStats={sourceStats} loaded={loaded} offline={offline} reload={reload} />} />
-              <Route path="/story/:id" element={<StoryPage stories={stories} allStories={allStories} loaded={loaded} offline={offline} reload={reload} />} />
+              <Route path="/sources/:name" element={<SourceProfile stories={stories} sources={sources} sourceStats={sourceStats} loaded={loaded} settled={settled} offline={offline} reload={reload} />} />
+              <Route path="/story/:id" element={<StoryPage stories={stories} allStories={allStories} loaded={loaded} settled={settled} offline={offline} reload={reload} />} />
               <Route path="/about" element={<About showToast={showToast} />} />
               <Route path="/methodology" element={<Methodology />} />
               <Route path="/saved" element={<Saved stories={stories} />} />

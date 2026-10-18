@@ -1230,7 +1230,12 @@ export function Asciify({
               position: "relative",
               width: "100%",
               height: "100%",
-              overflow: "auto",
+              // hidden, not auto: the nameplate's tight line-height makes the
+              // glyph box a few px taller than its line box, and an auto
+              // scrollport painted a scrollbar inside the wordmark. The clip is
+              // identical — the effect captures clientHeight, and scrollTop
+              // stays 0 for content nobody scrolls.
+              overflow: "hidden",
             }}>
             {children}
           </div>
@@ -1243,7 +1248,9 @@ export function Asciify({
             position: "relative",
             width: "100%",
             height: "100%",
-            overflow: "auto",
+            // hidden, not auto — see the note above: no scrollbar inside the
+            // wordmark, same visible box.
+            overflow: "hidden",
           }}>
           {children}
         </div>
