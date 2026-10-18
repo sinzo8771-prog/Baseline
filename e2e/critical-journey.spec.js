@@ -11,7 +11,7 @@ test("critical journey: landing → edition → search → filter → story → 
   await page.goto("/");
   await expect(page.getByText("Today's Hype Index")).toBeVisible();
   await expect(page.locator(".fp-hero-score .val")).toContainText("%");
-  await expect(page.getByText(/headline intensity across today's tracked ai news/i)).toBeVisible();
+  await expect(page.getByText(/share of today's stories scored warm or louder/i)).toBeVisible();
 
   // Into the edition via the primary CTA. The hero and the closing band both
   // carry a "Read today's edition" link; the hero's is the first in the DOM.
